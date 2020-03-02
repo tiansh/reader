@@ -1,0 +1,80 @@
+@font-face {
+  font-family: 'icons';
+  src: url('icons.woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+.icon {
+  font-family: 'icons' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  font-size: 20px;
+  padding: 5px 10px;
+  vertical-align: middle;
+}
+
+.icon-back {
+  line-height: 30px;
+  padding: 0 10px;
+}
+.icon-back::before {
+  content: "\e900";
+  font-size: 30px;
+}
+
+.icon-add::before {
+  content: "\e901";
+}
+
+.icon-settings::before {
+  content: "\e902";
+}
+
+.icon-detail::before {
+  content: "\e903";
+}
+
+.icon-remove-large {
+  line-height: inherit;
+  padding: 0;
+  font-size: 30px;
+}
+.icon-remove::before {
+  content: "\e904";
+}
+
+.icon-content::before {
+  content: "\e905";
+}
+
+.icon-bookmark::before {
+  content: "\e906";
+}
+
+.icon-search::before {
+  content: "\e907";
+}
+
+.icon-jump::before {
+  content: "\e908";
+}
+
+.icon-speech::before {
+  content: "\e909";
+}
+
+.icon-stop::before {
+  content: "\e90a";
+}
+
+.icon-refresh::before {
+  content: "\e90b";
+}
+
