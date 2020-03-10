@@ -664,22 +664,30 @@ export default class ReadPage extends Page {
       });
       const startPos = Number(firstOut.dataset.start);
       const textNode = firstOut.firstChild;
-      const range = document.createRange();
-      let low = 0, high = textNode.textContent.length - 1;
-      while (low <= high) {
-        const mid = Math.floor((low + high) / 2);
-        range.setStart(textNode, mid);
-        range.setEnd(textNode, mid + 1);
-        if (range.getBoundingClientRect().bottom > rect.bottom) {
-          high = mid - 1;
-        } else {
-          low = mid + 1;
+      let low, high;
+      if (textNode) {
+        const range = document.createRange();
+        low = 0;
+        high = textNode.textContent.length - 1;
+        while (low <= high) {
+          const mid = Math.floor((low + high) / 2);
+          range.setStart(textNode, mid);
+          range.setEnd(textNode, mid + 1);
+          if (range.getBoundingClientRect().bottom > rect.bottom) {
+            high = mid - 1;
+          } else {
+            low = mid + 1;
+          }
         }
+      } else {
+        low = 0;
+        high = -1;
       }
       let targetHeight = null;
       if (high < 0) {
         targetHeight = firstOut.getBoundingClientRect().top - rect.top;
       } else {
+        const range = document.createRange();
         range.setStart(textNode, low - 1);
         range.setEnd(textNode, low);
         targetHeight = range.getBoundingClientRect().bottom - rect.top;
