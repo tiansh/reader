@@ -31,7 +31,7 @@ export default class Router {
     this.hashTo('#!' + url);
   }
   async initial() {
-    const path = await config.get('path') || this.fallback;
+    const path = await config.get('path') || '#!' + this.fallback;
     this.hashTo(path);
   }
   update() {
