@@ -1,0 +1,19 @@
+{
+  "short_name": "Reader",
+  "name": "Reader",
+  "description": "Simple TXT Reader",
+  "icons": [
+    {
+      "src": "reader.png",
+      "type": "image/png",
+      "sizes": "180x180"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "black",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": ".",
+  "theme_color": "black"
+}
+
