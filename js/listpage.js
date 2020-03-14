@@ -13,6 +13,7 @@ export default class ListPage extends Page {
     this.addButton = document.querySelector('#add');
     /** @type {HTMLInputElement} */
     this.fileButton = document.querySelector('#file');
+    this.configButton = document.querySelector('#settings');
     this.settingsButton = document.querySelector('#settings');
     this.fileListContainer = document.querySelector('.file-list-container');
     this.fileList = document.querySelector('.file-list');
@@ -45,6 +46,9 @@ export default class ListPage extends Page {
       this.fileButton.value = null;
       this.updateList();
     });
+    this.configButton.addEventListener('click', event => {
+      this.router.go('config');
+    });
     this.sortContent.addEventListener('click', event => {
       this.sortMenu.style.display = 'block';
     });
@@ -52,12 +56,13 @@ export default class ListPage extends Page {
       const target = event.target;
       if (!(target instanceof Element)) return;
       const item = target.closest('.screen-option-item');
-      if (!item) return;
-      const option = item.dataset.option;
-      if (option) {
-        this.options.sortBy = option;
-        this.updateSort();
-        this.updateList();
+      if (item) {
+        const option = item.dataset.option;
+        if (option) {
+          this.options.sortBy = option;
+          this.updateSort();
+          this.updateList();
+        }
       }
       this.sortMenu.style.display = 'none';
     });
@@ -79,9 +84,6 @@ export default class ListPage extends Page {
         (item.cursor / item.length * 100).toFixed(2) + '%' :
         'NEW';
       li.querySelector('.file-detail').textContent = percent;
-      li.addEventListener('scroll', event => {
-        if (li.scrollLeft > 150) li.scrollLeft = 150;
-      });
       const content = li.querySelector('.file-item-content');
       const listener = new TouchListener(content, { clickParts: 1 });
       listener.onTouch(() => {

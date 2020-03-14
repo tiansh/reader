@@ -78,3 +78,15 @@
   content: "\e90b";
 }
 
+.icon-open {
+  padding: 0;
+  display: inline-block;
+}
+.icon-open::before {
+  content: "\e90c";
+}
+
+.icon-checkmark::before {
+  content: "\e90d";
+}
+
