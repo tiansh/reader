@@ -58,8 +58,9 @@ a {
 .header {
   background: var(--header-background);
   color: var(--header-color);
-  height: 50px;
+  height: 49px;
   font-size: 20px;
+  border-bottom: 1px solid var(--header-border-color);
 }
 
 .footer {
@@ -213,6 +214,7 @@ a {
   font-size: 25px;
   border-bottom: 1px solid var(--list-border-color);
   background: var(--menu-background);
+  color: var(--menu-color);
 }
 
 .screen-option-item:last-child {
@@ -354,8 +356,7 @@ a {
   text-justify: var(--content-text-justify);
   overflow: hidden;
   overflow-wrap: break-word;
-  line-height: var(--read-line-height);
-  font-size: var(--read-font-size);
+  line-height: normal;
   white-space: pre-wrap;
 }
 
@@ -643,7 +644,10 @@ a {
   z-index: 1;
   left: calc(calc(100% - 20px) * var(--range-ratio));
   background: var(--range-thumb-color);
+  border: 1px solid var(--range-thumb-border-color);
+  box-shadow: 0 1px 1px #000;
 }
+
 
 .range-track {
   border-radius: 1.5px;
@@ -670,5 +674,166 @@ a {
   left: 0;
   right: 0;
   z-index: -1;
+}
+
+.config-page-main,
+.config-page-font {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.config-page {
+  position: fixed;
+  top: 50px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  background: var(--config-background);
+  user-select: none;
+}
+
+.config-group {
+  margin: 35px 0;
+  border: 1px solid var(--config-border-color);
+  border-width: 1px 0;
+}
+
+.config-title {
+  padding: 0 15px;
+  line-height: 36px;
+  font-size: 16px;
+  color: var(--config-title-color);
+  margin: 35px 0 -35px;
+}
+
+.config-item {
+  padding: 0;
+  position: relative;
+  background: var(--config-item-background);
+  height: 50px;
+  color: var(--config-content-color);
+}
+
+.config-item:not(:last-child) {
+  padding-bottom: 1px;
+}
+
+.config-item:not(:last-child)::after {
+  content: " ";
+  position: absolute;
+  bottom: 0;
+  left: 15px;
+  right: 0;
+  height: 1px;
+  background: var(--config-border-color);
+}
+
+.config-item-title {
+  position: absolute;
+  top: 0;
+  left: 15px;
+  line-height: 50px;
+  font-size: 20px;
+  white-space: pre;
+  max-width: calc(100% - 30px);
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.config-item:focus-within .config-item-title {
+  color: var(--config-content-active-color);
+}
+
+
+.config-item select,
+.config-item select + span,
+.config-item input[type="color"],
+.config-item button,
+.config-item .config-detail {
+  position: absolute;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  top: 0;
+  left: 0;
+  height: 50px;
+  width: 100%;
+  background: none;
+  border: 0 none;
+  padding: 0 15px;
+  font: inherit;
+  z-index: 1;
+}
+
+.config-item select {
+  opacity: 0;
+}
+
+.config-item select + span {
+  text-align: right;
+  line-height: 50px;
+  z-index: 0;
+}
+
+.config-item input[type="color"] {
+  padding-left: calc(100% - 75px)
+}
+
+.config-item input[type="file"] {
+  position: fixed;
+  top: -100px;
+}
+
+.config-item .config-detail {
+  text-align: right;
+  line-height: 50px;
+}
+
+.config-item button {
+  color: var(--config-content-active-color);
+}
+
+.config-check-group .config-item-title {
+  padding-left: 40px;
+}
+
+.config-check-group .config-item .icon-checkmark {
+  line-height: 50px;
+  padding-left: 15px;
+  visibility: hidden;
+}
+
+.config-check-group .config-item-checked .icon-checkmark {
+  visibility: visible;
+}
+
+.config-font-list .config-item {
+  position: relative;
+}
+
+.config-font-list .config-item:not(.font-item-slide-remove) {
+  transition: left ease-out 0.1s;
+}
+
+.font-remove {
+  position: absolute;
+  left: 100%;
+  width: 80px;
+  background: red;
+  top: 0;
+  bottom: 0;
+  padding: 0 10px 0 0;
+  text-align: center;
+  line-height: 50px;
+}
+
+.config-page-font.font-item-slide-remove {
+  overflow-y: hidden;
 }
 

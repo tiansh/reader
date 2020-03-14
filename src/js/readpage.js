@@ -3,6 +3,7 @@ import text from './text.js';
 import file from './file.js';
 import onResize from './onresize.js';
 import TouchListener from './touch.js';
+import config from './config.js';
 
 /** @typedef {{ cursor: number, nextCursor: number, container: HTMLElement }} PageRender */
 
@@ -315,9 +316,7 @@ export default class ReadPage extends Page {
   constructor() {
     super(document.querySelector('#read_page'));
     this.onResize = this.onResize.bind(this);
-    speechSynthesis.onvoiceschanged = function () {
-      console.log(window.speechSynthesis.getVoices());
-    };
+    this.keyboardEvents = this.keyboardEvents.bind(this);
   }
   matchUrl(url) {
     if (!/\/read\/\d+/.test(url)) return null;
@@ -341,17 +340,20 @@ export default class ReadPage extends Page {
     this.jumpButton = document.querySelector('#jump_button');
     this.speechButton = document.querySelector('#speech_button');
 
-
     this.jumpElement = document.querySelector('.read-jump');
     this.jumpPage = new JumpPage(this.jumpElement, this);
 
     this.bookmarkPage.onFirstActive();
     this.jumpPage.onFirstActive();
+
+    this.customFont = document.querySelector('#custom_font');
+    this.customStyle = document.querySelector('#custom_style');
   }
   async onActive({ id }) {
     this.meta = await file.getMeta(id);
     this.index = await file.getIndex(id);
     this.content = await file.content(id);
+
     if (!this.meta || !this.content) {
       this.gotoList();
       return;
@@ -362,8 +364,6 @@ export default class ReadPage extends Page {
     this.listenEvents();
 
     this.layoutConfig = {
-      readFontSize: 20,
-      readLineHeight: 28,
       paragraphMargin: 0,
       pageMarginX: 20,
       pageMarginY: 20,
@@ -372,6 +372,8 @@ export default class ReadPage extends Page {
     };
     this.updateLayoutConfig();
     this.pageInfo = onResize.currentSize();
+
+    await this.updateStyleConfig();
 
     /** @type {{ prev: PageRender, current: PageRender, next: PageRender }} */
     this.pages = {};
@@ -399,6 +401,7 @@ export default class ReadPage extends Page {
     this.pageInfo = null;
     this.pages = null;
     onResize.removeListener(this.onResize);
+    document.body.removeEventListener('keydown', this.keyboardEvents);
   }
   gotoList() {
     this.router.go('list');
@@ -415,8 +418,7 @@ export default class ReadPage extends Page {
     const container = this.pages.current.container;
     for (let i = 0; i < selection.rangeCount; i++) {
       const range = selection.getRangeAt(i);
-      if (range.startContainer === range.endContainer) continue;
-      if (range.startOffset === range.endOffset) continue;
+      if (range.startContainer === range.endContainer && range.startOffset === range.endOffset) continue;
       if (!container.contains(range.startContainer)) continue;
       return true;
     }
@@ -424,18 +426,23 @@ export default class ReadPage extends Page {
   }
   listenEvents() {
     const listener = new TouchListener(this.pageContainer, { yRadian: Math.PI / 6, minDistanceY: 100 });
-    const wos = f => (...p) => {
-      if (this.isAnythingSelected()) return;
-      f(...p);
+    const wos = (f, g) => (...p) => {
+      if (this.isAnythingSelected()) {
+        g(...p);
+      } else {
+        f(...p);
+      }
     };
-    listener.onMoveX(wos(distance => { this.slidePage('move', distance); }));
-    listener.onCancelX(wos(() => { this.slidePage('cancel'); }));
-    listener.onSlideLeft(wos(() => { this.slidePage('left'); }));
-    listener.onSlideRight(wos(() => { this.slidePage('right'); }));
-    listener.onMoveY(wos(distance => { this.slideBookmarks('move', distance); }));
-    listener.onCancelY(wos(() => { this.slideBookmarks('cancel'); }));
-    listener.onSlideUp(wos(() => { this.slideBookmarks('up'); }));
-    listener.onSlideDown(wos(() => { this.slideBookmarks('down'); }));
+    const cancelX = () => { this.slidePage('cancel'); };
+    listener.onMoveX(wos(distance => { this.slidePage('move', distance); }, cancelX));
+    listener.onCancelX(wos(cancelX, cancelX));
+    listener.onSlideLeft(wos(() => { this.slidePage('left'); }, cancelX));
+    listener.onSlideRight(wos(() => { this.slidePage('right'); }, cancelX));
+    const cancelY = () => { this.slideBookmarks('cancel'); };
+    listener.onMoveY(wos(distance => { this.slideBookmarks('move', distance); }, cancelY));
+    listener.onCancelY(wos(cancelY, cancelY));
+    listener.onSlideUp(wos(() => { this.slideBookmarks('up'); }, cancelY));
+    listener.onSlideDown(wos(() => { this.slideBookmarks('down'); }, cancelY));
     listener.onTouchLeft(wos(() => { this.prevPage(); }));
     listener.onTouchRight(wos(() => { this.nextPage(); }));
     listener.onTouchMiddle(wos(() => { this.showControl(); }));
@@ -460,6 +467,16 @@ export default class ReadPage extends Page {
     this.jumpButton.addEventListener('click', event => {
       this.showJumpPage();
     });
+    document.body.addEventListener('keydown', this.keyboardEvents);
+  }
+  keyboardEvents(event) {
+    if (event.code === 'PageDown') this.nextPage();
+    if (event.code === 'PageUp') this.prevPage();
+    if (event.code === 'Escape') this.gotoList();
+    if (event.code === 'ArrowRight') this.nextPage();
+    if (event.code === 'ArrowLeft') this.prevPage();
+    if (event.code === 'ArrowUp') this.showControl();
+    if (event.code === 'ArrowDown') this.showBookmark();
   }
   /**
    * @param {'move'|'left'|'right'|'cancel'} action
@@ -534,6 +551,21 @@ export default class ReadPage extends Page {
   updateCursor(cursor) {
     this.meta.cursor = cursor;
     file.setMeta(this.meta);
+  }
+  async updateStyleConfig() {
+    const keys = ['light_text', 'light_background', 'dark_text', 'dark_background', 'font_size', 'font_family', 'font_list'];
+    const configs = Object.fromEntries(await Promise.all(keys.map(async key => [key, await config.get(key)])));
+    const font = configs.font_family && Array.isArray(configs.font_list) &&
+      configs.font_list.find(font => font.id === configs.font_family).content || null;
+    this.customFont.textContent = [
+      font ? `@font-face { font-family: "CustomFont"; src: url("${font}"); }` : '',
+    ].join('\n');
+    this.customStyle.textContent = [
+      `.dark-theme .read-container { color: ${configs.dark_text}; background: ${configs.dark_background}; }`,
+      `.light-theme .read-container { color: ${configs.light_text}; background: ${configs.light_background}; }`,
+      `.read-container { font-size: ${configs.font_size}px; }`,
+      font ? `.read-container { font-family: CustomFont; }` : '',
+    ].join('\n');
   }
   updateLayoutConfig() {
     Object.keys(this.layoutConfig).forEach(key => {
