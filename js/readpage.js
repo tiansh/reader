@@ -365,7 +365,7 @@ export default class ReadPage extends Page {
 
     this.layoutConfig = {
       paragraphMargin: 0,
-      pageMarginX: 20,
+      pageMarginX: 15,
       pageMarginY: 20,
       metaFontSize: 12,
       metaLineHeight: 20,

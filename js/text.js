@@ -1,3 +1,5 @@
+import config from "./config.js";
+
 const text = {};
 
 export default text;
@@ -81,3 +83,56 @@ text.generateContent = function (text, template) {
   });
   return content;
 };
+
+const convertLineEnding = function (text) {
+  return text.replace(/\r\n|\r/g, '\n');
+};
+
+const maxEmptyLine = async function (text) {
+  const setting = await config.get('max_empty_lines');
+  if (setting === 'disable') return text;
+  const max = Number(setting);
+  return text.replace(new RegExp('\\n'.repeat(max) + '\\n+'), '\n'.repeat(max));
+};
+
+const chineseConvert = async function (text) {
+  const setting = await config.get('chinese_convert');
+  if (setting === 'disable') return text;
+  const convertFile = setting === 's2t' ? './data/s2t.json' : './data/t2s.json';
+  const table = await fetch(convertFile).then(r => r.json()), root = table[0];
+  let output = '';
+  let state = 0;
+  const hasOwnProperty = Object.prototype.hasOwnProperty;
+  for (let char of text) {
+    while (true) {
+      const current = table[state];
+      const hasMatch = hasOwnProperty.call(current, char);
+      if (!hasMatch && state === 0) {
+        output += char;
+        break;
+      }
+      if (hasMatch) {
+        const [adding, next] = current[char];
+        if (adding) output += adding;
+        state = next;
+        break;
+      }
+      const [adding, next] = current[''];
+      if (adding) output += adding;
+      state = next;
+    }
+  }
+  while (state !== 0) {
+    const current = table[state];
+    const [adding, next] = current[''];
+    if (adding) output += adding;
+    state = next;
+  }
+  return output;
+};
+
+text.preprocess = async function (text) {
+  const processors = [convertLineEnding, maxEmptyLine, chineseConvert];
+  return processors.reduce(async (text, f) => f(await text), text);
+};
+

@@ -303,7 +303,8 @@ a {
   bottom: 0;
   left: 100%;
   padding: 11px 40px 11px 10px;
-  background: red;
+  background: var(--remove-background);
+  color: var(--remove-color);
   line-height: 70px;
   width: 130px;
   text-align: center;
@@ -356,7 +357,7 @@ a {
   text-justify: var(--content-text-justify);
   overflow: hidden;
   overflow-wrap: break-word;
-  line-height: normal;
+  line-height: 1.3  ;
   white-space: pre-wrap;
 }
 
@@ -532,7 +533,8 @@ a {
   left: 100%;
   width: 100px;
   padding: 0 30px 0 10px;
-  background: red;
+  background: var(--remove-background);
+  color: var(--remove-color);
 }
 
 .read-search-list-item .sample-text,
@@ -825,7 +827,8 @@ a {
   position: absolute;
   left: 100%;
   width: 80px;
-  background: red;
+  background: var(--remove-background);
+  color: var(--remove-color);
   top: 0;
   bottom: 0;
   padding: 0 10px 0 0;
@@ -837,3 +840,31 @@ a {
   overflow-y: hidden;
 }
 
+#import_tip {
+  display: none;
+}
+
+#import_tip .tip-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 30px 0;
+  width: 270PX;
+  height: 20px;
+  line-height: 20px;
+  font-size: 20px;
+  background: var(--alert-background);
+  color: var(--alert-color);
+  text-align: center;
+  border-radius: 10px;
+}
+
+#import_tip .tip-cover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--alert-cover-background);
+}

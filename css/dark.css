@@ -36,5 +36,12 @@
   --config-content-active-color: #dcb13d;
   --config-item-background: #1c1c1e;
   --config-border-color: #3d3d3d;
+
+  --remove-background: #eb5545;
+  --remove-color: #fff;
+
+  --alert-cover-background: #0007;
+  --alert-background: #262626;
+  --alert-text: #fff;
 }
 

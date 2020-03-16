@@ -1,4 +1,4 @@
-const version = '20200314';
+const version = '20200316';
 
 const resourceList = [
   './css/icons.css',
@@ -21,6 +21,8 @@ const resourceList = [
   './js/listpage.js',
   './js/configpage.js',
   './js/mainpage.js',
+  './data/s2t.json',
+  './data/t2s.json',
   './manifest.webmanifest',
   './reader.png',
   './reader.svg',
