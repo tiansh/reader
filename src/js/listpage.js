@@ -21,6 +21,7 @@ export default class ListPage extends Page {
     this.fileListItem = document.querySelector('#list_item');
     this.sortContent = document.querySelector('.list-sort-content');
     this.sortMenu = document.querySelector('.list-sort-menu');
+    this.importTip = document.querySelector('#import_tip');
     this.initialListener();
     this.options = { sortBy: 'dateread' };
   }
@@ -38,10 +39,18 @@ export default class ListPage extends Page {
     this.fileButton.addEventListener('change', async event => {
       const files = this.fileButton.files;
       if (files.length === 1) {
-        const item = files.item(0);
-        const content = await text.readFile(item);
-        const title = text.parseFilename(item.name);
-        await file.add({ title, content });
+        try {
+          this.importTip.style.display = 'block';
+          const item = files.item(0);
+          const raw_content = await text.readFile(item);
+          const content = await text.preprocess(raw_content);
+          const raw_title = text.parseFilename(item.name);
+          const title = await text.preprocess(raw_title);
+          await file.add({ title, content });
+          this.importTip.style.display = 'none';
+        } catch (e) {
+          alert('Reading failed.');
+        }
       }
       this.fileButton.value = null;
       this.updateList();

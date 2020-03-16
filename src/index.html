@@ -65,6 +65,10 @@
           <li class="file-item"><div class="file-item-content"><h2 class="file-title"></h2><div class="file-comment"><div class="file-date"></div><div class="file-detail"></div></div></div><div class="file-remove file-action"><span class="icon icon-remove icon-remove-large"></span></div></li>
         </template>
       </ul>
+      <div id="import_tip">
+        <div class="tip-cover"></div>
+        <div class="tip-content">Reading text file...</div>
+      </div>
     </div>
   </div>
   <div class="page" id="read_page">
@@ -200,6 +204,15 @@
             <div class="config-item-title">Font Size</div>
           </div>
         </div>
+        <div class="config-title">Preprocess</div>
+        <div class="config-group">
+          <div class="config-item" data-config="max_empty_lines">
+            <div class="config-item-title">Multiple New Lines</div>
+          </div>
+          <div class="config-item" data-config="chinese_convert">
+            <div class="config-item-title">Chinese Convert</div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="config-page-font">
@@ -224,7 +237,6 @@
       </div>
     </div>
   </div>
-  <div class="them-detect"></div>
   <script src="js/main.js" type="module"></script>
 </body>
 </html>

@@ -14,6 +14,7 @@ Safari 打开，选择“添加到主屏幕”，然后就可以用了。
     * 右上角齿轮可以进设置，不过设置很简陋就是了
     * 设置里面可以传个字体进去，毕竟打包个盗版字体不太好，但是用户自己传的就与我无关了
     * 字体主要看 Safari 支持什么格式，常见的应该是 \*.ttf 格式
+    * 预处理的空行折叠与繁简转换只在导入时执行一次，已导入的文件不受影响
 * 阅读界面：
     * 左滑，点右侧：下一页
     * 右滑，点左侧：上一页
@@ -32,3 +33,5 @@ Android 的话作者没试过，反正与我无关。
 
 * normalize.css v8.0.1 from normalize; MIT License; github.com/necolas/normalize.css
 * icon.svg / icon.woff based on Feather; MIT License; https://github.com/feathericons/feather
+* s2t.json, t2s.json Chinese traditional / simplified translate table based on OpenCC; Apache License 2.0; https://github.com/BYVoid/OpenCC
+

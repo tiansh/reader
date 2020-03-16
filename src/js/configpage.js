@@ -70,6 +70,26 @@ const configOptions = [{
     { value: '26', text: '26' },
   ],
   default: '18',
+}, {
+  name: 'max_empty_lines',
+  type: 'select',
+  select: [
+    { value: 'disable', text: 'Not Limited' },
+    { value: '1', text: 'Up to 1' },
+    { value: '2', text: 'Up to 2' },
+    { value: '3', text: 'Up to 3' },
+    { value: '4', text: 'Up to 4' },
+  ],
+  default: 'disable',
+}, {
+  name: 'chinese_convert',
+  type: 'select',
+  select: [
+    { value: 'disable', text: 'Not Applied' },
+    { value: 's2t', text: 'Simp. to Trad.' },
+    { value: 't2s', text: 'Trad. to Simp.' },
+  ],
+  default: 'disable',
 }];
 
 class FontConfigPage {
