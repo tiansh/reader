@@ -4,10 +4,6 @@
   --content-padding-y: 20px;
 }
 
-* {
-  overscroll-behavior: none;
-}
-
 html, body {
   overflow: hidden;
   position: fixed;
@@ -153,6 +149,8 @@ a {
   height: calc(var(--window-height) - 50px);
   overflow-x: hidden;
   overflow-y: scroll;
+  scrollbar-width: none;
+  overscroll-behavior: none;
   user-select: none;
 }
 
@@ -450,6 +448,8 @@ a {
   left: calc(calc(calc(var(--tab-index) - var(--tab-index-current)) * var(--window-width)) + var(--slide-x));
   overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-width: none;
+  overscroll-behavior: none;
   transition: left ease 0.2s;
 }
 
@@ -483,12 +483,12 @@ a {
   border: 1px solid var(--list-border-color);
   border-width: 1px 0 0;
   height: 40px;
-  padding: 5px 30px;
+  padding: 5px 20px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 40px;
-  font-size: 20px;
+  font-size: 16px;
 }
 
 
@@ -520,7 +520,7 @@ a {
 }
 
 .bookmark-item-content {
-  padding: 15px 30px;
+  padding: 15px 20px;
   height: 45px;
 }
 
@@ -543,6 +543,21 @@ a {
   text-overflow: ellipsis;
 }
 
+.read-search-list-empty,
+.read-bookmark-list-empty,
+.read-content-list-empty {
+  color: var(--list-comment-color);
+  text-align: center;
+  white-space: pre-wrap;
+  position: relative;
+  top: calc(calc(var(--window-height) - 110px) / 2);
+  transform: translateY(-50%);
+  font-size: 16px;
+}
+
+.read-search-list-empty {
+  top: calc(calc(var(--window-height) - 150px) / 2);
+}
 .bookmark-text,
 .bookmark-meta {
   overflow: hidden;
@@ -550,11 +565,11 @@ a {
 }
 
 .bookmark-text {
-  font-size: 20px;
+  font-size: 16px;
 }
 .bookmark-meta {
   margin-top: 6px;
-  font-size: 18px;
+  font-size: 14px;
   line-height: 20px;
   color: var(--list-comment-color);
   display: flex;
@@ -579,8 +594,13 @@ a {
   background: var(--list-active-background);
 }
 
+.read-bookmark-active-item,
+.read-content-active-item {
+  background: var(--list-active-background);
+}
+
 .read-content-list-item h2 {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: normal;
   margin: 0;
 }
@@ -695,6 +715,8 @@ a {
   right: 0;
   overflow-y: scroll;
   overflow-x: hidden;
+  scrollbar-width: none;
+  overscroll-behavior: none;
   background: var(--config-background);
   user-select: none;
 }

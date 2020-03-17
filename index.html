@@ -119,6 +119,9 @@
             <template id="read_content_item_template">
               <li class="read-content-list-item" data-cursor=""><h2></h2></li>
             </template>
+            <template id="read_content_empty_template">
+              <li class="read-content-list-empty"></li>
+            </template>
           </ol>
         </div>
         <div class="bookmark-tab-page scroll" id="read_bookmark_page">
@@ -126,15 +129,24 @@
             <template id="read_bookmark_item_template">
               <li class="read-bookmark-list-item" data-cursor=""><div class="bookmark-item-content"><div class="bookmark-text"></div><div class="bookmark-meta"><div class="bookmark-time"></div><div class="bookmark-content"></div></div></div><div class="bookmark-remove bookmark-action"><span class="icon icon-remove icon-remove-large"></span></div></li>
             </template>
+            <template id="read_bookmark_empty_template">
+              <li class="read-bookmark-list-empty"></li>
+            </template>
           </ol>
         </div>
         <div class="bookmark-tab-page scroll" id="read_search_page">
           <div class="search-box">
-            <form><span class="icon icon-search"></span><input type="search" name="search_box" class="search-input" /></form>
+            <form action="/"><span class="icon icon-search"></span><input type="search" name="search_box" class="search-input" /></form>
           </div>
           <ul id="read_search_list">
             <template id="read_search_item_template">
               <li class="read-search-list-item" data-cursor=""><div class="sample-text"></div></li>
+            </template>
+            <template id="read_search_empty_template">
+              <li class="read-search-list-empty"></li>
+            </template>
+            <template id="read_search_initial_template">
+              <li class="read-search-list-empty"></li>
             </template>
           </ul>
         </div>

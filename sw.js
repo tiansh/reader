@@ -1,4 +1,4 @@
-const version = '20200316';
+const version = '20200318';
 
 const resourceList = [
   './css/icons.css',
