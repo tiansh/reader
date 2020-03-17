@@ -30,23 +30,43 @@ class BookmarkPage {
     this.contentList = document.querySelector('#read_content_list');
     /** @type {HTMLTemplateElement} */
     this.contentItemTemplate = document.querySelector('#read_content_item_template');
+    /** @type {HTMLTemplateElement} */
+    this.contentEmptyTemplate = document.querySelector('#read_content_empty_template');
     this.bookmarkList = document.querySelector('#read_bookmark_list');
     /** @type {HTMLTemplateElement} */
     this.bookmarkItemTemplate = document.querySelector('#read_bookmark_item_template');
+    /** @type {HTMLTemplateElement} */
+    this.bookmarkEmptyTemplate = document.querySelector('#read_bookmark_empty_template');
     this.searchForm = document.querySelector('.search-box form');
     this.searchInput = document.querySelector('.search-input');
     this.searchList = document.querySelector('#read_search_list');
     /** @type {HTMLTemplateElement} */
     this.searchItemTemplate = document.querySelector('#read_search_item_template');
+    /** @type {HTMLTemplateElement} */
+    this.searchEmptyTemplate = document.querySelector('#read_search_empty_template');
+    /** @type {HTMLTemplateElement} */
+    this.searchInitialTemplate = document.querySelector('#read_search_initial_template');
   }
   onFirstActive() {
+    this.dateFormatter = new Intl.DateTimeFormat(navigator.language, {
+      year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric',
+    });
     this.addListener();
     window.requestAnimationFrame(() => {
       this.showContent();
     });
   }
   onActive() {
-    this.updatePages();
+    window.requestAnimationFrame(() => {
+      this.updatePages();
+      this.searchClear();
+    });
+  }
+  onShow() {
+  }
+  updateCursor(cursor) {
+    this.updateContentCursor(cursor);
+    this.updateBookmarkCursor(cursor);
   }
   addListener() {
     this.contentButton.addEventListener('click', () => { this.showContent(); });
@@ -60,6 +80,7 @@ class BookmarkPage {
       if (!li) return;
       const cursor = Number(li.dataset.cursor);
       this.setCursor(cursor);
+      this.page.hideBookmark();
     };
 
     this.contentRefreshButton.addEventListener('click', () => { this.refreshContent(); });
@@ -76,8 +97,6 @@ class BookmarkPage {
   }
   setCursor(cursor) {
     this.page.setCursor(cursor);
-    this.page.jumpPage.updateCursor(cursor);
-    this.page.hideBookmark();
   }
   showTab(button, headerButtons, page) {
     this.currentPage = page;
@@ -126,14 +145,41 @@ class BookmarkPage {
   }
   updateContent() {
     this.contentList.innerHTML = '';
-    if (!this.page.index || !this.page.index.content) return;
-    const items = this.page.index.content.items;
-    items.forEach(item => {
-      /** @type {HTMLLIElement} */
-      const li = this.contentItemTemplate.content.cloneNode(true).querySelector('li');
-      li.dataset.cursor = item.cursor;
-      li.querySelector('h2').textContent = item.title;
+    const hasContent = this.page.index && this.page.index.content;
+    const items = hasContent ? this.page.index.content.items : null;
+    if (hasContent && items.length) {
+      items.forEach(item => {
+        /** @type {HTMLLIElement} */
+        const li = this.contentItemTemplate.content.cloneNode(true).querySelector('li');
+        li.dataset.cursor = item.cursor;
+        li.querySelector('h2').textContent = item.title;
+        this.contentList.appendChild(li);
+      });
+      this.updateContentCursor(this.page.meta.cursor);
+    } else {
+      const li = this.contentEmptyTemplate.content.cloneNode(true).querySelector('li');
       this.contentList.appendChild(li);
+      li.textContent = 'No table of contents yet.\nClick refresh button to build one.';
+    }
+  }
+  getContentByCursor(cursor) {
+    const items = this.page.index.content && this.page.index.content.items || [];
+    let last = items[0];
+    items.every(item => {
+      if (item.cursor > cursor) return false;
+      last = item;
+      return true;
+    });
+    return last || null;
+  }
+  updateContentCursor(cursor) {
+    const contentItem = this.getContentByCursor(cursor);
+    const li = Array.from(this.contentList.querySelectorAll('li[data-cursor]'));
+    li.forEach(i => {
+      if (Number(i.dataset.cursor) === contentItem.cursor) {
+        i.classList.add('read-content-active-item');
+        if (i.offsetParent) i.offsetParent.scrollTop = i.offsetTop;
+      } else i.classList.remove('read-content-active-item');
     });
   }
   addBookmark() {
@@ -142,102 +188,146 @@ class BookmarkPage {
     }
     const cursor = this.page.meta.cursor;
     const bookmarks = this.page.index.bookmarks;
-    const next = bookmarks.find(b => b.cursor > cursor);
-    const title = this.page.content.substr(cursor, 200).trim().split('\n')[0].slice(0, 50);
-    const bookmark = { cursor, createTime: new Date(), title };
-    if (!next) bookmarks.push(bookmark);
-    else bookmarks.splice(next, 0, bookmark);
-    file.setIndex(this.page.index);
+    const found = bookmarks.find(b => Number(b.cursor) === cursor);
+    if (!found) {
+      const next = bookmarks.findIndex(b => Number(b.cursor) > cursor);
+      const title = this.page.content.substr(cursor, 200).trim().split('\n')[0].slice(0, 50);
+      const bookmark = { cursor, createTime: new Date(), title };
+      if (next === -1) bookmarks.push(bookmark);
+      else bookmarks.splice(next, 0, bookmark);
+      file.setIndex(this.page.index);
+    }
     this.updateBookmarks();
+  }
+  updateBookmarkItem(bookmark) {
+    /** @type {HTMLLIElement} */
+    const li = this.bookmarkItemTemplate.content.cloneNode(true).querySelector('li');
+    li.dataset.cursor = bookmark.cursor;
+    li.querySelector('.bookmark-text').textContent = bookmark.title;
+    li.querySelector('.bookmark-time').textContent = this.dateFormatter.format(bookmark.createTime);
+    const contentItem = this.getContentByCursor(bookmark.cursor);
+    if (contentItem) {
+      li.querySelector('.bookmark-content').textContent = contentItem.title;
+    }
+    let isShowMove = false;
+    const showDelete = (action, offset) => {
+      if (action === 'move') {
+        li.classList.add('slide-bookmark-remove');
+        this.bookmarkPage.classList.add('slide-bookmark-remove');
+        const base = isShowMove ? offset - 120 : offset;
+        const move = base > 0 ? 0 : base < -120 ? Math.max(base / 2 - 60, -130) : base;
+        li.style.left = move + 'px';
+      } else {
+        li.classList.remove('slide-bookmark-remove');
+        this.bookmarkPage.classList.remove('slide-bookmark-remove');
+        window.requestAnimationFrame(() => {
+          if (action === 'show') isShowMove = true;
+          if (action === 'hide') isShowMove = false;
+          li.style.left = isShowMove ? '-120px' : 0;
+        });
+      }
+    };
+    const content = li.querySelector('.bookmark-item-content');
+    const listener = new TouchListener(content, { clickParts: 1 });
+    listener.onMoveX(offset => { showDelete('move', offset); });
+    listener.onCancelX(() => { showDelete('cancel'); });
+    listener.onSlideLeft(() => { showDelete('show'); });
+    listener.onSlideRight(() => { showDelete('hide'); });
+    listener.onTouch(() => {
+      this.setCursor(bookmark.cursor);
+      this.page.hideBookmark();
+    });
+    const remove = li.querySelector('.bookmark-remove');
+    remove.addEventListener('click', () => {
+      li.classList.add('bookmark-item-remove');
+      const bookmarks = this.page.index.bookmarks;
+      const pos = bookmarks.indexOf(bookmark);
+      if (pos !== -1) bookmarks.splice(pos, 1);
+      file.setIndex(this.page.index);
+      setTimeout(() => {
+        li.remove();
+      }, 100);
+    });
+    this.bookmarkList.appendChild(li);
   }
   updateBookmarks() {
     this.bookmarkList.innerHTML = '';
-    if (!this.page.index || !this.page.index.bookmarks) return;
-    const bookmarks = this.page.index.bookmarks;
-    const items = this.page.index.content && this.page.index.content.items || [];
-    let contentIndex = 0;
-    const formatter = new Intl.DateTimeFormat(navigator.language, {
-      year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric',
-    });
-    bookmarks.forEach(bookmark => {
-      /** @type {HTMLLIElement} */
-      const li = this.bookmarkItemTemplate.content.cloneNode(true).querySelector('li');
-      li.dataset.cursor = bookmark.cursor;
-      li.querySelector('.bookmark-text').textContent = bookmark.title;
-      li.querySelector('.bookmark-time').textContent = formatter.format(bookmark.createTime);
-      if (items.length) {
-        while (items[contentIndex + 1] && items[contentIndex + 1].cursor <= bookmark.cursor) contentIndex++;
-        li.querySelector('.bookmark-content').textContent = items[contentIndex].title;
-      }
-      let isShowMove = false;
-      const showDelete = (action, offset) => {
-        if (action === 'move') {
-          li.classList.add('slide-bookmark-remove');
-          this.bookmarkPage.classList.add('slide-bookmark-remove');
-          const base = isShowMove ? offset - 120 : offset;
-          const move = base > 0 ? 0 : base < -120 ? Math.max(base / 2 - 60, -130) : base;
-          li.style.left = move + 'px';
-        } else {
-          li.classList.remove('slide-bookmark-remove');
-          this.bookmarkPage.classList.remove('slide-bookmark-remove');
-          window.requestAnimationFrame(() => {
-            if (action === 'show') isShowMove = true;
-            if (action === 'hide') isShowMove = false;
-            li.style.left = isShowMove ? '-120px' : 0;
-          });
-        }
-      };
-      const content = li.querySelector('.bookmark-item-content');
-      const listener = new TouchListener(content, { clickParts: 1 });
-      listener.onMoveX(offset => { showDelete('move', offset); });
-      listener.onCancelX(() => { showDelete('cancel'); });
-      listener.onSlideLeft(() => { showDelete('show'); });
-      listener.onSlideRight(() => { showDelete('hide'); });
-      listener.onTouch(() => {
-        this.setCursor(bookmark.cursor);
-        this.page.jumpPage.updateCursor(bookmark.cursor);
+    const hasBookmarks = this.page.index && this.page.index.bookmarks;
+    const bookmarks = hasBookmarks ? this.page.index.bookmarks : null;
+    if (hasBookmarks && bookmarks.length) {
+      bookmarks.forEach(bookmark => {
+        this.updateBookmarkItem(bookmark);
       });
-      const remove = li.querySelector('.bookmark-remove');
-      remove.addEventListener('click', () => {
-        li.classList.add('bookmark-item-remove');
-        const pos = bookmarks.indexOf(bookmark);
-        if (pos !== -1) bookmarks.splice(pos, 1);
-        file.setIndex(this.page.index);
-        setTimeout(() => {
-          li.remove();
-        }, 100);
-      });
+      this.updateBookmarkCursor(this.page.meta.cursor);
+    } else {
+      const li = this.bookmarkEmptyTemplate.content.cloneNode(true).querySelector('li');
       this.bookmarkList.appendChild(li);
+      li.textContent = 'No bookmarks yet.\nClick add bookmark button to add one.';
+    }
+  }
+  updateBookmarkCursor(cursor) {
+    const li = Array.from(this.bookmarkList.querySelectorAll('li[data-cursor]'));
+    let currentLi = null;
+    li.forEach(i => {
+      const currentCursor = Number(i.dataset.cursor);
+      if (currentCursor >= cursor && !currentLi) {
+        currentLi = i;
+        if (currentCursor === cursor) {
+          i.classList.add('read-bookmark-active-item');
+          if (i.offsetParent) i.offsetParent.scrollTop = i.offsetTop - (this.contentList.clientHeight - i.clientHeight) / 2;
+          return;
+        } else {
+          if (i.offsetParent) i.offsetParent.scrollTop = i.offsetTop - this.contentList.clientHeight / 2;
+        }
+      }
+      i.classList.remove('read-bookmark-active-item');
     });
   }
-  searchClear() {
+  searchShowInitial() {
     this.searchList.innerHTML = '';
+    const li = this.searchInitialTemplate.content.cloneNode(true).querySelector('li');
+    this.searchList.appendChild(li);
+    li.textContent = 'Input some words so you can find them in text...';
+    li.addEventListener('click', () => { this.searchInput.focus(); });
+    this.searchInput.placeholder = 'Find what';
+  }
+  searchClear() {
     this.searchInput.value = '';
+    this.searchShowInitial();
   }
   searchWords(word) {
     this.searchList.innerHTML = '';
     if (word === '') return;
+    const reg = new RegExp('(' + word.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ')', 'i');
     const lines = this.page.content.split('\n');
+    let searchHit = false;
     let cursor = 0;
     lines.forEach(line => {
-      if (line.includes(word)) {
-        const index = line.indexOf(word);
+      if (reg.test(line)) {
+        const index = line.match(reg).index;
         const text = line.substr(Math.max(index - 10, 0), 200).trim().slice(0, 50);
 
         /** @type {HTMLLIElement} */
         const li = this.searchItemTemplate.content.cloneNode(true).querySelector('li');
         li.dataset.cursor = cursor;
         const sample = li.querySelector('.sample-text');
-        text.split(word).forEach((part, index) => {
-          if (index !== 0) {
-            sample.appendChild(document.createElement('mark')).textContent = word;
+        text.split(reg).forEach((part, index) => {
+          if (index % 2 === 1) {
+            sample.appendChild(document.createElement('mark')).textContent = part;
+          } else {
+            sample.appendChild(document.createTextNode(part));
           }
-          sample.appendChild(document.createTextNode(part));
         });
         this.searchList.appendChild(li);
+        searchHit = true;
       }
       cursor += line.length + 1;
     });
+    if (!searchHit) {
+      const li = this.searchEmptyTemplate.content.cloneNode(true).querySelector('li');
+      this.searchList.appendChild(li);
+      li.textContent = `Cannot find "${word}"`;
+    }
   }
 }
 
@@ -359,6 +449,8 @@ export default class ReadPage extends Page {
       return;
     }
 
+    await file.setMeta(this.meta);
+
     this.pageContainer = this.containerElement.appendChild(document.createElement('div'));
     this.pageContainer.classList.add('read-pages');
     this.listenEvents();
@@ -378,8 +470,10 @@ export default class ReadPage extends Page {
     /** @type {{ prev: PageRender, current: PageRender, next: PageRender }} */
     this.pages = {};
     window.requestAnimationFrame(() => {
-      this.updatePages();
+      this.hideBookmark();
+      this.hideJumpPage();
       this.hideControl();
+      this.updatePages();
     });
 
     onResize.addListener(this.onResize);
@@ -509,7 +603,6 @@ export default class ReadPage extends Page {
     this.pages.next = null;
     this.updatePages();
     this.updateCursor(this.pages.current.cursor);
-    this.jumpPage.updateCursor(this.pages.current.cursor);
   }
   prevPage() {
     if (this.pages.isFirst) return;
@@ -519,7 +612,6 @@ export default class ReadPage extends Page {
     this.pages.prev = null;
     this.updatePages();
     this.updateCursor(this.pages.current.cursor);
-    this.jumpPage.updateCursor(this.pages.current.cursor);
   }
   /**
    * @param {'move'|'up'|'down'|'cancel'} action
@@ -535,6 +627,7 @@ export default class ReadPage extends Page {
       if (action === 'down') {
         window.requestAnimationFrame(() => {
           this.bookmarkElement.style.bottom = '0';
+          this.bookmarkPage.onShow();
         });
       } else {
         this.bookmarkElement.style.bottom = window.innerHeight + 'px';
@@ -549,6 +642,11 @@ export default class ReadPage extends Page {
     this.bookmarkElement.style.removeProperty('bottom');
   }
   updateCursor(cursor) {
+    this.writeCursor(cursor);
+    this.jumpPage.updateCursor(cursor);
+    this.bookmarkPage.updateCursor(cursor);
+  }
+  writeCursor(cursor) {
     this.meta.cursor = cursor;
     file.setMeta(this.meta);
   }
