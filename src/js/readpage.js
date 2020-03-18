@@ -4,6 +4,7 @@ import file from './file.js';
 import onResize from './onresize.js';
 import TouchListener from './touch.js';
 import config from './config.js';
+import i18n from './i18n.js';
 
 /** @typedef {{ cursor: number, nextCursor: number, container: HTMLElement }} PageRender */
 
@@ -46,6 +47,8 @@ class BookmarkPage {
     this.searchEmptyTemplate = document.querySelector('#read_search_empty_template');
     /** @type {HTMLTemplateElement} */
     this.searchInitialTemplate = document.querySelector('#read_search_initial_template');
+    /** @type {HTMLTemplateElement} */
+    this.searchTooManyTemplate = document.querySelector('#read_search_too_many_template');
   }
   onFirstActive() {
     this.dateFormatter = new Intl.DateTimeFormat(navigator.language, {
@@ -132,7 +135,7 @@ class BookmarkPage {
       this.page.index.content = { template: '', items: [] };
     }
     const content = this.page.index.content;
-    content.template = prompt('Content Template', content.template) || '';
+    content.template = prompt(i18n.getMessage('readContentTemplate'), content.template) || '';
     if (content.template) {
       content.items = text.generateContent(this.page.content, content.template);
       content.items.unshift({ title: this.page.meta.title, cursor: 0 });
@@ -159,7 +162,7 @@ class BookmarkPage {
     } else {
       const li = this.contentEmptyTemplate.content.cloneNode(true).querySelector('li');
       this.contentList.appendChild(li);
-      li.textContent = 'No table of contents yet.\nClick refresh button to build one.';
+      li.textContent = i18n.getMessage('readContentEmpty');
     }
   }
   getContentByCursor(cursor) {
@@ -262,7 +265,7 @@ class BookmarkPage {
     } else {
       const li = this.bookmarkEmptyTemplate.content.cloneNode(true).querySelector('li');
       this.bookmarkList.appendChild(li);
-      li.textContent = 'No bookmarks yet.\nClick add bookmark button to add one.';
+      li.textContent = i18n.getMessage('readBookmarkEmpty');
     }
   }
   updateBookmarkCursor(cursor) {
@@ -287,9 +290,9 @@ class BookmarkPage {
     this.searchList.innerHTML = '';
     const li = this.searchInitialTemplate.content.cloneNode(true).querySelector('li');
     this.searchList.appendChild(li);
-    li.textContent = 'Input some words so you can find them in text...';
+    li.textContent = i18n.getMessage('readSearchInitial');
     li.addEventListener('click', () => { this.searchInput.focus(); });
-    this.searchInput.placeholder = 'Find what';
+    this.searchInput.placeholder = i18n.getMessage('readSearchPlaceholder');
   }
   searchClear() {
     this.searchInput.value = '';
@@ -299,34 +302,49 @@ class BookmarkPage {
     this.searchList.innerHTML = '';
     if (word === '') return;
     const reg = new RegExp('(' + word.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ')', 'i');
-    const lines = this.page.content.split('\n');
-    let searchHit = false;
+    const lines = this.page.content.split('\n'), linum = lines.length;
+    let searchHit = 0;
     let cursor = 0;
-    lines.forEach(line => {
-      if (reg.test(line)) {
-        const index = line.match(reg).index;
-        const text = line.substr(Math.max(index - 10, 0), 200).trim().slice(0, 50);
+    const genSearchResult = start => {
+      for (let i = start; i < linum; i++) {
+        const line = lines[i];
+        if (reg.test(line)) {
+          const index = line.match(reg).index;
+          const text = line.substr(Math.max(index - 10, 0), 200).trim().slice(0, 50);
 
-        /** @type {HTMLLIElement} */
-        const li = this.searchItemTemplate.content.cloneNode(true).querySelector('li');
-        li.dataset.cursor = cursor;
-        const sample = li.querySelector('.sample-text');
-        text.split(reg).forEach((part, index) => {
-          if (index % 2 === 1) {
-            sample.appendChild(document.createElement('mark')).textContent = part;
-          } else {
-            sample.appendChild(document.createTextNode(part));
+          /** @type {HTMLLIElement} */
+          const li = this.searchItemTemplate.content.cloneNode(true).querySelector('li');
+          li.dataset.cursor = cursor;
+          const sample = li.querySelector('.sample-text');
+          text.split(reg).forEach((part, index) => {
+            if (index % 2 === 1) {
+              sample.appendChild(document.createElement('mark')).textContent = part;
+            } else {
+              sample.appendChild(document.createTextNode(part));
+            }
+          });
+          this.searchList.appendChild(li);
+          searchHit++
+          if (searchHit % 1000 === 0) {
+            const li = this.searchTooManyTemplate.content.cloneNode(true).querySelector('li');
+            li.textContent = i18n.getMessage('readSearchTooMany', searchHit);
+            li.addEventListener('click', () => {
+              this.searchList.removeChild(li);
+              genSearchResult(i + 1);
+            });
+            this.searchList.appendChild(li);
+            cursor += line.length + 1;
+            return;
           }
-        });
-        this.searchList.appendChild(li);
-        searchHit = true;
+        }
+        cursor += line.length + 1;
       }
-      cursor += line.length + 1;
-    });
+    };
+    genSearchResult(0);
     if (!searchHit) {
       const li = this.searchEmptyTemplate.content.cloneNode(true).querySelector('li');
       this.searchList.appendChild(li);
-      li.textContent = `Cannot find "${word}"`;
+      li.textContent = i18n.getMessage('readSearchEmpty', word);
     }
   }
 }
@@ -564,13 +582,25 @@ export default class ReadPage extends Page {
     document.body.addEventListener('keydown', this.keyboardEvents);
   }
   keyboardEvents(event) {
-    if (event.code === 'PageDown') this.nextPage();
-    if (event.code === 'PageUp') this.prevPage();
-    if (event.code === 'Escape') this.gotoList();
-    if (event.code === 'ArrowRight') this.nextPage();
-    if (event.code === 'ArrowLeft') this.prevPage();
-    if (event.code === 'ArrowUp') this.showControl();
-    if (event.code === 'ArrowDown') this.showBookmark();
+    if (event.code === 'Escape') {
+      if (this.bookmarkShown) this.hideBookmark();
+      else if (this.controlShown) this.hideControl();
+      else this.gotoList();
+    }
+    if (event.code === 'PageDown' || event.code === 'ArrowRight') {
+      if (!this.bookmarkShown && !this.controlShown) this.nextPage();
+    }
+    if (event.code === 'PageUp' || event.code === 'ArrowLeft') {
+      if (!this.bookmarkShown && !this.controlShown) this.prevPage();
+    }
+    if (event.code === 'ArrowUp') {
+      if (this.bookmarkShown) this.hideBookmark();
+      else this.showControl();
+    }
+    if (event.code === 'ArrowDown') {
+      if (this.controlShown) this.hideControl(); 
+      else this.showBookmark();
+    }
   }
   /**
    * @param {'move'|'left'|'right'|'cancel'} action
@@ -636,9 +666,11 @@ export default class ReadPage extends Page {
     }
   }
   showBookmark() {
+    this.bookmarkShown = true;
     this.slideBookmarks('down');
   }
   hideBookmark() {
+    this.bookmarkShown = false;
     this.bookmarkElement.style.removeProperty('bottom');
   }
   updateCursor(cursor) {
@@ -857,6 +889,7 @@ export default class ReadPage extends Page {
     return lastPrev;
   }
   showControl() {
+    this.controlShown = true;
     window.requestAnimationFrame(() => {
       this.controlElement.style.display = 'block';
       window.requestAnimationFrame(() => {
@@ -865,6 +898,7 @@ export default class ReadPage extends Page {
     });
   }
   hideControl() {
+    this.controlShown = false;
     this.controlElement.style.opacity = '0';
     setTimeout(() => {
       this.controlElement.style.opacity = '0';

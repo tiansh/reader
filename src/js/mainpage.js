@@ -1,5 +1,6 @@
 import onResize from './onresize.js';
 import config from './config.js';
+import i18n from './i18n.js';
 
 onResize.addListener(([width, height]) => {
   const html = document.documentElement;
@@ -16,6 +17,10 @@ document.body.addEventListener('touchmove', function (event) {
   }
   event.preventDefault();
 }, { passive: false, useCapture: false });
+
+Array.from(document.querySelectorAll('[data-i18n]')).forEach(element => {
+  element.textContent = i18n.getMessage(element.dataset.i18n, ...element.children);
+});
 
 ; (function () {
   let currentTheme = 'dark';
@@ -40,3 +45,4 @@ document.body.addEventListener('touchmove', function (event) {
   config.addListener('theme', updateConfigTheme);
   config.get('theme').then(updateConfigTheme);
 }());
+

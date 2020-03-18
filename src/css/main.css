@@ -633,6 +633,10 @@ a {
   margin: 0;
 }
 
+.read-search-list-too-many {
+  color: var(--list-comment-color);
+}
+
 .sample-text mark {
   color: var(--search-highlight-color);
   background: none;

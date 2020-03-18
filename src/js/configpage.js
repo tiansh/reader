@@ -2,6 +2,7 @@ import Page from './page.js';
 import config from './config.js';
 import onResize from './onresize.js';
 import TouchListener from './touch.js';
+import i18n from './i18n.js';
 
 /**
  * @typedef {Object} SelectConfigOption
@@ -29,9 +30,9 @@ const configOptions = [{
   name: 'theme',
   type: 'select',
   select: [
-    { value: 'auto', text: 'Auto' },
-    { value: 'light', text: 'Light' },
-    { value: 'dark', text: 'Dark' },
+    { value: 'auto', text: i18n.getMessage('configThemeAuto') },
+    { value: 'light', text: i18n.getMessage('configThemeLight') },
+    { value: 'dark', text: i18n.getMessage('configThemeDark') },
   ],
   default: 'auto',
 }, {
@@ -57,37 +58,29 @@ const configOptions = [{
 }, {
   name: 'font_size',
   type: 'select',
-  select: [
-    { value: '10', text: '10' },
-    { value: '11', text: '11' },
-    { value: '12', text: '12' },
-    { value: '14', text: '14' },
-    { value: '16', text: '16' },
-    { value: '18', text: '18' },
-    { value: '20', text: '20' },
-    { value: '22', text: '22' },
-    { value: '24', text: '24' },
-    { value: '26', text: '26' },
-  ],
+  select: [10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28].map(n => ({
+    value: String(n),
+    text: i18n.getMessage('configTextFontSizeNum', n),
+  })),
   default: '18',
 }, {
   name: 'max_empty_lines',
   type: 'select',
   select: [
-    { value: 'disable', text: 'Not Limited' },
-    { value: '1', text: 'Up to 1' },
-    { value: '2', text: 'Up to 2' },
-    { value: '3', text: 'Up to 3' },
-    { value: '4', text: 'Up to 4' },
+    { value: 'disable', text: i18n.getMessage('configPreprocessMultipleNewLineDisable') },
+    ...[1, 2, 3, 4].map(n => ({
+      value: String(n),
+      text: i18n.getMessage('configPreprocessMultipleNewLineNum', n),
+    })),
   ],
   default: 'disable',
 }, {
   name: 'chinese_convert',
   type: 'select',
   select: [
-    { value: 'disable', text: 'Not Applied' },
-    { value: 's2t', text: 'Simp. to Trad.' },
-    { value: 't2s', text: 'Trad. to Simp.' },
+    { value: 'disable', text: i18n.getMessage('configPreprocessChineseConvertDisabled') },
+    { value: 's2t', text: i18n.getMessage('configPreprocessChineseConvertS2T') },
+    { value: 't2s', text: i18n.getMessage('configPreprocessChineseConvertT2S') },
   ],
   default: 'disable',
 }];
@@ -356,7 +349,7 @@ export default class ConfigPage extends Page {
     if (item.type === 'select') {
       const select = container.querySelector('select');
       select.value = value;
-      const text = container.querySelector('span');
+      const text = container.querySelector('select + span');
       text.textContent = item.select.find(i => i.value === value).text;
     } else if (item.type === 'color') {
       const color = container.querySelector('input');

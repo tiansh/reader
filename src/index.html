@@ -43,19 +43,19 @@
     <div id="list" class="file-list-container scroll">
       <div class="list-action">
         <div class="list-sort">
-          <span class="list-sort-title">Sort</span>
+          <span class="list-sort-title"><span data-i18n="listSortTitle"></span></span>
           <span class="list-sort-content"><span></span><span class="icon icon-detail" title="Detail"></span></span>
 
         </div>
         <div class="list-sort-menu">
           <div class="list-sort-options screen-option">
             <div class="screen-option-group">
-              <div class="screen-option-item" data-option="dateread" data-option-default>Date Read</div>
-              <div class="screen-option-item" data-option="dateadd">Date Add</div>
-              <div class="screen-option-item" data-option="title">Title</div>
+              <div class="screen-option-item" data-option="dateread" data-option-default><span data-i18n="listSortByDateRead"></span></div>
+              <div class="screen-option-item" data-option="dateadd"><span data-i18n="listSortByDateAdd"></span></div>
+              <div class="screen-option-item" data-option="title"><span data-i18n="listSortByTitle"></span></div>
             </div>
             <div class="screen-option-group">
-              <div class="screen-option-item">Cancel</div>
+              <div class="screen-option-item"><span data-i18n="listSortCancel"></span></div>
             </div>
           </div>
         </div>
@@ -67,7 +67,7 @@
       </ul>
       <div id="import_tip">
         <div class="tip-cover"></div>
-        <div class="tip-content">Reading text file...</div>
+        <div class="tip-content"><span data-i18n="listImportTip"></span></div>
       </div>
     </div>
   </div>
@@ -148,6 +148,9 @@
             <template id="read_search_initial_template">
               <li class="read-search-list-empty"></li>
             </template>
+            <template id="read_search_too_many_template">
+              <li class="read-search-list-item read-search-list-too-many"></li>
+            </template>
           </ul>
         </div>
       </div>
@@ -182,47 +185,47 @@
         </div>
       </div>
       <div class="config-page scroll">
-        <div class="config-title">Theme</div>
+        <div class="config-title"><span data-i18n="configThemeGroupTitle"></span></div>
         <div class="config-group">
           <div class="config-item" data-config="theme">
-            <div class="config-item-title">Theme</div>
+            <div class="config-item-title"><span data-i18n="configThemeTitle"></span></div>
           </div>
         </div>
-        <div class="config-title">Dark Theme</div>
+        <div class="config-title"><span data-i18n="configDarkThemeGroupTitle"></span></div>
         <div class="config-group">
           <div class="config-item" data-config="dark_text">
-            <div class="config-item-title">Text Color</div>
+            <div class="config-item-title"><span data-i18n="configDarkThemeColorTitle"></span></div>
           </div>
           <div class="config-item" data-config="dark_background">
-            <div class="config-item-title">Background Color</div>
+            <div class="config-item-title"><span data-i18n="configDarkThemeBackgroundTitle"></span></div>
           </div>
         </div>
-        <div class="config-title">Light Theme</div>
+        <div class="config-title"><span data-i18n="configLightThemeGroupTitle"></span></div>
         <div class="config-group">
           <div class="config-item" data-config="light_text">
-            <div class="config-item-title">Text Color</div>
+            <div class="config-item-title"><span data-i18n="configLightThemeColorTitle"></span></div>
           </div>
           <div class="config-item" data-config="light_background">
-            <div class="config-item-title">Background Color</div>
+            <div class="config-item-title"><span data-i18n="configLightThemeBackgroundTitle"></span></div>
           </div>
         </div>
-        <div class="config-title">Reader Text</div>
+        <div class="config-title"><span data-i18n="configTextGroupTitle"></span></div>
         <div class="config-group">
           <div class="config-item" data-config="font_family">
-            <div class="config-item-title">Font Family</div>
+            <div class="config-item-title"><span data-i18n="configTextFontFamily"></span></div>
             <div class="config-detail"><span class="icon icon-open"></span></div>
           </div>
           <div class="config-item" data-config="font_size">
-            <div class="config-item-title">Font Size</div>
+            <div class="config-item-title"><span data-i18n="configTextFontSize"></span></div>
           </div>
         </div>
-        <div class="config-title">Preprocess</div>
+        <div class="config-title"><span data-i18n="configPreprocessGroupTitle"></span></div>
         <div class="config-group">
           <div class="config-item" data-config="max_empty_lines">
-            <div class="config-item-title">Multiple New Lines</div>
+            <div class="config-item-title"><span data-i18n="configPreprocessMultipleNewLine"></span></div>
           </div>
           <div class="config-item" data-config="chinese_convert">
-            <div class="config-item-title">Chinese Convert</div>
+            <div class="config-item-title"><span data-i18n="configPreprocessChineseConvert"></span></div>
           </div>
         </div>
       </div>
@@ -238,13 +241,13 @@
       <div class="config-page scroll config-page-font">
         <div class="config-group">
           <div class="config-item">
-            <button id="select_font_button" class="config-item-title">Select Font File</button>
+            <button id="select_font_button" class="config-item-title"><span data-i18n="configTextFontFamilyUpload"></span></button>
             <input id="select_font_file" type="file" />
           </div>
         </div>
         <div class="config-group config-check-group config-font-list">
           <template id="font_item_template"><div class="config-item"><span class="icon icon-checkmark"></span><div class="config-item-title"></div><div class="font-remove font-action"><span class="icon icon-remove icon-remove-large"></span></div></div></template>
-          <div class="config-item" data-font-id="0"><span class="icon icon-checkmark"></span><div class="config-item-title">Default</div></div>
+          <div class="config-item" data-font-id="0"><span class="icon icon-checkmark"></span><div class="config-item-title"><span data-i18n="configTextFontFamilyDefault"></span></div></div>
         </div>
       </div>
     </div>
