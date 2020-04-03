@@ -63,7 +63,8 @@ text.generateContent = function (text, template) {
       if (c === ' ') return '\\s+';
       if (c === '*') return '.*';
       if (c === '?') return '.';
-      return c.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+      return c.replace(/[-[\]{}()*+?.,\\^$|#\s]/g,
+        c => `\\u${c.charCodeAt().toString(16).padStart(4, 0)}`);
     });
     matchReg = new RegExp(`^\\s*(?:${escape})`, 'u');
   }
