@@ -2,6 +2,7 @@ import Page from './page.js';
 import text from './text.js';
 import file from './file.js';
 import TouchListener from './touch.js';
+import i18n from './i18n.js';
 
 export default class ListPage extends Page {
   constructor() {
@@ -9,7 +10,7 @@ export default class ListPage extends Page {
   }
   matchUrl(url) { return url === '/'; }
   getUrl(param) { return '/'; }
-  async onFirstActive() {
+  async onFirstActivate() {
     this.addButton = document.querySelector('#add');
     /** @type {HTMLInputElement} */
     this.fileButton = document.querySelector('#file');
@@ -25,11 +26,11 @@ export default class ListPage extends Page {
     this.initialListener();
     this.options = { sortBy: 'dateread' };
   }
-  async onActive() {
+  async onActivate() {
     this.updateSort();
     await this.updateList();
   }
-  async onDeactive() {
+  async onInactivate() {
     this.clearList();
   }
   initialListener() {
@@ -49,7 +50,7 @@ export default class ListPage extends Page {
           await file.add({ title, content });
           this.importTip.style.display = 'none';
         } catch (e) {
-          alert('Reading failed.');
+          alert(i18n.getMessage('listImportFail'));
         }
       }
       this.fileButton.value = null;

@@ -2,7 +2,7 @@ export default class Page {
   constructor(/** @type {HTMLElement} */element) {
     this.element = element;
     this.initialized = false;
-    this.actived = false;
+    this.active = false;
     /** @type {import('router.js').default} */
     this.router = null;
   }
@@ -15,30 +15,30 @@ export default class Page {
   hide() {
     this.element.classList.remove('active-page');
   }
-  async onFirstActive() { }
-  async onActive() { }
+  async onFirstActivate() { }
+  async onActivate() { }
   async onUpdate() { }
-  async onDeactive() { }
-  async active(param) {
+  async onInactivate() { }
+  async activate(param) {
     if (!this.initialized) {
       this.initialized = true;
-      await this.onFirstActive();
+      await this.onFirstActivate();
     }
-    if (this.actived) {
+    if (this.active) {
       await this.onUpdate(param);
     } else {
-      await this.onActive(param);
-      this.actived = true;
+      await this.onActivate(param);
+      this.active = true;
       this.show();
     }
   }
-  async deactive() {
+  async inactivate() {
     this.hide();
-    await this.onDeactive();
-    this.actived = false;
+    await this.onInactivate();
+    this.active = false;
   }
-  isActived() {
-    return this.actived;
+  isActive() {
+    return this.active;
   }
   matchUrl(url) { return false; }
   getUrl(param) { return '/'; }

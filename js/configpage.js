@@ -2,6 +2,8 @@ import Page from './page.js';
 import config from './config.js';
 import onResize from './onresize.js';
 import TouchListener from './touch.js';
+import speech from './speech.js';
+import i18n from './i18n.js';
 
 /**
  * @typedef {Object} SelectConfigOption
@@ -29,9 +31,9 @@ const configOptions = [{
   name: 'theme',
   type: 'select',
   select: [
-    { value: 'auto', text: 'Auto' },
-    { value: 'light', text: 'Light' },
-    { value: 'dark', text: 'Dark' },
+    { value: 'auto', text: i18n.getMessage('configThemeAuto') },
+    { value: 'light', text: i18n.getMessage('configThemeLight') },
+    { value: 'dark', text: i18n.getMessage('configThemeDark') },
   ],
   default: 'auto',
 }, {
@@ -57,39 +59,51 @@ const configOptions = [{
 }, {
   name: 'font_size',
   type: 'select',
-  select: [
-    { value: '10', text: '10' },
-    { value: '11', text: '11' },
-    { value: '12', text: '12' },
-    { value: '14', text: '14' },
-    { value: '16', text: '16' },
-    { value: '18', text: '18' },
-    { value: '20', text: '20' },
-    { value: '22', text: '22' },
-    { value: '24', text: '24' },
-    { value: '26', text: '26' },
-  ],
+  select: [10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28].map(n => ({
+    value: String(n),
+    text: i18n.getMessage('configTextFontSizeNum', n),
+  })),
   default: '18',
 }, {
   name: 'max_empty_lines',
   type: 'select',
   select: [
-    { value: 'disable', text: 'Not Limited' },
-    { value: '1', text: 'Up to 1' },
-    { value: '2', text: 'Up to 2' },
-    { value: '3', text: 'Up to 3' },
-    { value: '4', text: 'Up to 4' },
+    { value: 'disable', text: i18n.getMessage('configPreprocessMultipleNewLineDisable') },
+    ...[1, 2, 3, 4].map(n => ({
+      value: String(n),
+      text: i18n.getMessage('configPreprocessMultipleNewLineNum', n),
+    })),
   ],
   default: 'disable',
 }, {
   name: 'chinese_convert',
   type: 'select',
   select: [
-    { value: 'disable', text: 'Not Applied' },
-    { value: 's2t', text: 'Simp. to Trad.' },
-    { value: 't2s', text: 'Trad. to Simp.' },
+    { value: 'disable', text: i18n.getMessage('configPreprocessChineseConvertDisabled') },
+    { value: 's2t', text: i18n.getMessage('configPreprocessChineseConvertS2T') },
+    { value: 't2s', text: i18n.getMessage('configPreprocessChineseConvertT2S') },
   ],
   default: 'disable',
+}, {
+  name: 'speech_voice',
+  type: 'voice',
+  default: null,
+}, {
+  name: 'speech_pitch',
+  type: 'select',
+  select: [...Array(21)].map((_, i) => i / 10).map(pitch => ({
+    value: String(pitch),
+    text: i18n.getMessage('configSpeechPitchNum', pitch),
+  })),
+  default: '1',
+}, {
+  name: 'speech_rate',
+  type: 'select',
+  select: [...Array(16)].map((_, i) => i / 10 + 0.5).map(rate => ({
+    value: String(rate),
+    text: i18n.getMessage('configSpeechRateNum', rate),
+  })),
+  default: '1',
 }];
 
 class FontConfigPage {
@@ -111,13 +125,13 @@ class FontConfigPage {
 
     this.page = configPage;
   }
-  onFirstActive() {
+  onFirstActivate() {
     this.addListener();
   }
-  async onActive() {
+  async onActivate() {
     await this.updateList();
   }
-  onDeactive() {
+  onInactivate() {
 
   }
   addListener() {
@@ -157,16 +171,16 @@ class FontConfigPage {
     const pos = fonts.findIndex(font => font.id === id);
     if (pos !== -1) fonts.splice(pos, 1);
     await config.set('font_list', fonts);
-    const chosedFont = await config.get('font_family');
-    if (chosedFont === id) {
+    const chosenFont = await config.get('font_family');
+    if (chosenFont === id) {
       await config.set('font_family', 0);
     }
   }
   async updateActive() {
     const items = Array.from(this.fontList.querySelectorAll('[data-font-id]'));
-    const chosedFont = await config.get('font_family') || 0;
+    const chosenFont = await config.get('font_family') || 0;
     items.forEach(item => {
-      if (Number(item.dataset.fontId) === chosedFont) {
+      if (Number(item.dataset.fontId) === chosenFont) {
         item.classList.add('config-item-checked');
       } else {
         item.classList.remove('config-item-checked');
@@ -234,6 +248,90 @@ class FontConfigPage {
   }
 }
 
+class VoiceConfigPage {
+  /**
+   * @param {HTMLElement} container
+   * @param {ConfigPage} configPage
+   */
+  constructor(container, configPage) {
+    this.container = container;
+    this.page = configPage;
+
+    /** @type {HTMLTemplateElement} */
+    this.template = container.querySelector('#voice_item_template');
+    this.emptyTemplate = container.querySelector('#voice_empty_template');
+    this.voiceList = this.template.parentNode;
+    this.backButton = container.querySelector('#config_voice_back');
+  }
+  async onFirstActivate() {
+    const update = () => {
+      const prefer = speech.getPreferVoice();
+      const list = speech.getVoiceList();
+      this.updateVoiceList(list, prefer);
+    };
+    this.updateVoiceList([], null);
+    Promise.all([
+      speech.getVoiceListAsync(),
+      speech.getPreferVoiceAsync(),
+    ]).then(([list, prefer]) => {
+      this.updateVoiceList(list, prefer);
+      speech.onVoiceListChange(update);
+      speech.onPreferVoiceChange(update);
+    });
+    speech.onVoiceListChange(() => { update(); });
+    speech.onPreferVoiceChange(prefer => { this.updatePrefer(prefer); });
+    this.backButton.addEventListener('click', event => {
+      this.page.hideVoiceConfig();
+    });
+  }
+  onActivate() {
+    this.addEventListener();
+  }
+  onInactivate() {
+  }
+  /**
+   * @param {SpeechSynthesisVoice[]} list
+   * @param {SpeechSynthesisVoice} prefer
+   */
+  updateVoiceList(list, prefer) {
+    this.voiceList.innerHTML = '';
+    const voiceList = list.slice(0);
+    voiceList.forEach(voice => {
+      const item = this.template.content.cloneNode(true).firstChild;
+      const title = `${voice.lang} ${voice.name}`;
+      const remote = voice.localService ? '' : ' ' + i18n.getMessage('configSpeechVoiceRemote');
+      item.querySelector('.config-item-title').textContent = title + remote;
+      item.dataset.voiceUri = voice.voiceURI;
+      this.voiceList.appendChild(item);
+    });
+    if (!voiceList.length) {
+      const item = this.emptyTemplate.content.cloneNode(true).firstChild;
+      item.textContent = i18n.getMessage('configSpeechVoiceEmpty');
+      this.voiceList.appendChild(item);
+    }
+    this.updatePrefer(prefer);
+  }
+  updatePrefer(prefer) {
+    const items = Array.from(this.voiceList.querySelectorAll('[data-voice-uri]'));
+    items.forEach(item => {
+      if (prefer && item.dataset.voiceUri === prefer.voiceURI) {
+        item.classList.add('config-item-checked');
+      } else {
+        item.classList.remove('config-item-checked');
+      }
+    });
+  }
+  addEventListener() {
+    this.voiceList.addEventListener('click', event => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const voiceItem = target.closest('[data-voice-uri]');
+      if (!voiceItem) return;
+      speech.setPreferVoice(voiceItem.dataset.voiceUri);
+    });
+  }
+}
+
 export default class ConfigPage extends Page {
   constructor() {
     const configPage = document.querySelector('#config_page');
@@ -246,6 +344,9 @@ export default class ConfigPage extends Page {
     this.fontConfigPageElement = document.querySelector('.config-page-font');
     this.fontConfigPage = new FontConfigPage(this.fontConfigPageElement, this);
 
+    this.voiceConfigPageElement = document.querySelector('.config-page-voice');
+    this.voiceConfigPage = new VoiceConfigPage(this.voiceConfigPageElement, this);
+
     configOptions.forEach(config => {
       this.normalizeConfig(config);
     });
@@ -254,7 +355,7 @@ export default class ConfigPage extends Page {
   getUrl(item) {
     return item ? `/settings/${item}` : '/settings';
   }
-  async onFirstActive() {
+  async onFirstActivate() {
     /** @type {HTMLElement[]} */
     const dataConfigs = Array.from(this.configPage.querySelectorAll('[data-config]'));
     this.configItems = Object.fromEntries(dataConfigs.map(item => {
@@ -271,19 +372,23 @@ export default class ConfigPage extends Page {
       this.router.go('list');
     });
 
-    this.fontConfigPage.onFirstActive();
+    this.fontConfigPage.onFirstActivate();
+    this.voiceConfigPage.onFirstActivate();
   }
-  async onActive() {
+  async onActivate() {
     configOptions.forEach(item => {
       this.updateConfig(this.configItems[item.name], item);
     });
     onResize.addListener(this.onResize);
-    this.fontConfigPage.onActive();
+    this.fontConfigPage.onActivate();
+    this.voiceConfigPage.onActivate();
     this.hideFontConfig();
+    this.hideVoiceConfig();
   }
-  async onDeactive() {
+  async onInactivate() {
     onResize.removeListener(this.onResize);
-    this.fontConfigPage.onDeactive();
+    this.fontConfigPage.onInactivate();
+    this.voiceConfigPage.onInactivate();
   }
   /**
    * @param {HTMLElement} container
@@ -314,6 +419,11 @@ export default class ConfigPage extends Page {
       button.addEventListener('click', event => {
         this.showFontConfig();
       });
+    } else if (item.type === 'voice') {
+      const button = container.appendChild(document.createElement('button'));
+      button.addEventListener('click', event => {
+        this.showVoiceConfig();
+      });
     }
   }
   /**
@@ -338,6 +448,8 @@ export default class ConfigPage extends Page {
           const allFonts = await config.get('font_list');
           isValid = allFonts.find(font => font.id === value);
         }
+      } else if (item.type === 'voice') {
+        isValid = true;
       }
     }
     if (!isValid) {
@@ -356,12 +468,12 @@ export default class ConfigPage extends Page {
     if (item.type === 'select') {
       const select = container.querySelector('select');
       select.value = value;
-      const text = container.querySelector('span');
+      const text = container.querySelector('select + span');
       text.textContent = item.select.find(i => i.value === value).text;
     } else if (item.type === 'color') {
       const color = container.querySelector('input');
       color.value = value;
-    } else if (item.type === 'font') {
+    } else if (['font', 'voice'].includes(item.type)) {
       // do nothing
     }
   }
@@ -379,6 +491,12 @@ export default class ConfigPage extends Page {
   }
   hideFontConfig() {
     this.fontConfigPageElement.style.display = 'none';
+  }
+  showVoiceConfig() {
+    this.voiceConfigPageElement.style.display = 'block';
+  }
+  hideVoiceConfig() {
+    this.voiceConfigPageElement.style.display = 'none';
   }
 }
 

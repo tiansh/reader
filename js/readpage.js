@@ -3,7 +3,9 @@ import text from './text.js';
 import file from './file.js';
 import onResize from './onresize.js';
 import TouchListener from './touch.js';
+import speech from './speech.js';
 import config from './config.js';
+import i18n from './i18n.js';
 
 /** @typedef {{ cursor: number, nextCursor: number, container: HTMLElement }} PageRender */
 
@@ -46,8 +48,10 @@ class BookmarkPage {
     this.searchEmptyTemplate = document.querySelector('#read_search_empty_template');
     /** @type {HTMLTemplateElement} */
     this.searchInitialTemplate = document.querySelector('#read_search_initial_template');
+    /** @type {HTMLTemplateElement} */
+    this.searchTooManyTemplate = document.querySelector('#read_search_too_many_template');
   }
-  onFirstActive() {
+  onFirstActivate() {
     this.dateFormatter = new Intl.DateTimeFormat(navigator.language, {
       year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric',
     });
@@ -56,7 +60,7 @@ class BookmarkPage {
       this.showContent();
     });
   }
-  onActive() {
+  onActivate() {
     window.requestAnimationFrame(() => {
       this.updatePages();
       this.searchClear();
@@ -132,7 +136,7 @@ class BookmarkPage {
       this.page.index.content = { template: '', items: [] };
     }
     const content = this.page.index.content;
-    content.template = prompt('Content Template', content.template) || '';
+    content.template = prompt(i18n.getMessage('readContentTemplate'), content.template) || '';
     if (content.template) {
       content.items = text.generateContent(this.page.content, content.template);
       content.items.unshift({ title: this.page.meta.title, cursor: 0 });
@@ -159,7 +163,7 @@ class BookmarkPage {
     } else {
       const li = this.contentEmptyTemplate.content.cloneNode(true).querySelector('li');
       this.contentList.appendChild(li);
-      li.textContent = 'No table of contents yet.\nClick refresh button to build one.';
+      li.textContent = i18n.getMessage('readContentEmpty');
     }
   }
   getContentByCursor(cursor) {
@@ -262,7 +266,7 @@ class BookmarkPage {
     } else {
       const li = this.bookmarkEmptyTemplate.content.cloneNode(true).querySelector('li');
       this.bookmarkList.appendChild(li);
-      li.textContent = 'No bookmarks yet.\nClick add bookmark button to add one.';
+      li.textContent = i18n.getMessage('readBookmarkEmpty');
     }
   }
   updateBookmarkCursor(cursor) {
@@ -287,9 +291,9 @@ class BookmarkPage {
     this.searchList.innerHTML = '';
     const li = this.searchInitialTemplate.content.cloneNode(true).querySelector('li');
     this.searchList.appendChild(li);
-    li.textContent = 'Input some words so you can find them in text...';
+    li.textContent = i18n.getMessage('readSearchInitial');
     li.addEventListener('click', () => { this.searchInput.focus(); });
-    this.searchInput.placeholder = 'Find what';
+    this.searchInput.placeholder = i18n.getMessage('readSearchPlaceholder');
   }
   searchClear() {
     this.searchInput.value = '';
@@ -299,34 +303,49 @@ class BookmarkPage {
     this.searchList.innerHTML = '';
     if (word === '') return;
     const reg = new RegExp('(' + word.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ')', 'i');
-    const lines = this.page.content.split('\n');
-    let searchHit = false;
+    const lines = this.page.content.split('\n'), linum = lines.length;
+    let searchHit = 0;
     let cursor = 0;
-    lines.forEach(line => {
-      if (reg.test(line)) {
-        const index = line.match(reg).index;
-        const text = line.substr(Math.max(index - 10, 0), 200).trim().slice(0, 50);
+    const genSearchResult = start => {
+      for (let i = start; i < linum; i++) {
+        const line = lines[i];
+        if (reg.test(line)) {
+          const index = line.match(reg).index;
+          const text = line.substr(Math.max(index - 10, 0), 200).trim().slice(0, 50);
 
-        /** @type {HTMLLIElement} */
-        const li = this.searchItemTemplate.content.cloneNode(true).querySelector('li');
-        li.dataset.cursor = cursor;
-        const sample = li.querySelector('.sample-text');
-        text.split(reg).forEach((part, index) => {
-          if (index % 2 === 1) {
-            sample.appendChild(document.createElement('mark')).textContent = part;
-          } else {
-            sample.appendChild(document.createTextNode(part));
+          /** @type {HTMLLIElement} */
+          const li = this.searchItemTemplate.content.cloneNode(true).querySelector('li');
+          li.dataset.cursor = cursor;
+          const sample = li.querySelector('.sample-text');
+          text.split(reg).forEach((part, index) => {
+            if (index % 2 === 1) {
+              sample.appendChild(document.createElement('mark')).textContent = part;
+            } else {
+              sample.appendChild(document.createTextNode(part));
+            }
+          });
+          this.searchList.appendChild(li);
+          searchHit++;
+          if (searchHit % 1000 === 0) {
+            const li = this.searchTooManyTemplate.content.cloneNode(true).querySelector('li');
+            li.textContent = i18n.getMessage('readSearchTooMany', searchHit);
+            li.addEventListener('click', () => {
+              this.searchList.removeChild(li);
+              genSearchResult(i + 1);
+            });
+            this.searchList.appendChild(li);
+            cursor += line.length + 1;
+            return;
           }
-        });
-        this.searchList.appendChild(li);
-        searchHit = true;
+        }
+        cursor += line.length + 1;
       }
-      cursor += line.length + 1;
-    });
+    };
+    genSearchResult(0);
     if (!searchHit) {
       const li = this.searchEmptyTemplate.content.cloneNode(true).querySelector('li');
       this.searchList.appendChild(li);
-      li.textContent = `Cannot find "${word}"`;
+      li.textContent = i18n.getMessage('readSearchEmpty', word);
     }
   }
 }
@@ -336,8 +355,8 @@ class JumpPage {
     this.jumpElement = jumpElement;
     this.page = page;
   }
-  onFirstActive() {
-    this.backButton = document.querySelector('#jmup_back');
+  onFirstActivate() {
+    this.backButton = document.querySelector('#jump_back');
     /** @type {HTMLElement} */
     this.container = this.jumpElement.querySelector('.jump-range-container');
     this.thumb = this.jumpElement.querySelector('.range-thumb');
@@ -371,7 +390,7 @@ class JumpPage {
       touchMove(event.clientX);
     });
   }
-  onActive() {
+  onActivate() {
     this.updateCursor(this.page.meta.cursor);
   }
   setRatio(/** @type {number} */ratio) {
@@ -402,6 +421,194 @@ class JumpPage {
   }
 }
 
+class ReadSpeech {
+  /**
+   * @param {ReadPage} page
+   */
+  constructor(page) {
+    this.readBuffer = 500;
+    this.maxPendingSsuSize = 10;
+
+    this.page = page;
+
+    this.speaking = false;
+    this.spoken = null;
+
+    this.listenEvents();
+
+    this.onBoundary = this.onBoundary.bind(this);
+    this.onEnd = this.onEnd.bind(this);
+  }
+  listenEvents() {
+    this.listenMediaDeviceChange();
+    window.addEventListener('beforeunload', event => {
+      this.stop();
+    });
+  }
+  async listenMediaDeviceChange() {
+    if (!navigator.mediaDevices) return false;
+    if (!navigator.mediaDevices.enumerateDevices) return false;
+    let audioOutputCount = null;
+    return new Promise(resolve => {
+      navigator.mediaDevices.enumerateDevices().then(devices => {
+        audioOutputCount = devices.filter(x => x.kind === 'audiooutput').length;
+        navigator.mediaDevices.addEventListener('devicechange', () => {
+          navigator.mediaDevices.enumerateDevices().then(devices => {
+            const count = devices.filter(x => x.kind === 'audiooutput').length;
+            if (count < audioOutputCount) this.stop();
+            audioOutputCount = count;
+          });
+        });
+        resolve(true);
+      });
+    });
+  }
+  onBoundary(event) {
+    if (!this.speaking) return;
+    const ssu = event.target;
+    this.pendingSsu.delete(ssu);
+    const nextPage = this.page.pages.next.cursor;
+    const start = ssu.data.start + event.charIndex;
+    const len = Math.max(0, Math.min(event.charLength || ssu.data.end - start, nextPage - start));
+    if (start > nextPage) {
+      this.lastPageCursor = nextPage;
+      this.page.nextPage();
+    }
+    this.spoken = start;
+    this.highlightChars(start, len);
+    this.readMore();
+  }
+  onEnd(event) {
+    if (!this.speaking) return;
+    const ssu = event.target;
+    if (ssu.data.end === this.page.content.length) {
+      this.stop();
+    } else {
+      this.clearHighlight();
+      if (this.pendingSsu && this.pendingSsu.has(ssu)) {
+        this.pendingSsu.delete(ssu);
+        this.spoken = ssu.data.end;
+        this.readMore();
+      }
+    }
+    ssu.removeEventListener('boundary', this.onBoundary);
+    ssu.removeEventListener('end', this.onEnd);
+  }
+  readNext() {
+    const current = this.next;
+    const line = this.page.content.indexOf('\n', current) + 1;
+    const end = Math.min(line || this.page.content.length, current + this.readBuffer);
+    this.next = end;
+    const text = this.page.content.slice(current, end).trimRight();
+    if (!text) return;
+    const ssu = speech.prepare(text);
+    ssu.data = { start: current, end };
+    ssu.addEventListener('boundary', this.onBoundary);
+    ssu.addEventListener('end', this.onEnd);
+    this.pendingSsu.add(ssu);
+    speechSynthesis.speak(ssu);
+  }
+  async readMore() {
+    if (!this.speaking) return;
+    if (this.readMoreBusy) return;
+    this.readMoreBusy = true;
+    const length = this.page.content.length;
+    const size = this.readBuffer;
+    while (
+      this.speaking &&
+      this.next < Math.min(length, this.spoken + size) &&
+      this.pendingSsu.size <= this.maxPendingSsuSize
+    ) {
+      this.readNext();
+      await new Promise(resolve => { setTimeout(resolve, 0); });
+    }
+    this.readMoreBusy = false;
+  }
+  start() {
+    if (this.speaking) return;
+    this.readMoreBusy = false;
+    const page = this.page;
+    page.element.classList.add('read-speech');
+    this.next = page.pages.current.cursor;
+    if (this.spoken && this.spoken > this.next && this.spoken < page.pages.next.cursor) {
+      this.next = this.spoken;
+    }
+    this.lastPageCursor = this.next;
+    this.spoken = this.next;
+    this.pendingSsu = new Set();
+    ; ((async () => {
+      // Safari hack, again
+      while (speechSynthesis.speaking || speechSynthesis.pending) {
+        speechSynthesis.cancel();
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+      this.speaking = true;
+      this.readMore();
+    })());
+  }
+  stop() {
+    this.page.element.classList.remove('read-speech');
+    this.clearHighlight();
+    this.speaking = false;
+    this.pendingSsu = null;
+    speechSynthesis.cancel();
+  }
+  reset() {
+    if (!this.speaking) return;
+    this.stop();
+    this.start();
+  }
+  toggle() {
+    if (this.speaking) this.stop();
+    else this.start();
+  }
+  clearHighlight() {
+    Array.from(document.querySelectorAll('.read-highlight')).forEach(container => {
+      container.innerHTML = '';
+    });
+  }
+  highlightChars(start, length) {
+    if (this.lastHighlightStart === start && this.lastHighlightLength === length) return;
+    this.clearHighlight();
+    this.lastHighlightStart = start;
+    this.lastHighlightLength = length;
+    const container = this.page.pages.current.container;
+    const paragraphs = Array.from(container.querySelectorAll('p[data-start]'));
+    const paragraph = paragraphs.reverse().find(p => p.dataset.start <= start);
+    if (!paragraph) return;
+    const range = document.createRange();
+    const paragraphStart = Number(paragraph.dataset.start);
+    const node = paragraph.firstChild;
+    if (!node) return;
+    const contentLength = node.textContent.length;
+    const startPos = start - paragraphStart;
+    if (startPos >= contentLength) {
+      return;
+    }
+    const endPos = Math.min(startPos + length, contentLength);
+    range.setStart(node, startPos);
+    range.setEnd(node, endPos);
+    const rects = Array.from(range.getClientRects());
+    const highlight = container.querySelector('.read-highlight');
+    rects.forEach(rect => {
+      const span = document.createElement('span');
+      ['top', 'left', 'width', 'height'].forEach(attr => {
+        span.style[attr] = rect[attr] + 'px';
+      });
+      highlight.appendChild(span);
+      return span;
+    });
+  }
+  updateCursor(cursor) {
+    if (this.speaking) {
+      if (this.lastPageCursor === cursor) return;
+      this.reset();
+    } else {
+      this.spoken = null;
+    }
+  }
+}
+
 export default class ReadPage extends Page {
   constructor() {
     super(document.querySelector('#read_page'));
@@ -415,7 +622,7 @@ export default class ReadPage extends Page {
     return { id };
   }
   getUrl({ id }) { return '/read/' + id; }
-  async onFirstActive() {
+  async onFirstActivate() {
     this.containerElement = document.querySelector('#read_page');
     this.controlElement = document.querySelector('.read-control');
     this.bookmarkElement = document.querySelector('.read-bookmark');
@@ -433,13 +640,22 @@ export default class ReadPage extends Page {
     this.jumpElement = document.querySelector('.read-jump');
     this.jumpPage = new JumpPage(this.jumpElement, this);
 
-    this.bookmarkPage.onFirstActive();
-    this.jumpPage.onFirstActive();
+    this.bookmarkPage.onFirstActivate();
+    this.jumpPage.onFirstActivate();
 
     this.customFont = document.querySelector('#custom_font');
     this.customStyle = document.querySelector('#custom_style');
+
+    this.speech = new ReadSpeech(this);
+    this.speechButton.parentNode.style.display = 'none';
+    speech.getPreferVoiceAsync().then(() => {
+      this.speechButton.parentNode.style.display = '';
+    });
+
+    this.backButton = document.querySelector('#read_page_back');
+    this.listenEvents();
   }
-  async onActive({ id }) {
+  async onActivate({ id }) {
     this.meta = await file.getMeta(id);
     this.index = await file.getIndex(id);
     this.content = await file.content(id);
@@ -453,7 +669,7 @@ export default class ReadPage extends Page {
 
     this.pageContainer = this.containerElement.appendChild(document.createElement('div'));
     this.pageContainer.classList.add('read-pages');
-    this.listenEvents();
+    this.listenEventsForPageContainer();
 
     this.layoutConfig = {
       paragraphMargin: 0,
@@ -467,7 +683,7 @@ export default class ReadPage extends Page {
 
     await this.updateStyleConfig();
 
-    /** @type {{ prev: PageRender, current: PageRender, next: PageRender }} */
+    /** @type {{ prev: PageRender, current: PageRender, next: PageRender, isLast: boolean, isFirst: boolean }} */
     this.pages = {};
     window.requestAnimationFrame(() => {
       this.hideBookmark();
@@ -478,14 +694,14 @@ export default class ReadPage extends Page {
 
     onResize.addListener(this.onResize);
 
-    this.bookmarkPage.onActive();
-    this.jumpPage.onActive();
+    this.bookmarkPage.onActivate();
+    this.jumpPage.onActivate();
   }
   async onUpdate({ id }) {
-    this.onDeactive();
-    this.onActive({ id });
+    this.onInactivate();
+    this.onActivate({ id });
   }
-  async onDeactive() {
+  async onInactivate() {
     this.meta = null;
     this.index = null;
     this.content = null;
@@ -498,6 +714,7 @@ export default class ReadPage extends Page {
     document.body.removeEventListener('keydown', this.keyboardEvents);
   }
   gotoList() {
+    this.speech.stop();
     this.router.go('list');
   }
   onResize() {
@@ -518,7 +735,7 @@ export default class ReadPage extends Page {
     }
     return false;
   }
-  listenEvents() {
+  listenEventsForPageContainer() {
     const listener = new TouchListener(this.pageContainer, { yRadian: Math.PI / 6, minDistanceY: 100 });
     const wos = (f, g) => (...p) => {
       if (this.isAnythingSelected()) {
@@ -540,6 +757,8 @@ export default class ReadPage extends Page {
     listener.onTouchLeft(wos(() => { this.prevPage(); }));
     listener.onTouchRight(wos(() => { this.nextPage(); }));
     listener.onTouchMiddle(wos(() => { this.showControl(); }));
+  }
+  listenEvents() {
     const controlBody = this.controlElement.querySelector('.control-body');
     const controlListener = new TouchListener(controlBody, { clickParts: 1 });
     controlListener.onTouch(() => { this.hideControl(); });
@@ -561,16 +780,35 @@ export default class ReadPage extends Page {
     this.jumpButton.addEventListener('click', event => {
       this.showJumpPage();
     });
+    this.speechButton.addEventListener('click', event => {
+      this.speech.toggle();
+      this.hideControl();
+    });
+    this.backButton.addEventListener('click', event => {
+      this.gotoList();
+    });
     document.body.addEventListener('keydown', this.keyboardEvents);
   }
   keyboardEvents(event) {
-    if (event.code === 'PageDown') this.nextPage();
-    if (event.code === 'PageUp') this.prevPage();
-    if (event.code === 'Escape') this.gotoList();
-    if (event.code === 'ArrowRight') this.nextPage();
-    if (event.code === 'ArrowLeft') this.prevPage();
-    if (event.code === 'ArrowUp') this.showControl();
-    if (event.code === 'ArrowDown') this.showBookmark();
+    if (event.code === 'Escape') {
+      if (this.bookmarkShown) this.hideBookmark();
+      else if (this.controlShown) this.hideControl();
+      else this.gotoList();
+    }
+    if (event.code === 'PageDown' || event.code === 'ArrowRight') {
+      if (!this.bookmarkShown && !this.controlShown) this.nextPage();
+    }
+    if (event.code === 'PageUp' || event.code === 'ArrowLeft') {
+      if (!this.bookmarkShown && !this.controlShown) this.prevPage();
+    }
+    if (event.code === 'ArrowUp') {
+      if (this.bookmarkShown) this.hideBookmark();
+      else this.showControl();
+    }
+    if (event.code === 'ArrowDown') {
+      if (this.controlShown) this.hideControl();
+      else this.showBookmark();
+    }
   }
   /**
    * @param {'move'|'left'|'right'|'cancel'} action
@@ -636,15 +874,18 @@ export default class ReadPage extends Page {
     }
   }
   showBookmark() {
+    this.bookmarkShown = true;
     this.slideBookmarks('down');
   }
   hideBookmark() {
+    this.bookmarkShown = false;
     this.bookmarkElement.style.removeProperty('bottom');
   }
   updateCursor(cursor) {
     this.writeCursor(cursor);
     this.jumpPage.updateCursor(cursor);
     this.bookmarkPage.updateCursor(cursor);
+    this.speech.updateCursor(cursor);
   }
   writeCursor(cursor) {
     this.meta.cursor = cursor;
@@ -857,6 +1098,7 @@ export default class ReadPage extends Page {
     return lastPrev;
   }
   showControl() {
+    this.controlShown = true;
     window.requestAnimationFrame(() => {
       this.controlElement.style.display = 'block';
       window.requestAnimationFrame(() => {
@@ -865,6 +1107,7 @@ export default class ReadPage extends Page {
     });
   }
   hideControl() {
+    this.controlShown = false;
     this.controlElement.style.opacity = '0';
     setTimeout(() => {
       this.controlElement.style.opacity = '0';

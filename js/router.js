@@ -42,9 +42,9 @@ export default class Router {
     const target = pages.find(page => page.matchUrl(url));
     if (!target) { this.goFallback(); return; }
     pages.forEach(page => {
-      if (page.isActived() && page !== target) page.deactive();
+      if (page.isActive() && page !== target) page.inactivate();
     });
-    target.active(target.matchUrl(url));
+    target.activate(target.matchUrl(url));
   }
   goFallback() {
     this.hashTo('#!' + this.fallback);

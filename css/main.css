@@ -355,8 +355,9 @@ a {
   text-justify: var(--content-text-justify);
   overflow: hidden;
   overflow-wrap: break-word;
-  line-height: 1.3  ;
+  line-height: 1.3;
   white-space: pre-wrap;
+  z-index: 2;
 }
 
 .read-text p {
@@ -398,10 +399,33 @@ a {
   white-space: nowrap;
 }
 
+.read-highlight {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.read-speech .read-highlight {
+  display: block;
+}
+
+.read-highlight span {
+  position: absolute;
+  background: var(--highlight-background);
+}
+
+.read-control .icon-speech-stop { display: none; }
+.read-speech .read-control .icon-speech-stop { display: inline; }
+.read-control .icon-speech { display: inline; }
+.read-speech .read-control .icon-speech { display: none; }
+
 .read-bookmark, .read-control {
   height: var(--window-height);
   width: var(--window-width);
-  z-index: 1;
+  z-index: 5;
 }
 
 .read-control {
@@ -633,6 +657,10 @@ a {
   margin: 0;
 }
 
+.read-search-list-too-many {
+  color: var(--list-comment-color);
+}
+
 .sample-text mark {
   color: var(--search-highlight-color);
   background: none;
@@ -699,7 +727,8 @@ a {
 }
 
 .config-page-main,
-.config-page-font {
+.config-page-font,
+.config-page-voice {
   position: fixed;
   top: 0;
   bottom: 0;
@@ -824,7 +853,7 @@ a {
 }
 
 .config-check-group .config-item-title {
-  padding-left: 40px;
+  padding-left: 30px;
 }
 
 .config-check-group .config-item .icon-checkmark {
@@ -860,6 +889,14 @@ a {
 
 .config-page-font.font-item-slide-remove {
   overflow-y: hidden;
+}
+
+.config-empty {
+  color: var(--list-comment-color);
+  text-align: center;
+  line-height: calc(var(--window-height) - 120px);
+  font-size: 14px;
+  white-space: pre-wrap;
 }
 
 #import_tip {
