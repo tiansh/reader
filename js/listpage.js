@@ -1,7 +1,8 @@
 import Page from './page.js';
+import ItemList from './itemlist.js';
+import template from './template.js';
 import text from './text.js';
 import file from './file.js';
-import TouchListener from './touch.js';
 import i18n from './i18n.js';
 
 export default class ListPage extends Page {
@@ -15,11 +16,9 @@ export default class ListPage extends Page {
     /** @type {HTMLInputElement} */
     this.fileButton = document.querySelector('#file');
     this.configButton = document.querySelector('#settings');
-    this.settingsButton = document.querySelector('#settings');
-    this.fileListContainer = document.querySelector('.file-list-container');
-    this.fileList = document.querySelector('.file-list');
-    /** @type {HTMLTemplateElement} */
-    this.fileListItem = document.querySelector('#list_item');
+
+    this.fileListElement = document.querySelector('#file_list');
+
     this.sortContent = document.querySelector('.list-sort-content');
     this.sortMenu = document.querySelector('.list-sort-menu');
     this.importTip = document.querySelector('#import_tip');
@@ -82,87 +81,45 @@ export default class ListPage extends Page {
     const files = await file.list();
     this.sortFiles(files);
     if (token !== this.lastToken) return;
+
     this.clearList();
-    files.forEach(item => {
-      /** @type {HTMLFrameElement} */
-      const container = this.fileListItem.content.cloneNode(true);
-      const li = container.querySelector('li');
-      li.querySelector('.file-title').textContent = item.title;
-      const date = item.lastAccessTime.toLocaleDateString();
-      li.querySelector('.file-date').textContent = date;
-      const percent = item.cursor ?
-        (item.cursor / item.length * 100).toFixed(2) + '%' :
-        'NEW';
-      li.querySelector('.file-detail').textContent = percent;
-      const content = li.querySelector('.file-item-content');
-      const listener = new TouchListener(content, { clickParts: 1 });
-      listener.onTouch(() => {
-        this.router.go('read', { id: item.id });
-      });
-      const listContainer = this.fileListContainer;
-      let showActions = false;
-      const slideActions = function (action, offset) {
-        if (action === 'move') {
-          const move = showActions ?
-            offset > 150 ? 0 : offset < 0 ? Math.max(-10, offset / 2) - 150 : offset - 150 :
-            offset > 0 ? 0 : offset < -150 ? Math.max(-160, offset / 2 - 75) : offset;
-          li.style.left = move + 'px';
-          li.classList.add('file-item-slide');
-          listContainer.classList.add('file-item-slide-remove');
-        } else {
-          li.classList.remove('file-item-slide');
-          listContainer.classList.remove('file-item-slide-remove');
-          window.requestAnimationFrame(() => {
-            if (action === 'cancel') {
-              li.style.left = showActions ? '0' : '-150px';
-            } else if (action === 'show') {
-              showActions = true;
-              li.style.left = '-150px';
-            } else if (action === 'hide') {
-              showActions = false;
-              li.style.left = '0';
-            }
-          });
-        }
-      };
-      listener.onMoveX(offset => slideActions('move', offset));
-      listener.onCancelX(() => slideActions('cancel'));
-      listener.onSlideLeft(() => slideActions('show'));
-      listener.onSlideRight(() => slideActions('hide'));
-      const removeHandler = event => {
-        file.remove(item.id);
-        li.classList.add('file-item-remove');
-        setTimeout(() => {
-          li.remove();
-        }, 100);
-        event.stopPropagation();
-      };
-      const removeButton = li.querySelector('.file-remove');
-      removeButton.addEventListener('click', removeHandler);
-      removeButton.addEventListener('touchstart', event => {
-        if (event.target instanceof Element) {
-          if (event.target.closest('li') === li) return;
-        }
-        slideActions('hide');
-      });
-      const cancelShowRemove = event => {
-        if (!showActions) return;
-        const target = event.target;
-        if (target instanceof Element) {
-          if (target.closest('li') === li) {
-            return;
-          }
-        }
-        slideActions('hide');
-        event.preventDefault();
-      };
-      this.fileListContainer.addEventListener('touchstart', cancelShowRemove);
-      this.fileListContainer.addEventListener('mousedown', cancelShowRemove);
-      this.fileList.appendChild(li);
+
+    const render = (container, file) => {
+      if (container.firstChild) return;
+      const [element, ref] = template.create('file_list_item');
+      ref.get('title').textContent = file.title;
+      const date = file.lastAccessTime.toLocaleDateString();
+      ref.get('date').textContent = date;
+      const percent = file.cursor ?
+        (file.cursor / file.length * 100).toFixed(2) + '%' :
+        i18n.getMessage('listNotYetRead');
+      ref.get('detail').textContent = percent;
+      container.appendChild(element);
+    };
+    const onItemClick = file => {
+      this.router.go('read', { id: file.id });
+    };
+    const onRemove = async (item, index) => {
+      await file.remove(item.id);
+      this.fileList.removeItem(index);
+    };
+    const emptyListRender = container => {
+      const text = container.appendChild(document.createElement('div'));
+      text.textContent = i18n.getMessage('listEmptyTip');
+    };
+    this.fileList = new ItemList(this.fileListElement, {
+      list: files.slice(0),
+      render,
+      onItemClick,
+      onRemove,
+      emptyListRender,
     });
   }
   clearList() {
-    this.fileList.innerHTML = '';
+    if (this.fileList) {
+      this.fileList.dispatch();
+      this.fileList = null;
+    }
   }
   updateSort() {
     const menuItems = [...document.querySelectorAll('.list-sort-menu [data-option]')];

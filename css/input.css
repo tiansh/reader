@@ -1,0 +1,135 @@
+input[type="button"], button[type="button"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  border: 0 none;
+  font: inherit;
+  color: inherit;
+}
+
+.range-container {
+  padding: 10px;
+  height: 40px;
+  position: relative;
+  --range-ratio: 0;
+  z-index: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.range-thumb {
+  display: block;
+  height: 20px;
+  width: 20px;
+  border-radius: 10px;
+  position: absolute;
+  z-index: 1;
+  left: calc(calc(100% - 20px) * var(--range-ratio));
+  top: calc(50% - 11px);
+  background: var(--range-thumb-color);
+  border: 1px solid var(--range-thumb-border-color);
+  box-shadow: 0 1px 1px #000;
+}
+
+.range-track {
+  border-radius: 1.5px;
+  position: absolute;
+  top: 0;
+  left: 10px;
+  right: 10px;
+  bottom: 0;
+  margin: auto 0;
+  height: 3px;
+  z-index: 0;
+  background: linear-gradient(to right,
+    var(--range-lower-color) 0%,
+    var(--range-lower-color) calc(100% * var(--range-ratio)),
+    var(--range-upper-color) calc(100% * var(--range-ratio)),
+    var(--range-upper-color) 100%
+  );
+}
+
+.color-picker {
+  width: 100%;
+  padding: 10px 20px;
+  box-sizing: border-box;
+}
+
+.color-picker-result {
+  width: calc(100% - 20px);
+  height: 40px;
+  border: 1px solid var(--range-thumb-border-color);
+  box-shadow: 0 0 1px black;
+  margin: 0 10px;
+  background: var(--color-picker-color);
+}
+
+.color-picker-palette {
+  margin: 20px 10px;
+  width: calc(100% - 20px);
+  padding: 50% 0 0;
+  border: 1px solid var(--range-thumb-border-color);
+  box-shadow: 0 0 1px black;
+  position: relative;
+  background: var(--color-picker-hue-color);
+}
+
+.color-picker-palette::before {
+  content: " ";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, #000, transparent), linear-gradient(to left, transparent, #fff);
+}
+
+.color-picker-picker {
+  display: block;
+  height: 20px;
+  width: 20px;
+  border-radius: 10px;
+  position: absolute;
+  z-index: 1;
+  background: var(--range-thumb-color);
+  border: 1px solid var(--range-thumb-border-color);
+  box-shadow: 0 1px 1px #000;
+  top: 100%;
+  margin: -10px;
+  right: calc(var(--color-picker-white) * 100%);
+  top: calc(var(--color-picker-black) * 100%);
+  background: var(--color-picker-color);
+}
+
+.color-picker-hue .range-track {
+  height: 16px;
+  background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  border-radius: 8px;
+}
+
+.color-picker-hue .range-thumb {
+  background: var(--color-picker-hue-color);
+}
+
+.color-picker-candidate-list {
+  list-style: none;
+  padding: 0 10px;
+  margin: 10px -10px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 50px);
+  grid-gap: 10px;
+  justify-content: space-between;
+  grid-auto-rows: 50px;
+}
+
+.color-picker-candidate-list li {
+}
+
+.color-picker-candidate-list li button {
+  width: 50px;
+  height: 50px;
+  border: 1px solid var(--config-border-color);
+}
+
