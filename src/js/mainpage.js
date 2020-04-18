@@ -10,11 +10,12 @@ onResize.addListener(([width, height]) => {
 
 document.body.addEventListener('touchmove', function (event) {
   const target = event.target;
-  if (target instanceof Element) {
-    if (target.matches('.scroll, .scroll *')) {
-      return;
-    }
-  }
+  do {
+    if (!(target instanceof Element)) break;
+    if (!target.matches('.scroll, .scroll *')) break;
+    if (document.body.classList.contains('noscroll')) break;
+    return;
+  } while (false);
   event.preventDefault();
 }, { passive: false, useCapture: false });
 

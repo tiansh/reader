@@ -1,7 +1,7 @@
 /** @typedef {[number, number]} Point */
 /** @typedef {'x'|'y'} Direction */
 
-export default class TouchListener {
+export class TouchGestureListener {
   constructor(targetElement, { minDistanceX = 20, minDistanceY = 20, clickParts = 3, yRadian = Math.PI / 2 } = {}) {
     this.listeners = new Map();
     this.minDistanceX = minDistanceX;
@@ -23,13 +23,12 @@ export default class TouchListener {
       return null;
     };
     /** @type {Object<string, (position: Point) => any>} */
-    const handlers = {};
-    handlers.start = ([x, y]) => {
+    const touchStartHandler = (x, y) => {
       startPos = [x, y];
       lastPos = [x, y];
       direction = null;
     };
-    handlers.cancel = () => {
+    const touchCancelHandler = () => {
       if (direction) {
         const action = direction === 'x' ? 'cancelx' : 'cancely';
         this.trigger(action);
@@ -38,7 +37,7 @@ export default class TouchListener {
       lastPos = null;
       direction = null;
     };
-    handlers.move = ([x, y]) => {
+    const touchMoveHandler = (x, y) => {
       if (!startPos) return;
       const [dx, dy] = [x - startPos[0], y - startPos[1]];
       lastPos = [x, y];
@@ -51,9 +50,9 @@ export default class TouchListener {
         this.trigger(action, offset);
       }
     };
-    handlers.end = () => {
+    const touchEndHandler = () => {
       if (!lastPos || !startPos) {
-        handlers.cancel();
+        touchCancelHandler();
         return;
       }
       const [dx, dy] = [lastPos[0] - startPos[0], lastPos[1] - startPos[1]];
@@ -83,47 +82,14 @@ export default class TouchListener {
       lastPos = null;
       direction = null;
     };
-    /** @type {(type: string) => (event: TouchEvent) => any} */
-    const touchEvent = type => event => {
-      if (event.touches.length === 1) {
-        const touch = event.touches.item(0);
-        const position = [touch.pageX, touch.pageY];
-        handlers[type](position);
-      } else if (type === 'end') {
-        handlers.end();
-      }
-      if (type === 'start') {
-        isTouch = true;
-      }
-    };
-    /** @type {(type: string) => (event: MouseEvent) => any} */
-    const mouseEvent = type => event => {
-      if (event.button !== 0) return;
-      if (!isTouch) {
-        const position = [event.pageX, event.pageY];
-        handlers[type](position);
-      }
-      if (type === 'end') {
-        isTouch = false;
-      }
-    };
-    const removeEventListeners = [];
-    const listen = (event, handler) => {
-      targetElement.addEventListener(event, handler);
-      removeEventListeners.push(() => {
-        targetElement.removeEventListener(event, handler);
-      });
-    };
-    listen('touchstart', touchEvent('start'));
-    listen('touchend', touchEvent('end'));
-    listen('touchcancel', touchEvent('cancel'));
-    listen('touchmove', touchEvent('move'));
-    listen('mousedown', mouseEvent('start'));
-    listen('mouseup', mouseEvent('end'));
-    listen('mouseleave', mouseEvent('cancel'));
-    listen('mousemove', mouseEvent('move'));
+    const moveListener = new TouchMoveListener(targetElement);
+    moveListener.onTouchStart(touchStartHandler);
+    moveListener.onTouchMove(touchMoveHandler);
+    moveListener.onTouchEnd(touchEndHandler);
+    moveListener.onTouchCancel(touchCancelHandler);
+
     this.dispatch = () => {
-      removeEventListeners.forEach(r => { r(); });
+      moveListener.dispatch();
     };
   }
   trigger(action, offset = null) {
@@ -150,5 +116,129 @@ export default class TouchListener {
   onSlideDown(listener) { return this.addListener('slidedown', listener); }
   onSlideLeft(listener) { return this.addListener('slideleft', listener); }
   onSlideRight(listener) { return this.addListener('slideright', listener); }
+}
+
+export class TouchMoveListener {
+  /**
+   * @param {HTMLElement} element
+   */
+  constructor(element) {
+    this.element = element;
+    /** @type {((x: number, y: number) => any)[]} */
+    this.touchMoveCallbackList = [];
+    /** @type {((x: number, y: number) => any)[]} */
+    this.touchStartCallbackList = [];
+    /** @type {(() => any)[]} */
+    this.touchEndCallbackList = [];
+    /** @type {(() => any)[]} */
+    this.touchCancelCallbackList = [];
+
+    let mouseDown = false, touchStart = false;
+    const addGlobalMouseHandlers = () => {
+      document.addEventListener('mouseup', mouseUpHandler);
+      document.addEventListener('mouseleave', mouseCancelHandler);
+      document.addEventListener('mousemove', mouseMoveHandler);
+    };
+    const removeGlobalMouseHandlers = () => {
+      document.removeEventListener('mouseup', mouseUpHandler);
+      document.removeEventListener('mouseleave', mouseCancelHandler);
+      document.removeEventListener('mousemove', mouseMoveHandler);
+    };
+    const mouseDownHandler = event => {
+      console.log('mouse start, touch: ', touchStart);
+      if (touchStart) {
+        touchStart = false;
+        return;
+      }
+      mouseDown = true;
+      this.triggerCallback('start', event.pageX, event.pageY);
+      addGlobalMouseHandlers();
+    };
+    const mouseUpHandler = event => {
+      if (mouseDown) this.triggerCallback('end');
+      mouseDown = false;
+      removeGlobalMouseHandlers();
+    };
+    const mouseCancelHandler = event => {
+      if (mouseDown) this.triggerCallback('end');
+      mouseDown = false;
+      removeGlobalMouseHandlers();
+    };
+    const mouseMoveHandler = event => {
+      if (mouseDown) this.triggerCallback('move', event.pageX, event.pageY);
+    };
+    const addGlobalTouchHandlers = () => {
+      document.addEventListener('touchend', touchEndHandler);
+      document.addEventListener('touchcancel', touchCancelHandler);
+      document.addEventListener('touchmove', touchMoveHandler);
+    };
+    const removeGlobalTouchHandlers = () => {
+      document.removeEventListener('touchend', touchEndHandler);
+      document.removeEventListener('touchcancel', touchCancelHandler);
+      document.removeEventListener('touchmove', touchMoveHandler);
+    };
+    const touchStartHandler = event => {
+      touchStart = true;
+      console.log('touchstart');
+      const touch = event.touches.item(0);
+      this.triggerCallback('start', touch.pageX, touch.pageY);
+      addGlobalTouchHandlers();
+    };
+    const touchEndHandler = event => {
+      if (touchStart) this.triggerCallback('end');
+      removeGlobalTouchHandlers();
+    };
+    const touchCancelHandler = event => {
+      if (touchStart) this.triggerCallback('cancel');
+      removeGlobalTouchHandlers();
+    };
+    const touchMoveHandler = event => {
+      const touch = event.touches.item(0);
+      if (touchStart) this.triggerCallback('move', touch.pageX, touch.pageY);
+    };
+
+    this.element.addEventListener('mousedown', mouseDownHandler);
+    this.element.addEventListener('touchstart', touchStartHandler);
+    const dispatch = () => {
+      this.element.removeEventListener('mousedown', mouseDownHandler);
+      removeGlobalMouseHandlers();
+      this.element.removeEventListener('touchstart', touchStartHandler);
+      removeGlobalTouchHandlers();
+    };
+
+    this.dispatch = dispatch;
+  }
+  /**
+   * @param {'move'|'start'|'end'|'cancel'} type
+   * @param {number} x
+   * @param {number} y
+   */
+  triggerCallback(type, x, y) {
+    const callbackList = {
+      move: this.touchMoveCallbackList,
+      start: this.touchStartCallbackList,
+      end: this.touchEndCallbackList,
+      cancel: this.touchCancelCallbackList,
+    }[type];
+    callbackList.forEach(callback => {
+      callback(x, y);
+    });
+  }
+  /** @param {(x: number, y: number) => any} callback */
+  onTouchMove(callback) {
+    this.touchMoveCallbackList.push(callback);
+  }
+  /** @param {(x: number, y: number) => any} callback */
+  onTouchStart(callback) {
+    this.touchStartCallbackList.push(callback);
+  }
+  /** @param {() => any} callback */
+  onTouchEnd(callback) {
+    this.touchEndCallbackList.push(callback);
+  }
+  /** @param {() => any} callback */
+  onTouchCancel(callback) {
+    this.touchCancelCallbackList.push(callback);
+  }
 }
 
