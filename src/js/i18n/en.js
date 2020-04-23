@@ -35,6 +35,10 @@ export default {
   configTextFontFamilyCustom: 'Custom Font',
   configTextFontSize: 'Font Size',
   configTextFontSizeNum: '{0}',
+  configTextLineHeight: 'Line Height',
+  configTextLineHeightNum: '{0}',
+  configTextParagraphSpacing: 'Paragraph Spacing',
+  configTextParagraphSpacingNum: '{0} lines',
   configPreprocessGroupTitle: 'Preprocess',
   configPreprocessMultipleNewLine: 'Max New Lines',
   configPreprocessMultipleNewLineNum: 'Up to {0}',
@@ -59,4 +63,17 @@ export default {
     if (rate === 1) return '1x (normal)';
     return rate + 'x';
   },
+
+  buttonBack: 'Back',
+  buttonAdd: 'Import File',
+  buttonSettings: 'Settings',
+  buttonContents: 'Table of Contents',
+  buttonBookmark: 'Bookmark',
+  buttonSearch: 'Search',
+  buttonJump: 'Jump to',
+  buttonSpeech: 'Start Text to Speech',
+  buttonSpeechStop: 'Stop Text to Speech',
+  buttonContentsRefresh: 'Refresh Table of Contents',
+  buttonSearchClear: 'Clear Search Result',
+  buttonBookmarkAdd: 'Add Bookmark',
 };

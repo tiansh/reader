@@ -95,7 +95,7 @@ const maxEmptyLine = async function (text) {
   const setting = await config.get('max_empty_lines');
   if (setting === 'disable') return text;
   const max = Number(setting);
-  return text.replace(new RegExp('\\n'.repeat(max) + '\\n+'), '\n'.repeat(max));
+  return text.replace(new RegExp(`(?:\\n\\s*){${max},}\\n`, 'g'), '\n'.repeat(max + 1));
 };
 
 const chineseConvert = async function (text) {

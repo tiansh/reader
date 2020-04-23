@@ -24,33 +24,15 @@
 </head>
 <body>
 <div class="page" id="list_page">
-  <div class="header-line">
-    <div class="header-left">
-      <button id="add" type="button"><span class="icon icon-add" title="Add"></span></button>
-      <input style="display: none;" id="file" type="file" accept="text/plain" />
-    </div>
-    <div class="header-right">
-      <button type="button" id="settings"><span class="icon icon-settings" title="Settings"></span></button>
-    </div>
-  </div>
-  <div class="file-list-container scroll">
+  <input id="file" type="file" accept="text/plain" tabindex="-1" />
+  <div class="file-list-container scroll" tabindex="-1">
     <div class="list-action">
-      <div class="list-sort">
-        <span class="list-sort-title"><span data-i18n="listSortTitle"></span></span>
-        <span class="list-sort-content"><span></span><span class="icon icon-detail" title="Detail"></span></span>
-      </div>
-      <div class="list-sort-menu">
-        <div class="list-sort-options screen-option">
-          <div class="screen-option-group">
-            <div class="screen-option-item" data-option="dateread" data-option-default><span data-i18n="listSortByDateRead"></span></div>
-            <div class="screen-option-item" data-option="dateadd"><span data-i18n="listSortByDateAdd"></span></div>
-            <div class="screen-option-item" data-option="title"><span data-i18n="listSortByTitle"></span></div>
-          </div>
-          <div class="screen-option-group">
-            <div class="screen-option-item"><span data-i18n="listSortCancel"></span></div>
-          </div>
+      <button class="list-sort">
+        <div class="button-wrap" tabindex="-1">
+          <span class="list-sort-title"><span data-i18n="listSortTitle"></span></span>
+          <span class="list-sort-content"><span></span><span class="icon icon-detail" title="Detail"></span></span>
         </div>
-      </div>
+      </button>
     </div>
     <div id="file_list"></div>
     <div id="import_tip">
@@ -59,46 +41,49 @@
     </div>
   </div>
 </div>
+<div class="list-sort-menu">
+  <div class="list-sort-options screen-option" role="listbox">
+    <div class="screen-option-group">
+      <button role="option" class="screen-option-item" data-option="dateread" data-option-default><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateRead"></span></div></button>
+      <button role="option" class="screen-option-item" data-option="dateadd"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateAdd"></span></div></button>
+      <button role="option" class="screen-option-item" data-option="title"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByTitle"></span></div></button>
+    </div>
+    <div class="screen-option-group">
+      <button role="option" class="screen-option-item"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortCancel"></span></div></button>
+    </div>
+  </div>
+</div>
 <div class="page" id="read_page">
   <div class="read-layer read-sub-page read-control">
-    <div class="footer-line">
-      <div class="icon-line">
-        <div class="icon-line-item"><button type="button" id="contents_button"><div class="footer-button-content" tabindex="-1"><span class="icon icon-content" title="content"></span></div></button></div>
-        <div class="icon-line-item"><button type="button" id="bookmark_button"><div class="footer-button-content" tabindex="-1"><span class="icon icon-bookmark" title="bookmarks"></span></div></button></div>
-        <div class="icon-line-item"><button type="button" id="search_button"><div class="footer-button-content" tabindex="-1"><span class="icon icon-search" title="search"></span></div></button></div>
-        <div class="icon-line-item"><button type="button" id="jump_button"><div class="footer-button-content" tabindex="-1"><span class="icon icon-jump" title="jump to"></span></div></button></div>
-        <div class="icon-line-item"><button type="button" id="speech_button"><div class="footer-button-content" tabindex="-1"><span class="icon icon-speech" title="speech"></span><span class="icon icon-speech-stop" title="speech"></span></div></button></div>
-      </div>
-    </div>
+    <div class="footer-line"><div class="icon-line"></div></div>
     <div class="read-control-cover"></div>
   </div>
   <div class="read-layer read-sub-page read-index">
     <div class="index-tab-group">
-      <div class="tab-group" role="tablist">
-        <button id="read_index_contents_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_contents" tabindex="-1" data-tab="content"><div class="tab-item-wrap" tabindex="-1"><span class="icon icon-content"></span></div></button>
-        <button id="read_index_bookmark_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_bookmark" tabindex="-1" data-tab="bookmark"><div class="tab-item-wrap" tabindex="-1"><span class="icon icon-bookmark"></span></div></button>
-        <button id="read_index_search_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_search" tabindex="-1" data-tab="search"><div class="tab-item-wrap" tabindex="-1"><span class="icon icon-search"></span></div></button>
+      <div class="tab-group" role="tablist" tabindex="0">
+        <div class="tab-group-wrap" tabindex="-1">
+          <button id="read_index_contents_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_contents" tabindex="-1"></button>
+          <button id="read_index_bookmark_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_bookmark" tabindex="-1"></button>
+          <button id="read_index_search_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_search" tabindex="-1"></button>
+        </div>
       </div>
     </div>
     <div id="read_index_contents" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_contents_tab">
-      <button id="refresh_content" class="index-tab-button" type="button"><div class="button-wrap"><span class="icon icon-refresh"></span></div></button>
       <div class="index-tab-container">
-        <div id="contents_list" class="index-list scroll"></div>
+        <div id="contents_list" class="index-list scroll" tabindex="-1"></div>
       </div>
     </div>
     <div id="read_index_bookmark" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_bookmark_tab">
-      <button id="add_bookmark" class="index-tab-button" type="button"><div class="button-wrap"><span class="icon icon-bookmark"></span></div></button>
       <div class="index-tab-container">
-        <div id="bookmark_list" class="index-list scroll"></div>
+        <div id="bookmark_list" class="index-list scroll" tabindex="-1"></div>
       </div>
     </div>
     <div id="read_index_search" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_search_tab">
-      <button id="clear_search" class="index-tab-button" type="button"><div class="button-wrap"><span class="icon icon-remove"></span></div></button>
       <div class="index-tab-container">
         <div class="search-box">
           <form action="/"><span class="icon icon-search"></span><input type="search" name="search_box" class="search-input" /></form>
         </div>
-        <div id="search_list" class="index-list scroll"></div>
+        <div id="search_list" class="index-list scroll" tabindex="-1"></div>
       </div>
     </div>
   </div>
@@ -106,58 +91,10 @@
     <div class="read-jump-cover"></div>
     <div class="footer-line"><div id="jump_range"></div></div>
   </div>
-  <!--<div class="read-bookmark">
-    <div class="header">
-      <div class="header-line">
-        <div class="header-left">
-          <button id="bookmark_back" type="button"><span class="icon icon-back" title="back"></span></button>
-        </div>
-        <div class="header-right">
-        </div>
-      </div>
-    </div>
-    <div class="tabber bookmark-tabber">
-      <div class="tab-group">
-        <div class="tab-item" data-tab="content"><span class="icon icon-content"></span></div>
-        <div class="tab-item" data-tab="bookmark"><span class="icon icon-bookmark"></span></div>
-        <div class="tab-item" data-tab="search"><span class="icon icon-search"></span></div>
-      </div>
-    </div>
-    <div class="bookmark-tab-pages">
-      <div class="bookmark-tab-page scroll" id="read_content_page">
-        <ol id="read_content_list">
-        </ol>
-      </div>
-      <div class="bookmark-tab-page scroll" id="read_bookmark_page">
-        <ol id="read_bookmark_list">
-        </ol>
-      </div>
-      <div class="bookmark-tab-page scroll" id="read_search_page">
-        <div class="search-box">
-          <form action="/"><span class="icon icon-search"></span><input type="search" name="search_box" class="search-input" /></form>
-        </div>
-        <ul id="read_search_list">
-        </ul>
-      </div>
-    </div>
-  </div>
-  <div class="read-jump">
-    <div class="header">
-      <div class="header-line">
-        <div class="header-left">
-          <button id="jump_back" type="button"><span class="icon icon-back" title="back"></span></button>
-        </div>
-      </div>
-    </div>
-    <div class="footer">
-      <div class="jump-range-container"></div>
-    </div>
-    <div class="jump-body"></div>
-  </div>-->
 </div>
 <div class="page" id="config_page">
   <div class="config-page-main config-page">
-    <div class="config-page-content scroll"></div>
+    <div class="config-page-content scroll" tabindex="-1"></div>
   </div>
   <div id="config_page_select" class="config-option-page config-page">
     <div class="config-page-content scroll">
@@ -182,13 +119,13 @@
     </div>
   </div>
 </div>
-<template id="back_button">
-  <button type="button">
-    <span class="icon icon-back" title="back">
-    </span>
-  </button>
+<template id="icon">
+  <span class="icon"></span>
 </template>
-<template id="page_header">
+<template id="icon_button">
+  <button type="button"><div class="button-wrap" tabindex="-1" data-ref="icon"></div></button>
+</template>
+<template id="header">
   <div class="header-line">
     <div class="header-left" data-ref="left"></div>
     <div class="header-mid" data-ref="mid"></div>
@@ -198,7 +135,7 @@
 <template id="list_remove_action">
   <div class="list-item-remove">
     <button type="button" tabindex="-1" data-ref="button">
-      <span class="icon icon-remove" aria-hidden="true"></span>
+      <div class="button-wrap" tabindex="-1"><span class="icon icon-remove" aria-hidden="true"></span></div>
     </button>
   </div>
 </template>
@@ -214,6 +151,8 @@
 <template id="read_content_page">
   <div class="read-content-page read-content-page-processing">
     <div class="read-body" data-ref="body"></div>
+    <div class="read-body read-body-left" data-ref="left"></div>
+    <div class="read-body read-body-right" data-ref="right"></div>
     <div class="read-meta">
       <div class="read-title" data-ref="title"></div>
       <div class="read-progress" data-ref="progress"></div>
@@ -230,70 +169,6 @@
     </div>
   </div>
 </template>
-<!--<template id="read_content_item_template">
-</template>
-<template id="read_content_empty_template">
-  <li class="read-content-list-item" data-cursor=""></li>
-  <li class="read-content-list-empty"></li>
-</template>
-<template id="read_bookmark_item_template">
-  <li class="read-bookmark-list-item" data-cursor="">
-    <div class="bookmark-item-content">
-      <div class="bookmark-text">
-      </div>
-      <div class="bookmark-meta">
-        <div class="bookmark-time">
-        </div>
-        <div class="bookmark-content">
-        </div>
-      </div>
-    </div>
-    <div class="bookmark-remove bookmark-action">
-      <span class="icon icon-remove icon-remove-large">
-      </span>
-    </div>
-  </li>
-</template>
-<template id="read_bookmark_empty_template">
-  <li class="read-bookmark-list-empty"></li>
-</template>
-<template id="read_search_item_template">
-  <li class="read-search-list-item" data-cursor="">
-    <div class="sample-text">
-    </div>
-  </li>
-</template>
-<template id="read_search_empty_template">
-  <li class="read-search-list-empty"></li>
-</template>
-<template id="read_search_initial_template">
-  <li class="read-search-list-empty"></li>
-</template>
-<template id="read_search_too_many_template">
-  <li class="read-search-list-item read-search-list-too-many"></li>
-</template>
-<template id="font_item_template">
-  <div class="config-item">
-    <span class="icon icon-checkmark"></span>
-    <div class="config-item-title">
-    </div>
-    <div class="font-remove font-action">
-      <span class="icon icon-remove icon-remove-large">
-      </span>
-    </div>
-  </div>
-</template>
-<template id="voice_item_template">
-  <div class="config-item">
-    <span class="icon icon-checkmark">
-    </span>
-    <div class="config-item-title">
-    </div>
-  </div>
-</template>
-<template id="voice_empty_template">
-  <div class="config-empty"></div>
-</template>-->
 <script src="js/main.js" type="module"></script>
 </body>
 </html>

@@ -1,5 +1,4 @@
 import RangeInput from './range.js';
-import { TouchMoveListener } from './touch.js';
 
 class Color {
   constructor(/** @type {number} */r, /** @type {number} */g, /** @type {number} */b) {
@@ -35,8 +34,6 @@ export default class ColorPicker {
   constructor(container) {
     this.container = container;
 
-    this.setHue = this.setHue.bind(this);
-    this.setBlackWhite = this.setBlackWhite.bind(this);
     /** @type {((value: number) => any)[]} */
     this.onValueChange = [];
 
@@ -44,96 +41,101 @@ export default class ColorPicker {
     this.result = this.container.appendChild(document.createElement('div'));
     this.result.classList.add('color-picker-result');
 
-    this.palette = this.container.appendChild(document.createElement('div'));
-    this.palette.classList.add('color-picker-palette');
-
-    this.picker = this.palette.appendChild(document.createElement('div'));
-    this.picker.classList.add('color-picker-picker');
-
     this.hueBar = this.container.appendChild(document.createElement('div'));
     this.hueBar.classList.add('color-picker-hue');
     this.hueRange = new RangeInput(this.hueBar, { min: 0, max: 360, step: 0.1 });
+    this.hueRange.onChange(hue => { this.setHSV({ hue }); });
+
+    this.saturationBar = this.container.appendChild(document.createElement('div'));
+    this.saturationBar.classList.add('color-picker-saturation');
+    this.saturationRange = new RangeInput(this.saturationBar, { min: 0, max: 1, step: 0.001 });
+    this.saturationRange.onChange(saturation => { this.setHSV({ saturation }); });
+
+    this.valueBar = this.container.appendChild(document.createElement('div'));
+    this.valueBar.classList.add('color-picker-value');
+    this.valueRange = new RangeInput(this.valueBar, { min: 0, max: 1, step: 0.001 });
+    this.valueRange.onChange(value => { this.setHSV({ value }); });
 
     this.candidateList = this.container.appendChild(document.createElement('ul'));
     this.candidateList.classList.add('color-picker-candidate-list');
 
-    this.hueRange.onChange(hue => {
-      this.setHue(hue);
-      this.triggerCallback();
-    });
-
-    this.setColor(0, 0, 0);
-
-    const mouseMove = (pageX, pageY) => {
-      const { x: paletteX, y: paletteY, height, width } = this.palette.getClientRects().item(0);
-      const clientX = pageX - paletteX;
-      const clientY = pageY - paletteY;
-      const black = Math.min(1, Math.max(0, clientY / height));
-      const white = Math.min(1, Math.max(0, 1 - clientX / width));
-      this.setBlackWhite(black, white);
-      this.triggerCallback();
-    };
-    this.touchMoveListener = new TouchMoveListener(this.palette);
-    this.touchMoveListener.onTouchMove(mouseMove);
+    this.setHSV({ hue: 0, saturation: 0, value: 0 });
 
     this.candidateList.addEventListener('click', event => {
       const target = event.target;
       if (!(target instanceof Element)) return;
       const li = target.closest('li');
       if (!li) return;
-      this.setValue(li.dataset.color);
-      this.triggerCallback();
+      this.setColor(li.dataset.color);
     });
   }
-  setColor(hue, black, white) {
-    this.black = black;
-    this.white = white;
-    this.setHue(hue);
-  }
-  setHue(hue) {
-    this.hue = Number(hue);
-    if (!Number.isFinite(this.hue)) this.hue = 0;
-    else this.hue = Math.min(360, Math.max(0, this.hue));
-    this.hueRange.setValue(this.hue);
-
-    const i = Math.floor(this.hue % 360 / 60);
-    const f = (this.hue % 60) / 60;
+  renderColor() {
+    const region = Math.floor(this.hue % 360 / 60);
+    const remind = (this.hue % 60) / 60;
     const [r, g, b] = {
-      0: [1, f, 0],
-      1: [1 - f, 1, 0],
-      2: [0, 1, f],
-      3: [0, 1 - f, 1],
-      4: [f, 0, 1],
-      5: [1, 0, 1 - f],
-    }[i];
+      0: [1, remind, 0],
+      1: [1 - remind, 1, 0],
+      2: [0, 1, remind],
+      3: [0, 1 - remind, 1],
+      4: [remind, 0, 1],
+      5: [1, 0, 1 - remind],
+    }[region];
     this.hueColor = new Color(r, g, b);
-
     this.container.style.setProperty('--color-picker-hue-color', this.hueColor.toHex());
 
-    this.setBlackWhite(this.black, this.white);
+    const v = this.value;
+    this.emptySaturationColor = new Color(v, v, v);
+    this.fullSaturationColor = new Color(v * r, v * g, v * b);
+    this.container.style.setProperty('--color-picker-empty-saturation', this.emptySaturationColor.toHex());
+    this.container.style.setProperty('--color-picker-full-saturation', this.fullSaturationColor.toHex());
+
+    const s = this.saturation;
+    const [sr, sg, sb] = [r, g, b].map(c => 1 + c * s - s);
+    this.emptyValueColor = new Color(0, 0, 0);
+    this.fullValueColor = new Color(1 + r * s - s, 1 + g * s - s, 1 + b * s - s);
+    this.container.style.setProperty('--color-picker-empty-value', this.emptyValueColor.toHex());
+    this.container.style.setProperty('--color-picker-full-value', this.fullValueColor.toHex());
+
+    const [tr, tg, tb] = [sr, sg, sb].map(c => c * v);
+    this.color = new Color(tr, tg, tb);
+    this.container.style.setProperty('--color-picker-color', this.color.toHex());
   }
-  setBlackWhite(black, white) {
-    this.black = black;
-    this.white = white;
-    this.value = new Color(...[...'rgb'].map(c => (this.hueColor[c] * (1 - white) + white) * (1 - black)));
-    this.container.style.setProperty('--color-picker-black', black);
-    this.container.style.setProperty('--color-picker-white', white);
-    this.container.style.setProperty('--color-picker-color', this.value.toHex());
+  setHSV({ hue, saturation, value }) {
+    if (hue != null) this.setHue(hue);
+    if (saturation != null) this.setSaturation(saturation);
+    if (value != null) this.setValue(value);
+    this.renderColor();
+    this.triggerCallback();
+  }
+  normalizeValue(value, max) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return 0;
+    else return Math.min(max, Math.max(0, number));
+  }
+  setHue(hue) {
+    this.hue = this.normalizeValue(hue, 360);
+    this.hueRange.setValue(this.hue);
+  }
+  setSaturation(saturation) {
+    this.saturation = this.normalizeValue(saturation, 1);
+    this.saturationRange.setValue(this.saturation);
+  }
+  setValue(value) {
+    this.value = this.normalizeValue(value, 1);
+    this.valueRange.setValue(this.value);
   }
   /** @param {(value: string) => any} callback */
   onChange(callback) {
     this.onValueChange.push(callback);
   }
-  setValue(value) {
-    const setColor = Color.fromHex(value);
-    if (setColor.toHex() === this.value.toHex()) return;
+  setColor(color) {
+    const setColor = Color.fromHex(color);
+    if (setColor.toHex() === this.color.toHex()) return;
     const { r, g, b } = setColor;
     const [min, mid, max] = [r, g, b].sort((x, y) => x - y);
     if (max === min) {
-      this.setColor(0, 1 - max, 1);
+      this.setHSV({ hue: 0, saturation: 0, value: max });
     } else {
-      const black = 1 - max;
-      const white = min / max;
       const i = [
         r >= g && g >= b,
         g >= r && r >= b,
@@ -144,12 +146,16 @@ export default class ColorPicker {
       ].findIndex(x => x);
       const f = Math.abs((mid - min) / (max - min) - i % 2);
       const hue = 60 * (i + f);
-      this.setColor(hue, black, white);
+      const saturation = 1 - min / max;
+      const value = max;
+      this.setHSV({ hue, saturation, value });
     }
   }
   triggerCallback() {
+    if (this.hexColor === this.color.toHex()) return;
+    this.hexColor = this.color.toHex();
     this.onValueChange.forEach(callback => {
-      callback(this.value.toHex());
+      callback(this.hexColor);
     });
   }
   setCandidateList(colors) {
@@ -164,8 +170,9 @@ export default class ColorPicker {
     });
   }
   dispatch() {
-    this.touchMoveListener.dispatch();
     this.hueRange.dispatch();
+    this.saturationRange.dispatch();
+    this.valueRange.dispatch();
     this.container.innerHTML = '';
   }
 }

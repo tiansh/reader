@@ -1,27 +1,26 @@
 import Page from './page.js';
 import config from './config.js';
-import { TouchGestureListener } from './touch.js';
+import options from './options.js';
 import speech from './speech.js';
 import i18n from './i18n.js';
 import ColorPicker from './color.js';
 import ItemList from './itemlist.js';
 import template from './template.js';
+import dom from './dom.js';
 
-/**
- * @template {ConfigOption} OptionType
- */
 class ConfigOptionPage {
   /**
    * @param {HTMLElement} container
-   * @param {OptionType} mainPage
+   * @param {ConfigPage} mainPage
    */
   constructor(container, mainPage) {
     this.container = container;
     this.page = mainPage;
 
-    const [header, headerRef] = template.create('page_header');
-    this.container.insertBefore(header, this.container.firstChild);
-    const [back] = template.create('back_button');
+    const headerRef = template.create('header');
+    this.container.insertBefore(headerRef.get('root'), this.container.firstChild);
+    const back = template.iconButton('back', i18n.getMessage('buttonBack'));
+
     headerRef.get('left').appendChild(back);
 
     this.titleElement = headerRef.get('mid');
@@ -33,20 +32,29 @@ class ConfigOptionPage {
   }
   show() {
     this.container.classList.add('config-option-page-show');
+    this.page.configPageMain.setAttribute('aria-hidden', 'true');
+    dom.disableKeyboardFocus(this.page.configPageMain);
     this.mainContent.scrollTop = 0;
     this.mainContent.focus();
+    this.isActive = true;
+    this.lastFocus = document.activeElement;
+    if (this.lastFocus.matches('button')) {
+      this.mainContent.querySelector('button, [tabindex="0"]').focus();
+    }
   }
   hide() {
     this.container.classList.remove('config-option-page-show');
+    this.page.configPageMain.setAttribute('aria-hidden', 'false');
+    dom.enableKeyboardFocus(this.page.configPageMain);
+    this.isActive = false;
+    if (this.lastFocus) this.lastFocus.focus();
   }
   onFirstActivate() {
+    this.hide();
     this.backButton.addEventListener('click', () => { this.hide(); });
   }
   onActivate() { }
   onInactivate() { }
-  /**
-   * @param {OptionType} configOption
-   */
   async setConfigOption(configOption) {
     this.cleanUp();
     this.configOption = configOption;
@@ -157,8 +165,9 @@ class ColorConfigOptionPage extends ConfigOptionPage {
     }
   }
   renderValue(value) {
-    this.colorPicker.setValue(value);
+    this.colorPicker.setColor(value);
   }
+  onConfigValueChange() { }
 }
 
 class FontConfigOptionPage extends SelectConfigOptionPage {
@@ -330,257 +339,6 @@ class VoiceConfigOptionPage extends SelectConfigOptionPage {
   }
 }
 
-class ConfigOption {
-  /** @param {{ name: string, title: string }} config */
-  constructor(config) {
-    this.name = config.name;
-    this.title = config.title;
-    /** @type {string} */
-    this.default = null;
-    this.initialized = false;
-  }
-  /** @returns {string} */
-  get type() { throw Error('Unimplementated'); }
-  setConfig(value) { return config.set(this.name, value); }
-  getConfig(value) { return config.get(this.name, value); }
-  /**
-   * @param {HTMLElement} container
-   * @param {number} index
-   */
-  render(container, index) {
-    const itemElement = container.appendChild(document.createElement('div'));
-    itemElement.classList.add('config-item');
-    const titleElement = itemElement.appendChild(document.createElement('div'));
-    titleElement.classList.add('config-item-title');
-    titleElement.textContent = this.title;
-    this.container = itemElement;
-  }
-  renderValue(value) {}
-  isValidValue(value) { return true; }
-  async normalizeConfig() {
-    let value = null;
-    try {
-      value = await config.get(this.name);
-    } catch (e) {
-      // use default
-    }
-    const isValid = await this.isValidValue(value);
-    if (!isValid) {
-      await config.set(this.name, this.default);
-      this.renderValue(this.default);
-    }
-  }
-  async setup(container, index) {
-    if (this.initialized) return;
-    this.initialized = true;
-    this.render(container, index);
-    await this.normalizeConfig();
-    await config.get(this.name).then(value => {
-      this.renderValue(value);
-      config.addListener(this.name, value => {
-        this.renderValue(value);
-      });
-    });
-  }
-  editConfig() {
-    alert(this.name);
-  }
-}
-
-class SelectConfigOption extends ConfigOption {
-  /** @param {{ name: string, title: string, select: { value: string, text: string }[], default: string }} config */
-  constructor(config) {
-    super(config);
-    this.select = config.select;
-    this.default = config.default;
-  }
-  get type() { return 'select'; }
-  isValidValue(value) {
-    return this.select.find(item => item.value === value) != null;
-  }
-  render(container, index) {
-    super.render(container, index);
-    const itemElement = container.firstChild;
-    this.resultElement = itemElement.appendChild(document.createElement('span'));
-    this.resultElement.classList.add('config-item-value');
-    const detailIcon = itemElement.appendChild(template.icon('detail'));
-    detailIcon.classList.add('config-item-detail');
-  }
-  renderValue(value) {
-    this.resultElement.textContent = this.select.find(i => i.value === value).text;
-  }
-}
-
-/** @typedef {string} Color */
-class ColorConfigOption extends ConfigOption {
-  /** @param {{ name: string, title: string, default: Color }} config */
-  constructor(config) {
-    super(config);
-    this.default = config.default;
-  }
-  get type() { return 'color'; }
-  isValidValue(value) {
-    return /^#[a-f0-9]{6}$/i.test(value);
-  }
-  render(container, index) {
-    super.render(container, index);
-    const itemElement = container.firstChild;
-    this.resultElement = itemElement.appendChild(document.createElement('span'));
-    this.resultElement.classList.add('config-item-value', 'config-item-color-value');
-    const detailIcon = itemElement.appendChild(template.icon('detail'));
-    detailIcon.classList.add('config-item-detail');
-  }
-  renderValue(value) {
-    this.resultElement.style.backgroundColor = value;
-  }
-}
-
-class FontConfigOption extends ConfigOption {
-  /** @param {{ name: string, title: string, default: Color }} config */
-  constructor(config) {
-    super(config);
-    this.default = config.default;
-  }
-  get type() { return 'font'; }
-  async isValidValue(value) {
-    if (value === 0) return true;
-    const allFonts = await config.get('font_list');
-    return allFonts.find(font => font.id === value);
-  }
-  render(container, index) {
-    super.render(container, index);
-    const itemElement = container.firstChild;
-    this.resultElement = itemElement.appendChild(document.createElement('span'));
-    this.resultElement.classList.add('config-item-value');
-    const detailIcon = itemElement.appendChild(template.icon('detail'));
-    detailIcon.classList.add('config-item-detail');
-  }
-  renderValue(value) {
-    const id = value ? 'configTextFontFamilyCustom' : 'configTextFontFamilyDefault';
-    const text = i18n.getMessage(id);
-    this.resultElement.textContent = text;
-  }
-}
-
-class VoiceConfigOption extends ConfigOption {
-  /** @param {{ name: string, title: string, default: Color }} config */
-  constructor(config) {
-    super(config);
-    this.default = config.default;
-  }
-  get type() { return 'voice'; }
-  render(container, index) {
-    super.render(container, index);
-    const itemElement = container.firstChild;
-    const detailIcon = itemElement.appendChild(template.icon('detail'));
-    detailIcon.classList.add('config-item-detail');
-  }
-}
-
-/**
- * @typedef {Object} ConfigGroup
- * @property {string} title
- * @property {ConfigOption[]} items
- */
-/** @type {ConfigGroup[]} */
-const configGroups = [{
-  title: i18n.getMessage('configThemeGroupTitle'),
-  items: [new SelectConfigOption({
-    name: 'theme',
-    title: i18n.getMessage('configTheme'),
-    select: [
-      { value: 'auto', text: i18n.getMessage('configThemeAuto') },
-      { value: 'light', text: i18n.getMessage('configThemeLight') },
-      { value: 'dark', text: i18n.getMessage('configThemeDark') },
-    ],
-    default: 'auto',
-  })],
-}, {
-  title: i18n.getMessage('configDarkThemeGroupTitle'),
-  items: [new ColorConfigOption({
-    name: 'dark_text',
-    title: i18n.getMessage('configDarkThemeColor'),
-    default: '#ffffff',
-  }), new ColorConfigOption({
-    name: 'dark_background',
-    title: i18n.getMessage('configDarkThemeBackground'),
-    default: '#000000',
-  })],
-}, {
-  title: i18n.getMessage('configLightThemeGroupTitle'),
-  items: [new ColorConfigOption({
-    name: 'light_text',
-    title: i18n.getMessage('configLightThemeColor'),
-    default: '#000000',
-  }), new ColorConfigOption({
-    name: 'light_background',
-    title: i18n.getMessage('configLightThemeBackground'),
-    default: '#ffffff',
-  })],
-}, {
-  title: i18n.getMessage('configTextGroupTitle'),
-  items: [new FontConfigOption({
-    name: 'font_family',
-    title: i18n.getMessage('configTextFontFamily'),
-    default: null,
-  }), new SelectConfigOption({
-    name: 'font_size',
-    title: i18n.getMessage('configTextFontSize'),
-    select: [10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28].map(n => ({
-      value: String(n),
-      text: i18n.getMessage('configTextFontSizeNum', n),
-    })),
-    default: '18',
-  })],
-}, {
-  title: i18n.getMessage('configPreprocessGroupTitle'),
-  items: [new SelectConfigOption({
-    name: 'max_empty_lines',
-    title: i18n.getMessage('configPreprocessMultipleNewLine'),
-    select: [
-      { value: 'disable', text: i18n.getMessage('configPreprocessMultipleNewLineDisable') },
-      ...[1, 2, 3, 4].map(n => ({
-        value: String(n),
-        text: i18n.getMessage('configPreprocessMultipleNewLineNum', n),
-      })),
-    ],
-    default: 'disable',
-  }), new SelectConfigOption({
-    name: 'chinese_convert',
-    title: i18n.getMessage('configPreprocessChineseConvert'),
-    select: [
-      { value: 'disable', text: i18n.getMessage('configPreprocessChineseConvertDisabled') },
-      { value: 's2t', text: i18n.getMessage('configPreprocessChineseConvertS2T') },
-      { value: 't2s', text: i18n.getMessage('configPreprocessChineseConvertT2S') },
-    ],
-    default: 'disable',
-  })],
-}, {
-  title: i18n.getMessage('configSpeechGroupTitle'),
-  items: [new VoiceConfigOption({
-    name: 'speech_voice',
-    title: i18n.getMessage('configSpeechVoice'),
-    default: null,
-  }), new SelectConfigOption({
-    name: 'speech_pitch',
-    title: i18n.getMessage('configSpeechPitch'),
-    select: [...Array(21)].map((_, i) => i / 10).map(pitch => ({
-      value: String(pitch),
-      text: i18n.getMessage('configSpeechPitchNum', pitch),
-    })),
-    default: '1',
-  }), new SelectConfigOption({
-    name: 'speech_rate',
-    title: i18n.getMessage('configSpeechRate'),
-    select: [...Array(16)].map((_, i) => i / 10 + 0.5).map(rate => ({
-      value: String(rate),
-      text: i18n.getMessage('configSpeechRateNum', rate),
-    })),
-    default: '1',
-  })],
-}];
-
-
 export default class ConfigPage extends Page {
   constructor() {
     const configPage = document.getElementById('config_page');
@@ -603,15 +361,6 @@ export default class ConfigPage extends Page {
     this.voiceConfigPageElement = document.getElementById('config_page_voice');
     this.voiceConfigPage = new VoiceConfigOptionPage(this.voiceConfigPageElement, this);
 
-    // this.fontConfigPageElement = document.querySelector('.config-page-font');
-    // this.fontConfigPage = new FontConfigPage(this.fontConfigPageElement, this);
-
-    // this.voiceConfigPageElement = document.querySelector('.config-page-voice');
-    // this.voiceConfigPage = new VoiceConfigPage(this.voiceConfigPageElement, this);
-
-    // this.colorConfigPageElement = document.querySelector('.config-page-color');
-    // this.colorConfigPage = new ColorConfigPage(this.colorConfigPageElement, this);
-
     this.subConfigPages = [
       this.selectConfigPage,
       this.colorConfigPage,
@@ -620,14 +369,16 @@ export default class ConfigPage extends Page {
     ];
     /** @type {ConfigOptionPage} */
     this.activeSubConfigPage = null;
+
+    this.keyboardHandler = this.keyboardHandler.bind(this);
   }
   addHeader() {
     const container = this.configPageMain;
-    const [header, headerRef] = template.create('page_header');
-    container.insertBefore(header, container.firstChild);
-    const [back] = template.create('back_button');
+    const headerRef = template.create('header');
+    container.insertBefore(headerRef.get('root'), container.firstChild);
+    const back = template.iconButton('back', i18n.getMessage('buttonBack'));
     headerRef.get('left').appendChild(back);
-    back.addEventListener('click', () => { this.router.go('list'); });
+    back.addEventListener('click', () => { this.gotoList(); });
   }
   matchUrl(url) { return /^\/settings(\/.*)?$/.test(url); }
   getUrl(item) {
@@ -661,7 +412,7 @@ export default class ConfigPage extends Page {
         subPage.show();
       }
     };
-    configGroups.forEach(group => {
+    options.forEach(group => {
       const titleElement = configList.appendChild(document.createElement('div'));
       titleElement.classList.add('config-title');
       titleElement.textContent = group.title;
@@ -670,16 +421,27 @@ export default class ConfigPage extends Page {
       new ItemList(groupElement, { list: group.items, onItemClick, render: itemRender });
     });
 
-    // this.backButton.addEventListener('click', () => {
-    //   this.router.go('list');
-    // });
-
     this.subConfigPages.forEach(page => { page.onFirstActivate(); });
   }
   async onActivate() {
+    document.addEventListener('keydown', this.keyboardHandler);
   }
   async onInactivate() {
     this.subConfigPages.forEach(page => { page.onInactivate(); });
+    document.removeEventListener('keydown', this.keyboardHandler);
+  }
+  isPreserve() { return false; }
+  /** @param {KeyboardEvent} event */
+  keyboardHandler(event) {
+    if (event.code === 'Escape') {
+      const activePage = this.subConfigPages.find(page => page.isActive);
+      if (activePage) activePage.hide();
+      else this.gotoList();
+      event.preventDefault();
+    }
+  }
+  gotoList() {
+    this.router.go('list');
   }
 }
 

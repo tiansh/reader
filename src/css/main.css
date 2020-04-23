@@ -1,5 +1,4 @@
 :root {
-  --content-text-justify: distribute;
   --content-padding-x: 20px;
   --content-padding-y: 20px;
 }
@@ -65,13 +64,18 @@ a {
 
 .icon-line {
   width: 100%;
-  height: 40px;
+  height: 60px;
   text-align: center;
   display: flex;
 }
 
 .icon-line-item {
   flex: 1 1 0;
+}
+
+.icon-line-item button {
+  display: block;
+  width: 100%;
 }
 
 .header-left,
@@ -140,6 +144,10 @@ a {
   position: relative;
 }
 
+button.list-item-container:active {
+  background: var(--list-active-background);
+}
+
 .list-item-selected-icon {
   position: absolute;
   top: 50%;
@@ -154,6 +162,7 @@ a {
 
 .list-item-content-wrap {
   margin: 0 15px;
+  outline: none;
 }
 
 .item-list-selectable .list-item-content-wrap {
@@ -192,11 +201,26 @@ a {
   left: 0;
   width: 120px;
   bottom: 0;
-  display: table-cell;
-  vertical-align: middle;
-  text-align: center;
+}
+
+.list-item-remove .icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .noscroll .scroll {
   overflow: hidden;
 }
+
+.button-wrap {
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+[tabindex="-1"] {
+  outline: none;
+}
+

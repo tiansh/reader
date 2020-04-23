@@ -1,4 +1,4 @@
-const version = '20200418';
+const version = '20200420';
 
 const resourceList = [
   './css/normalize-8.0.1.css',
@@ -20,11 +20,13 @@ const resourceList = [
   './js/color.js',
   './js/onresize.js',
   './js/storage.js',
+  './js/dom.js',
   './js/template.js',
   './js/itemlist.js',
   './js/text.js',
   './js/file.js',
   './js/config.js',
+  './js/options.js',
   './js/speech.js',
   './js/page.js',
   './js/router.js',

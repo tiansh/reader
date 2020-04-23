@@ -34,24 +34,30 @@ export default class Router {
     const path = await config.get('path') || '#!' + this.fallback;
     this.hashTo(path);
   }
+  /** @returns {Page} */
   update() {
     const hash = location.hash;
-    if (!hash.startsWith('#!')) { this.goFallback(); return; }
+    if (!hash.startsWith('#!')) return this.goFallback();
     const url = hash.slice(2);
     const pages = [...Object.values(this.pages)];
     const target = pages.find(page => page.matchUrl(url));
-    if (!target) { this.goFallback(); return; }
+    if (!target) return this.goFallback();
     pages.forEach(page => {
       if (page.isActive() && page !== target) page.inactivate();
     });
     target.activate(target.matchUrl(url));
+    return target;
   }
   goFallback() {
-    this.hashTo('#!' + this.fallback);
+    const hash = '#!' + this.fallback;
+    window.history.replaceState(null, null, hash);
+    return this.update();
   }
   async hashTo(hash) {
     window.history.replaceState(null, null, hash);
-    this.update();
-    await config.set('path', hash);
+    const page = this.update();
+    if (page.isPreserve()) {
+      await config.set('path', hash);
+    }
   }
 }
