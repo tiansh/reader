@@ -86,12 +86,12 @@ export default class ItemList {
     if (this.hasRemove && this.mayRemove(item, index)) {
       li.classList.add('list-item-has-remove');
 
-      const [removeAction, removeRef] = template.create('list_remove_action');
+      const removeRef = template.create('listRemoveAction');
       removeRef.get('button').addEventListener('click', () => {
         const index = this.list.indexOf(item);
         if (index !== -1) this.onRemove(item, index);
       });
-      li.appendChild(removeAction);
+      li.appendChild(removeRef.get('root'));
 
       const maxSlide = 120, overSlide = 20;
       let showDelete = false, showDeleteMove = false;
@@ -127,11 +127,14 @@ export default class ItemList {
 
       li.addEventListener('keydown', event => {
         if (['Delete', 'ArrowLeft'].includes(event.code)) {
-          if (!this.showDelete) slideDelete('show');
-          else this.onRemove(item, index);
-        }
-        if (['Enter', 'Space', 'Escape', 'ArrowRight'].includes(event.code)) {
-          if (this.showDelete) {
+          this.listElement.dispatchEvent(new Event('__hide_remove'));
+          if (!showDelete) slideDelete('show');
+          else {
+            const index = this.list.indexOf(item);
+            this.onRemove(item, index);
+          }
+        } else if (['Enter', 'Space', 'Escape', 'ArrowRight'].includes(event.code)) {
+          if (showDelete) {
             slideDelete('hide');
           }
         }

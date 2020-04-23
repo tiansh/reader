@@ -4,6 +4,7 @@ import template from './template.js';
 import text from './text.js';
 import file from './file.js';
 import i18n from './i18n.js';
+import dom from './dom.js';
 
 export default class ListPage extends Page {
   constructor() {
@@ -12,13 +13,19 @@ export default class ListPage extends Page {
   matchUrl(url) { return url === '/'; }
   getUrl(param) { return '/'; }
   async onFirstActivate() {
-    this.addButton = document.querySelector('#add');
+    const headerRef = template.create('header');
+    this.element.insertBefore(headerRef.get('root'), this.element.firstChild);
+    this.addButton = template.iconButton('add', i18n.getMessage('buttonAdd'));
+    this.configButton = template.iconButton('settings', i18n.getMessage('buttonSettings'));
+    headerRef.get('left').appendChild(this.addButton);
+    headerRef.get('right').appendChild(this.configButton);
+
     /** @type {HTMLInputElement} */
     this.fileButton = document.querySelector('#file');
-    this.configButton = document.querySelector('#settings');
 
     this.fileListElement = document.querySelector('#file_list');
 
+    this.sortButton = document.querySelector('.list-sort');
     this.sortContent = document.querySelector('.list-sort-content');
     this.sortMenu = document.querySelector('.list-sort-menu');
     this.importTip = document.querySelector('#import_tip');
@@ -58,8 +65,8 @@ export default class ListPage extends Page {
     this.configButton.addEventListener('click', event => {
       this.router.go('config');
     });
-    this.sortContent.addEventListener('click', event => {
-      this.sortMenu.style.display = 'block';
+    this.sortButton.addEventListener('click', event => {
+      this.showSortMenu();
     });
     this.sortMenu.addEventListener('click', event => {
       const target = event.target;
@@ -73,7 +80,7 @@ export default class ListPage extends Page {
           this.updateList();
         }
       }
-      this.sortMenu.style.display = 'none';
+      this.hideSortMenu();
     });
   }
   async updateList() {
@@ -86,7 +93,7 @@ export default class ListPage extends Page {
 
     const render = (container, file) => {
       if (container.firstChild) return;
-      const [element, ref] = template.create('file_list_item');
+      const ref = template.create('fileListItem');
       ref.get('title').textContent = file.title;
       const date = file.lastAccessTime.toLocaleDateString();
       ref.get('date').textContent = date;
@@ -94,7 +101,7 @@ export default class ListPage extends Page {
         (file.cursor / file.length * 100).toFixed(2) + '%' :
         i18n.getMessage('listNotYetRead');
       ref.get('detail').textContent = percent;
-      container.appendChild(element);
+      container.appendChild(ref.get('root'));
     };
     const onItemClick = file => {
       this.router.go('read', { id: file.id });
@@ -134,6 +141,16 @@ export default class ListPage extends Page {
       title: (a, b) => a.title.localeCompare(b.title, navigator.language),
     }[sortBy];
     files.sort(cmp);
+  }
+  showSortMenu() {
+    this.sortMenu.style.display = 'block';
+    this.element.setAttribute('aria-hidden', 'true');
+    dom.disableKeyboardFocus(this.element);
+  }
+  hideSortMenu() {
+    this.sortMenu.style.display = 'none';
+    this.element.setAttribute('aria-hidden', 'false');
+    dom.enableKeyboardFocus(this.element);
   }
 }
 

@@ -42,5 +42,6 @@ export default class Page {
   }
   matchUrl(url) { return false; }
   getUrl(param) { return '/'; }
+  isPreserve() { return true; }
 }
 

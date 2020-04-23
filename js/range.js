@@ -10,21 +10,25 @@ import { TouchMoveListener } from './touch.js';
 
 export default class RangeInput {
   /**
-   * @param {HTMLElement} container
+   * @param {HTMLElement} outer
    * @param {RangeConfig} config
    */
-  constructor(container, config) {
-    this.container = container;
-    this.config = this.normalizeConfig(config);
-    this.value = this.normalizeValue(config);
+  constructor(outer, config) {
+    this.container = outer.appendChild(document.createElement('div'));
+    this.setConfig(config);
 
     /** @type {((value: number) => any)[]} */
     this.onValueChange = [];
 
     this.container.classList.add('range-container');
-    this.thumb = container.appendChild(document.createElement('div'));
+    this.container.setAttribute('role', 'slide');
+    this.container.setAttribute('tabindex', '0');
+    this.wrap = this.container.appendChild(document.createElement('div'));
+    this.wrap.classList.add('range-wrap');
+    this.wrap.setAttribute('tabindex', '-1');
+    this.thumb = this.wrap.appendChild(document.createElement('div'));
     this.thumb.classList.add('range-thumb');
-    this.track = container.appendChild(document.createElement('div'));
+    this.track = this.wrap.appendChild(document.createElement('div'));
     this.track.classList.add('range-track');
 
     const setRatio = ratio => {
@@ -37,13 +41,7 @@ export default class RangeInput {
           Math.round((config.max - config.min) * ratio / config.step) * config.step + config.min
         ));
       }
-      if (this.value !== pos) {
-        this.value = pos;
-        this.onValueChange.forEach(callback => {
-          callback(pos);
-        });
-        this.renderValue(pos);
-      }
+      this.updateValue(pos);
     };
     const mouseMove = pageX => {
       const clientX = pageX - this.track.getClientRects().item(0).x;
@@ -53,6 +51,10 @@ export default class RangeInput {
     };
     this.listener = new TouchMoveListener(this.container);
     this.listener.onTouchMove(mouseMove);
+    this.listener.onTouchStart(mouseMove);
+
+    this.keyboardHandler = this.keyboardHandler.bind(this);
+    this.container.addEventListener('keydown', this.keyboardHandler);
   }
   /**
    * @param {RangeConfig} config
@@ -60,6 +62,10 @@ export default class RangeInput {
   setConfig(config) {
     this.config = this.normalizeConfig(config);
     this.value = this.normalizeValue(config);
+
+    this.container.setAttribute('aria-valuemin', this.config.min);
+    this.container.setAttribute('aria-valuemax', this.config.max);
+    this.container.setAttribute('aria-valuenow', this.value);
   }
   getConfig() {
     return this.config;
@@ -72,6 +78,14 @@ export default class RangeInput {
       this.renderValue(newValue);
     }
   }
+  updateValue(newValue) {
+    if (this.value === newValue) return;
+    this.value = newValue;
+    this.onValueChange.forEach(callback => {
+      callback(newValue);
+    });
+    this.renderValue(newValue);
+  }
   /** @param {(value: number) => any} callback */
   onChange(callback) {
     this.onValueChange.push(callback);
@@ -80,6 +94,7 @@ export default class RangeInput {
     const config = this.config;
     const ratio = (value - config.min) / (config.max - config.min);
     this.container.style.setProperty('--range-ratio', ratio);
+    this.container.setAttribute('aria-valuenow', value);
   }
   normalizeConfig(config) {
     let min = Number.isFinite(config.min) ? config.min : 0;
@@ -101,8 +116,30 @@ export default class RangeInput {
     }
     return Math.round((config.value - this.config.min) / this.config.step) * this.config.step + this.config.min;
   }
+  /** @param {KeyboardEvent} event */
+  keyboardHandler(event) {
+    if (!event.repeat) this.repeatCount = 0;
+    else this.repeatCount++;
+    const base = 1.2 ** this.repeatCount;
+    const ratio = {
+      ArrowUp: 1,
+      ArrowDown: -1,
+      ArrowRight: 1,
+      ArrowLeft: -1,
+      PageUp: 10,
+      PageDown: -10,
+    }[event.code] || 0;
+    if (!ratio) return;
+    const total = (this.config.max - this.config.min) / this.config.step;
+    const move = Math.min(base, total / 50) * ratio * this.config.step;
+    const value = this.value + move;
+    const newValue = this.normalizeValue(Object.assign({}, this.config, { value: value }));
+    this.updateValue(newValue);
+    event.preventDefault();
+  }
   dispatch() {
     this.listener.dispatch();
-    this.container.innerHTML = '';
+    this.container.removeEventListener('keydown', this.keyboardHandler);
+    this.container.remove();
   }
 }

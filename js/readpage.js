@@ -9,6 +9,7 @@ import i18n from './i18n.js';
 import RangeInput from './range.js';
 import template from './template.js';
 import ItemList from './itemlist.js';
+import dom from './dom.js';
 
 class ReadSubPage {
   /**
@@ -26,17 +27,23 @@ class ReadSubPage {
     this.isCurrent = true;
     this.container.classList.add('read-sub-page-current');
     this.container.removeAttribute('aria-hidden');
+    dom.enableKeyboardFocus(this.container);
+    dom.disableKeyboardFocus(this.readPage.controlPage.container);
   }
   hide() {
     this.isCurrent = false;
     this.container.classList.remove('read-sub-page-current');
     this.container.setAttribute('aria-hidden', 'true');
+    dom.disableKeyboardFocus(this.container);
+    dom.enableKeyboardFocus(this.readPage.controlPage.container);
   }
   currentActive() {
     return this.isCurrent;
   }
   onFirstActivate() { }
-  onActivate() { }
+  onActivate() {
+    this.hide();
+  }
   onInactivate() { }
 }
 
@@ -55,23 +62,29 @@ class IndexSubPage extends ReadSubPage {
     this.indexPage = indexPage;
     this.tabGroup = this.tabItem.closest('.tab-group');
     this.onCursorChange = this.onCursorChange.bind(this);
+    this.pageButtonAction = this.pageButtonAction.bind(this);
   }
   show() {
     this.indexPage.container.style.setProperty('--tab-index-current', this.pageIndex);
     this.tabGroup.style.setProperty('--active-index', this.pageIndex);
     this.indexPage.currentActiveIndex = this.pageIndex;
     this.focusCurrentItem();
+    this.container.removeAttribute('aria-hidden');
+    dom.enableKeyboardFocus(this.container);
   }
   hide() {
+    this.container.setAttribute('aria-hidden', 'true');
+    dom.disableKeyboardFocus(this.container);
   }
+  createPageButton() { }
   onFirstActivate() {
     super.onFirstActivate();
 
-    const [header, headerRef] = template.create('page_header');
-    this.container.insertBefore(header, this.container.firstChild);
-    const [backButton] = template.create('back_button');
+    const headerRef = template.create('header');
+    this.container.insertBefore(headerRef.get('root'), this.container.firstChild);
+    const backButton = template.iconButton('back', i18n.getMessage('buttonBack'));
     this.backButton = headerRef.get('left').appendChild(backButton);
-    this.pageButton = this.container.querySelector('.index-tab-button');
+    this.pageButton = this.createPageButton();
     headerRef.get('right').appendChild(this.pageButton);
 
     this.tabItem.addEventListener('click', event => {
@@ -101,7 +114,7 @@ class IndexSubPage extends ReadSubPage {
     });
     this.currentContentsIndex = null;
 
-    this.pageButton.addEventListener('click', event => { this.pageButtonAction(); });
+    this.pageButton.addEventListener('click', this.pageButtonAction);
 
     this.updateCurrentHighlight();
   }
@@ -151,6 +164,9 @@ class IndexSubPage extends ReadSubPage {
 class IndexContentsPage extends IndexSubPage {
   constructor(container, tabItem, index, indexPage, readPage) {
     super(container, tabItem, index, indexPage, readPage);
+  }
+  createPageButton() {
+    return template.iconButton('refresh', i18n.getMessage('buttonContentsRefresh'));
   }
   refreshContents() {
     if (!this.readPage.index.content) {
@@ -211,6 +227,9 @@ class IndexBookmarkPage extends IndexSubPage {
   constructor(container, tabItem, index, indexPage, readPage) {
     super(container, tabItem, index, indexPage, readPage);
   }
+  createPageButton() {
+    return template.iconButton('bookmark', i18n.getMessage('buttonBookmarkAdd'));
+  }
   onFirstActivate() {
     super.onFirstActivate();
     this.dateFormatter = new Intl.DateTimeFormat(navigator.language, {
@@ -242,8 +261,8 @@ class IndexBookmarkPage extends IndexSubPage {
   }
   listItemRender(container, item) {
     if (!container.firstChild) {
-      const [element, ref] = template.create('bookmark_item');
-      container.appendChild(element);
+      const ref = template.create('bookmarkItem');
+      container.appendChild(ref.get('root'));
       ref.get('text').textContent = item.title;
       ref.get('time').textContent = this.dateFormatter.format(item.createTime);
       const contents = this.indexPage.contentsPage.getContentsByCursor(item.cursor);
@@ -282,6 +301,9 @@ class IndexBookmarkPage extends IndexSubPage {
 class IndexSearchPage extends IndexSubPage {
   constructor(container, tabItem, index, indexPage, readPage) {
     super(container, tabItem, index, indexPage, readPage);
+  }
+  createPageButton() {
+    return template.iconButton('remove', i18n.getMessage('buttonSearchClear'));
   }
   onFirstActivate() {
     super.onFirstActivate();
@@ -384,12 +406,17 @@ class IndexPage extends ReadSubPage {
     this.contentsPageElement = this.container.querySelector('#read_index_contents');
     this.contentsPageTabElement = this.container.querySelector('#read_index_contents_tab');
     this.contentsPage = new IndexContentsPage(this.contentsPageElement, this.contentsPageTabElement, 0, this, this.readPage);
+    this.contentsPageTabElement.appendChild(template.icon('contents', i18n.getMessage('buttonContents')));
+
     this.bookmarkPageElement = this.container.querySelector('#read_index_bookmark');
     this.bookmarkPageTabElement = this.container.querySelector('#read_index_bookmark_tab');
     this.bookmarkPage = new IndexBookmarkPage(this.bookmarkPageElement, this.bookmarkPageTabElement, 1, this, this.readPage);
+    this.bookmarkPageTabElement.appendChild(template.icon('bookmark', i18n.getMessage('buttonBookmark')));
+
     this.searchPageElement = this.container.querySelector('#read_index_search');
     this.searchPageTabElement = this.container.querySelector('#read_index_search_tab');
     this.searchPage = new IndexSearchPage(this.searchPageElement, this.searchPageTabElement, 2, this, this.readPage);
+    this.searchPageTabElement.appendChild(template.icon('search', i18n.getMessage('buttonSearch')));
 
     this.subPages = [this.contentsPage, this.bookmarkPage, this.searchPage];
     this.subPageMap = { contents: this.contentsPage, bookmark: this.bookmarkPage, search: this.searchPage };
@@ -399,6 +426,18 @@ class IndexPage extends ReadSubPage {
     this.subPages.forEach(page => page.onFirstActivate());
 
     this.tabGroupContainer = this.container.querySelector('.index-tab-group');
+
+    this.tabGroup = this.container.querySelector('.tab-group');
+    this.tabGroup.addEventListener('keydown', event => {
+      let targetPage = null;
+      if (event.code === 'ArrowRight') {
+        targetPage = this.subPages[this.currentActiveIndex + 1];
+      } else if (event.code === 'ArrowLeft') {
+        targetPage = this.subPages[this.currentActiveIndex - 1];
+      }
+      if (targetPage) this.showPage(targetPage);
+    });
+
   }
   onActivate() {
     super.onActivate();
@@ -410,8 +449,7 @@ class IndexPage extends ReadSubPage {
   }
   slideShow(action, offset) {
     if (action === 'move') {
-      const bottom = window.innerHeight - offset;
-      this.container.style.bottom = bottom + 'px';
+      this.container.style.bottom = `calc(100vh - ${offset}px)`;
       this.container.classList.add('read-index-slide');
     } else {
       this.container.classList.remove('read-index-slide');
@@ -432,11 +470,11 @@ class IndexPage extends ReadSubPage {
     super.show();
     this.container.style.bottom = '0';
     if (page) this.showPage(this.subPageMap[page]);
-    else this.subPages[this.currentActiveIndex].show();
+    else this.showPage(this.subPages[this.currentActiveIndex]);
   }
   hide() {
     super.hide();
-    this.container.style.bottom = window.innerHeight + 'px';
+    this.container.style.bottom = '100vh';
   }
 }
 
@@ -684,9 +722,9 @@ class ControlPage extends ReadSubPage {
   onFirstActivate() {
     super.onFirstActivate();
 
-    const [header, headerRef] = template.create('page_header');
-    this.container.appendChild(header);
-    const [backButton] = template.create('back_button');
+    const headerRef = template.create('header');
+    this.container.insertBefore(headerRef.get('root'), this.container.firstChild);
+    const backButton = template.iconButton('back', i18n.getMessage('buttonBack'));
     headerRef.get('left').appendChild(backButton);
     this.bookTitleELement = headerRef.get('mid');
     this.backButton = backButton;
@@ -694,11 +732,20 @@ class ControlPage extends ReadSubPage {
 
     this.coverElement = this.container.querySelector('.read-control-cover');
 
-    this.contentsButton = this.container.querySelector('#contents_button');
-    this.bookmarkButton = this.container.querySelector('#bookmark_button');
-    this.searchButton = this.container.querySelector('#search_button');
-    this.jumpButton = this.container.querySelector('#jump_button');
-    this.speechButton = this.container.querySelector('#speech_button');
+    const iconLine = this.container.querySelector('.icon-line');
+    const genButton = (type, title) => {
+      const item = iconLine.appendChild(document.createElement('div'));
+      item.classList.add('icon-line-item');
+      const button = item.appendChild(template.iconButton(type, title));
+      return button;
+    };
+    this.contentsButton = genButton('contents', i18n.getMessage('buttonContents'));
+    this.bookmarkButton = genButton('bookmark', i18n.getMessage('buttonBookmark'));
+    this.searchButton = genButton('search', i18n.getMessage('buttonSearch'));
+    this.jumpButton = genButton('jump', i18n.getMessage('buttonJump'));
+    this.speechButton = genButton('speech', i18n.getMessage('buttonSpeech'));
+    const stopIcon = template.icon('speech-stop', i18n.getMessage('buttonSpeechStop'));
+    this.speechButton.querySelector('.icon').after(stopIcon);
 
     [
       { name: 'contents', button: this.contentsButton },
@@ -733,6 +780,15 @@ class ControlPage extends ReadSubPage {
       if (!voice) speechContainer.hidden = true;
       else speechContainer.hidden = false;
     });
+
+    this.container.addEventListener('focusin', event => {
+      this.hasFocus = true;
+      this.container.classList.add('read-control-active');
+    });
+    this.container.addEventListener('focusout', event => {
+      this.hasFocus = false;
+      if (!this.isShow) this.container.classList.remove('read-control-active');
+    });
   }
   onActivate() {
     super.onActivate();
@@ -746,10 +802,19 @@ class ControlPage extends ReadSubPage {
     this.hide();
   }
   hide() {
+    this.isShow = false;
     this.container.classList.remove('read-control-active');
+    if (this.hasFocus) {
+      this.hasFocus = false;
+      document.documentElement.focus();
+    }
   }
   show() {
+    this.isShow = true;
     this.container.classList.add('read-control-active');
+  }
+  focus() {
+    this.backButton.focus();
   }
 }
 
@@ -786,6 +851,12 @@ export default class ReadPage extends Page {
 
     this.subPages = [this.controlPage, this.indexPage, this.jumpPage];
     this.subPages.forEach(page => { page.onFirstActivate(); });
+
+    this.container.addEventListener('scroll', event => {
+      this.container.scrollTop = 0;
+      this.container.scrollLeft = 0;
+      event.preventDefault();
+    });
   }
   async onActivate({ id }) {
     this.meta = await file.getMeta(id);
@@ -824,7 +895,7 @@ export default class ReadPage extends Page {
 
     onResize.addListener(this.onResize);
 
-    document.body.addEventListener('keydown', this.keyboardEvents);
+    document.addEventListener('keydown', this.keyboardEvents);
 
     this.subPages.forEach(page => { page.onActivate(); });
   }
@@ -842,7 +913,7 @@ export default class ReadPage extends Page {
     this.pageInfo = null;
     this.pages = null;
     onResize.removeListener(this.onResize);
-    document.body.removeEventListener('keydown', this.keyboardEvents);
+    document.removeEventListener('keydown', this.keyboardEvents);
     this.subPages.forEach(page => { page.onInactivate(); });
     this.speech.stop();
   }
@@ -868,7 +939,10 @@ export default class ReadPage extends Page {
     return false;
   }
   listenPagesContainer() {
-    const listener = new TouchGestureListener(this.pagesContainer, { yRadian: Math.PI / 6, minDistanceY: 80 });
+    const listener = new TouchGestureListener(this.pagesContainer, {
+      yRadian: Math.PI / 6,
+      minDistanceY: 80,
+    });
     const wos = (f, g) => (...p) => {
       if (this.isAnythingSelected()) {
         if (g) g(...p);
@@ -898,7 +972,18 @@ export default class ReadPage extends Page {
     const current = this.subPages.find(page => page.isCurrent);
     if (event.code === 'Escape') {
       if (current) current.hide();
-      else this.gotoList();
+      else if (this.controlPage.hasFocus) this.controlPage.hide();
+      else this.controlPage.focus();
+    } else if (!current) {
+      if (['PageUp', 'ArrowLeft'].includes(event.code)) {
+        this.prevPage();
+      } else if (['PageDown', 'ArrowRight'].includes(event.code)) {
+        this.nextPage();
+      } else if (['ArrowUp'].includes(event.code)) {
+        this.controlPage.focus();
+      } else if (['ArrowDown'].includes(event.code)) {
+        this.indexPage.show();
+      }
     }
   }
   /**
@@ -951,7 +1036,11 @@ export default class ReadPage extends Page {
     file.setMeta(this.meta);
   }
   async updateStyleConfig() {
-    const keys = ['light_text', 'light_background', 'dark_text', 'dark_background', 'font_size', 'font_family', 'font_list'];
+    const keys = [
+      'light_text', 'light_background', 'dark_text', 'dark_background',
+      'font_size', 'font_family', 'font_list',
+      'line_height', 'paragraph_spacing',
+    ];
     const configs = Object.fromEntries(await Promise.all(keys.map(async key => [key, await config.get(key)])));
     const font = configs.font_family && Array.isArray(configs.font_list) &&
       configs.font_list.find(font => font.id === configs.font_family).content || null;
@@ -961,7 +1050,8 @@ export default class ReadPage extends Page {
     this.customStyle.textContent = [
       `.dark-theme .read-content-page { color: ${configs.dark_text}; background: ${configs.dark_background}; }`,
       `.light-theme .read-content-page { color: ${configs.light_text}; background: ${configs.light_background}; }`,
-      `.read-content-page { font-size: ${configs.font_size}px; }`,
+      `.read-content-page { font-size: ${configs.font_size}px; line-height: ${configs.line_height}; }`,
+      `.read-content-page p { margin-bottom: ${configs.paragraph_spacing * configs.line_height * configs.font_size}px; }`,
       font ? `.read-content-page { font-family: CustomFont; }` : '',
     ].join('\n');
   }
@@ -1001,6 +1091,7 @@ export default class ReadPage extends Page {
       }
     }
     pages.current.container.className = 'read-content-page read-content-page-current';
+    pages.current.container.removeAttribute('aria-hidden');
     if (!pages.next && !pages.isLast) {
       const next = this.layoutPageStartsWith(pages.current.nextCursor);
       if (next) {
@@ -1012,6 +1103,7 @@ export default class ReadPage extends Page {
     }
     if (pages.next) {
       pages.next.container.className = 'read-content-page read-content-page-next';
+      pages.next.container.setAttribute('aria-hidden', 'true');
       pages.isLast = false;
     }
     if (!pages.prev && !pages.isFirst) {
@@ -1025,6 +1117,7 @@ export default class ReadPage extends Page {
     }
     if (pages.prev) {
       pages.prev.container.className = 'read-content-page read-content-page-prev';
+      pages.prev.container.setAttribute('aria-hidden', 'true');
       pages.isFirst = false;
     }
   }
@@ -1035,28 +1128,17 @@ export default class ReadPage extends Page {
     if (!page) return;
     page.container.remove();
   }
+  isTwoColumn() {
+    if (window.innerWidth < 960) return false;
+    if (window.innerWidth < window.innerHeight * 1.2) return false;
+    return true;
+  }
   /**
    * @param {number} cursor
-   * @returns {PageRender}
+   * @param {HTMLElement} body
+   * @returns {number}
    */
-  layoutPageStartsWith(cursor) {
-    if (cursor >= this.content.length) {
-      return null;
-    }
-    const [container, ref] = template.create('read_content_page');
-    const body = ref.get('body');
-    const title = ref.get('title');
-    const progress = ref.get('progress');
-    title.textContent = this.meta.title;
-    if (this.index && this.index.content && this.index.content.items) {
-      const items = this.index.content.items;
-      const next = items.findIndex(i => i.cursor > cursor);
-      if (next === -1 && items.length) title.textContent = items[items.length - 1].title;
-      else if (next > 0) title.textContent = items[next - 1].title;
-    }
-    progress.textContent = (cursor / this.content.length * 100).toFixed(2) + '%';
-    // 1. insert container into dom, so styles would applied to it
-    this.pagesContainer.appendChild(container);
+  layoutPageColumn(cursor, body) {
     // 2. fill texts until it overflow the content
     const step = 128;
     /** @type {HTMLParagraphElement[]} */
@@ -1088,7 +1170,7 @@ export default class ReadPage extends Page {
     if (body.clientHeight !== body.scrollHeight) {
       // 3. find out where the overflow happened
       const rect = body.getBoundingClientRect();
-      const firstOut = paragraphs.reverse().find(p => {
+      const firstOut = paragraphs.slice(0).reverse().find(p => {
         return p.getBoundingClientRect().top < rect.bottom;
       });
       const startPos = Number(firstOut.dataset.start);
@@ -1128,6 +1210,66 @@ export default class ReadPage extends Page {
     } else {
       nextCursor = this.content.length;
     }
+    // 5. Mark following contents hidden
+    paragraphs.forEach(paragraph => {
+      const start = Number(paragraph.dataset.start);
+      const text = paragraph.textContent;
+      const length = text.length;
+      const end = start + length;
+      if (start >= nextCursor) {
+        paragraph.remove();
+      } else if (end > nextCursor) {
+        const pos = nextCursor - start;
+        const before = text.slice(0, pos);
+        const after = text.slice(pos);
+        paragraph.textContent = before;
+        const afterSpan = document.createElement('span');
+        afterSpan.setAttribute('aria-hidden', 'true');
+        afterSpan.textContent = after;
+        paragraph.appendChild(afterSpan);
+      }
+    });
+
+    return nextCursor;
+  }
+  /**
+   * @param {number} cursor
+   * @returns {PageRender}
+   */
+  layoutPageStartsWith(cursor) {
+    if (cursor >= this.content.length) {
+      return null;
+    }
+    const ref = template.create('readContentPage');
+    const container = ref.get('root');
+    const title = ref.get('title');
+    const progress = ref.get('progress');
+    title.textContent = this.meta.title;
+    if (this.index && this.index.content && this.index.content.items) {
+      const items = this.index.content.items;
+      const next = items.findIndex(i => i.cursor > cursor);
+      if (next === -1 && items.length) title.textContent = items[items.length - 1].title;
+      else if (next > 0) title.textContent = items[next - 1].title;
+    }
+    progress.textContent = (cursor / this.content.length * 100).toFixed(2) + '%';
+    // 1. insert container into dom, so styles would applied to it
+    this.pagesContainer.appendChild(container);
+
+    let nextCursor;
+    const body = ref.get('body');
+    const left = ref.get('left');
+    const right = ref.get('right');
+
+    if (this.isTwoColumn()) {
+      body.remove();
+      const rightCursor = this.layoutPageColumn(cursor, left);
+      nextCursor = this.layoutPageColumn(rightCursor, right);
+    } else {
+      left.remove();
+      right.remove();
+      nextCursor = this.layoutPageColumn(cursor, body);
+    }
+
     // 5. Everything done
     this.pagesContainer.removeChild(container);
     container.classList.remove('read-content-page-processing');

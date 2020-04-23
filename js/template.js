@@ -11,9 +11,10 @@ export default template;
 
 /**
  * @param {string} id
- * @returns {[HTMLElement, Map<string, HTMLElement>]}
+ * @returns {Map<string, HTMLElement>}
  */
-template.create = function (id) {
+template.create = function (name) {
+  const id = name.replace(/[A-Z]/g, c => '_' + c.toLowerCase());
   const template = allTemplates.get(id);
   /** @type {DocumentFragment} */
   const content = template.content.cloneNode(true);
@@ -23,12 +24,13 @@ template.create = function (id) {
     reference.set(ref.dataset.ref, ref);
     ref.removeAttribute('data-ref');
   });
-  return [result, reference];
+  reference.set('root', result);
+  return reference;
 };
 
 template.icon = function (type, title = null) {
-  const icon = document.createElement('span');
-  icon.classList.add('icon', 'icon-' + type);
+  const icon = template.create('icon').get('root');
+  icon.classList.add('icon-' + type);
   if (title) {
     icon.setAttribute('title', title);
     icon.setAttribute('aria-label', title);
@@ -36,5 +38,12 @@ template.icon = function (type, title = null) {
     icon.setAttribute('aria-hidden', 'true');
   }
   return icon;
+};
+
+template.iconButton = function (type, title = null) {
+  const button = template.create('iconButton');
+  const icon = template.icon(type, title);
+  button.get('icon').appendChild(icon);
+  return button.get('root');
 };
 

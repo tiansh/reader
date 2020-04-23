@@ -95,33 +95,17 @@
 }
 
 .config-option-page  {
-  left: var(--screen-width);
+  display: none;
 }
 
 .config-option-page-show {
-  left: 0;
+  display: block;
 }
 
 .config-option-select-list {
   line-height: 50px;
   margin-top: 35px;
   background: var(--config-item-background);
-}
-
-.config-group .list-item-container:focus .config-item-title,
-.config-option-select-list .list-item-container:focus .select-config-option-item,
-.font-select-section .list-item-container:focus .select-font-button-inner {
-  color: var(--config-content-active-color);
-  font-weight: bold;
-}
-
-.config-group .list-item-container,
-.config-group .list-item-content-wrap,
-.config-option-select-list .list-item-container,
-.config-option-select-list .list-item-content-wrap,
-.font-select-section .list-item-container,
-.font-select-section .list-item-content-wrap {
-  outline: none;
 }
 
 .select-font-button-inner {
@@ -139,3 +123,4 @@
   background: var(--config-item-background);
   margin: 35px 0;
 }
+

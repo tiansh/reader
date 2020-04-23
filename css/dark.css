@@ -1,6 +1,7 @@
 .dark-theme {
   --default-background: #000;
   --default-color: #fff;
+  --active-color: #dcb13d;
 
   --header-background: #171717;
   --header-border-color: #3d3d3d;

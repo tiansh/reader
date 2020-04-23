@@ -145,7 +145,6 @@ export class TouchMoveListener {
       document.removeEventListener('mousemove', mouseMoveHandler);
     };
     const mouseDownHandler = event => {
-      console.log('mouse start, touch: ', touchStart);
       if (touchStart) {
         touchStart = false;
         return;
@@ -179,7 +178,6 @@ export class TouchMoveListener {
     };
     const touchStartHandler = event => {
       touchStart = true;
-      console.log('touchstart');
       const touch = event.touches.item(0);
       this.triggerCallback('start', touch.pageX, touch.pageY);
       addGlobalTouchHandlers();

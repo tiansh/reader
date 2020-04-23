@@ -35,9 +35,13 @@ export default {
   configTextFontFamilyCustom: '定制字体',
   configTextFontSize: '字号',
   configTextFontSizeNum: '{0}',
+  configTextLineHeight: '行高',
+  configTextLineHeightNum: '{0}',
+  configTextParagraphSpacing: '段间距',
+  configTextParagraphSpacingNum: '{0} 行',
   configPreprocessGroupTitle: '预处理',
   configPreprocessMultipleNewLine: '压缩连续空行至',
-  configPreprocessMultipleNewLineNum: '{0}行',
+  configPreprocessMultipleNewLineNum: '{0} 行',
   configPreprocessMultipleNewLineDisable: '不压缩',
   configPreprocessChineseConvert: '汉字繁简转换',
   configPreprocessChineseConvertS2T: '简体转繁体',
@@ -59,4 +63,17 @@ export default {
     if (rate === 1) return '1x (默认)';
     return rate + 'x';
   },
+
+  buttonBack: '返回',
+  buttonAdd: '添加文件',
+  buttonSettings: '设置',
+  buttonContents: '目录',
+  buttonBookmark: '书签',
+  buttonSearch: '搜索',
+  buttonJump: '跳转',
+  buttonSpeech: '开始朗读',
+  buttonSpeechStop: '停止朗读',
+  buttonContentsRefresh: '刷新目录',
+  buttonSearchClear: '清除搜索结果',
+  buttonBookmarkAdd: '添加书签',
 };
