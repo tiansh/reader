@@ -22,8 +22,6 @@
 
 .config-group {
   margin: 35px 0;
-  border: 1px solid var(--config-border-color);
-  border-width: 1px 0;
   background: var(--config-item-background);
 }
 
