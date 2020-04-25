@@ -457,6 +457,8 @@ class IndexPage extends ReadSubPage {
         window.requestAnimationFrame(() => {
           this.show();
         });
+      } else {
+        this.container.style.bottom = `100vh`;
       }
     }
   }
@@ -823,6 +825,7 @@ export default class ReadPage extends Page {
     super(document.querySelector('#read_page'));
     this.onResize = this.onResize.bind(this);
     this.keyboardEvents = this.keyboardEvents.bind(this);
+    this.wheelEvents = this.wheelEvents.bind(this);
     this.onCursorChangeCallbackList = [];
   }
   matchUrl(url) {
@@ -875,14 +878,6 @@ export default class ReadPage extends Page {
     this.listenPagesContainer();
     this.container.insertBefore(this.pagesContainer, this.container.firstChild);
 
-    this.layoutConfig = {
-      paragraphMargin: 0,
-      pageMarginX: 15,
-      pageMarginY: 20,
-      metaFontSize: 12,
-      metaLineHeight: 20,
-    };
-    this.updateLayoutConfig();
     this.pageInfo = onResize.currentSize();
 
     await this.updateStyleConfig();
@@ -896,6 +891,7 @@ export default class ReadPage extends Page {
     onResize.addListener(this.onResize);
 
     document.addEventListener('keydown', this.keyboardEvents);
+    document.addEventListener('wheel', this.wheelEvents);
 
     this.subPages.forEach(page => { page.onActivate(); });
   }
@@ -909,11 +905,11 @@ export default class ReadPage extends Page {
     this.content = null;
     this.pagesContainer.remove();
     this.pagesContainer = null;
-    this.layoutConfig = null;
     this.pageInfo = null;
     this.pages = null;
     onResize.removeListener(this.onResize);
     document.removeEventListener('keydown', this.keyboardEvents);
+    document.removeEventListener('wheel', this.wheelEvents);
     this.subPages.forEach(page => { page.onInactivate(); });
     this.speech.stop();
   }
@@ -921,6 +917,7 @@ export default class ReadPage extends Page {
     this.router.go('list');
   }
   onResize() {
+    this.stepCache = null;
     this.disposePage(this.pages.prev);
     this.disposePage(this.pages.current);
     this.disposePage(this.pages.next);
@@ -940,8 +937,8 @@ export default class ReadPage extends Page {
   }
   listenPagesContainer() {
     const listener = new TouchGestureListener(this.pagesContainer, {
-      yRadian: Math.PI / 6,
-      minDistanceY: 80,
+      yRadian: Math.PI / 5,
+      minDistanceY: 60,
     });
     const wos = (f, g) => (...p) => {
       if (this.isAnythingSelected()) {
@@ -985,6 +982,18 @@ export default class ReadPage extends Page {
         this.indexPage.show();
       }
     }
+  }
+  /**
+   * @param {WheelEvent} event
+   */
+  wheelEvents(event) {
+    if (this.wheelBusy) return;
+    const deltaY = event.deltaY;
+    if (!deltaY) return;
+    if (deltaY > 0) this.nextPage();
+    else if (deltaY < 0) this.prevPage();
+    this.wheelBusy = true;
+    setTimeout(() => { this.wheelBusy = false; }, 250);
   }
   /**
    * @param {'move'|'left'|'right'|'cancel'} action
@@ -1051,17 +1060,10 @@ export default class ReadPage extends Page {
       `.dark-theme .read-content-page { color: ${configs.dark_text}; background: ${configs.dark_background}; }`,
       `.light-theme .read-content-page { color: ${configs.light_text}; background: ${configs.light_background}; }`,
       `.read-content-page { font-size: ${configs.font_size}px; line-height: ${configs.line_height}; }`,
-      `.read-content-page p { margin-bottom: ${configs.paragraph_spacing * configs.line_height * configs.font_size}px; }`,
+      `.read-content-page p:not(:first-child) { margin-top: ${configs.paragraph_spacing * configs.line_height * configs.font_size}px; }`,
       font ? `.read-content-page { font-family: CustomFont; }` : '',
     ].join('\n');
-  }
-  updateLayoutConfig() {
-    Object.keys(this.layoutConfig).forEach(key => {
-      const cssKey = '--' + key.replace(/[A-Z]/g, c => '-' + c.toLowerCase());
-      const value = this.layoutConfig[key];
-      const cssValue = typeof value === 'number' ? value + 'px' : value;
-      document.documentElement.style.setProperty(cssKey, cssValue);
-    });
+    this.configs = configs;
   }
   setCursor(cursor) {
     this.disposePage(this.pages.prev);
@@ -1133,6 +1135,13 @@ export default class ReadPage extends Page {
     if (window.innerWidth < window.innerHeight * 1.2) return false;
     return true;
   }
+  step() {
+    if (this.stepCache) return this.stepCache;
+    const area = window.innerWidth * window.innerHeight;
+    const textArea = (this.configs && this.configs.font_size || 18) ** 2;
+    this.stepCache = Math.floor(area / textArea);
+    return this.stepCache;
+  }
   /**
    * @param {number} cursor
    * @param {HTMLElement} body
@@ -1140,7 +1149,7 @@ export default class ReadPage extends Page {
    */
   layoutPageColumn(cursor, body) {
     // 2. fill texts until it overflow the content
-    const step = 128;
+    const step = this.step();
     /** @type {HTMLParagraphElement[]} */
     const paragraphs = [];
     /** @type {HTMLParagraphElement} */
@@ -1283,19 +1292,43 @@ export default class ReadPage extends Page {
     if (!nextCursor) {
       return null;
     }
-    const step = 128;
-    let low = 0, high = nextCursor, lastPrev = null;
-    while (low <= high) {
-      const mid = Math.max(Math.floor((low + high) / 2), high - step);
-      const prev = this.layoutPageStartsWith(mid);
-      if (prev.nextCursor < nextCursor) {
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-        lastPrev = prev;
+    const ref = template.create('readContentPage');
+    const container = ref.get('root');
+    this.pagesContainer.appendChild(container);
+    const step = this.step();
+    const content = this.content;
+
+    const tryFill = function (nextCursor, body) {
+      let low = 0, high = nextCursor;
+      while (low <= high) {
+        const mid = Math.max(Math.floor((low + high) / 2), high - step);
+        const trunk = content.slice(mid, nextCursor);
+        body.innerHTML = '';
+        trunk.split(/\n/).forEach(line => {
+          const paragraph = body.appendChild(document.createElement('p'));
+          paragraph.textContent += line;
+        });
+        const isOverflow = body.clientHeight !== body.scrollHeight;
+        if (isOverflow) {
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
       }
+      return low;
+    };
+
+    let prevCursor = null;
+    if (this.isTwoColumn()) {
+      prevCursor = tryFill(nextCursor, ref.get('right'));
+      prevCursor = tryFill(prevCursor, ref.get('left'));
+    } else {
+      prevCursor = tryFill(nextCursor, ref.get('body'));
     }
-    return lastPrev;
+
+    this.pagesContainer.removeChild(container);
+
+    return this.layoutPageStartsWith(prevCursor);
   }
   onCursorChange(callback) {
     this.onCursorChangeCallbackList.push(callback);

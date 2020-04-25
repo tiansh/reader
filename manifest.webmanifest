@@ -11,7 +11,7 @@
   ],
   "start_url": "index.html",
   "background_color": "black",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait",
   "scope": ".",
   "theme_color": "black"

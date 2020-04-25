@@ -78,13 +78,22 @@ export default class RangeInput {
       this.renderValue(newValue);
     }
   }
-  updateValue(newValue) {
+  async updateValue(newValue) {
     if (this.value === newValue) return;
-    this.value = newValue;
+    if (this.updatePendingValue != null) {
+      this.updatePendingValue = newValue;
+      return;
+    } else {
+      this.updatePendingValue = newValue;
+      await new Promise(window.requestAnimationFrame);
+    }
+    const value = this.updatePendingValue;
+    this.updatePendingValue = null;
+    this.value = value;
     this.onValueChange.forEach(callback => {
-      callback(newValue);
+      callback(value);
     });
-    this.renderValue(newValue);
+    this.renderValue(value);
   }
   /** @param {(value: number) => any} callback */
   onChange(callback) {

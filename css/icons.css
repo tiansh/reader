@@ -66,6 +66,7 @@
 .icon-jump::before {
   content: "\e908";
   font-size: 25px;
+  vertical-align: -2px;
 }
 
 .icon-speech::before {
