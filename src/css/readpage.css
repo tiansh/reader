@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 .read-layer {
   position: absolute;
   top: 0;
@@ -30,6 +38,10 @@
   user-select: none;
   overflow: hidden;
   overflow-wrap: break-word;
+}
+
+.read-content-pages-select .read-content-page {
+  user-select: text;
 }
 
 .read-content-pages:not(.read-content-pages-slide) .read-content-page {
@@ -256,7 +268,7 @@
   display: flex;
 }
 
-.tab-item {
+button.tab-item {
   -moz-appearance: none;
   -webkit-appearance: none;
   color: var(--tabber-color);
@@ -267,6 +279,12 @@
   height: 40px;
   box-sizing: content-box;
   line-height: 20px;
+  outline: none;
+  width: 40px;
+}
+
+button.tab-item:focus {
+  outline: none;
 }
 
 :root button.tab-item:focus {
@@ -323,12 +341,12 @@
 #contents_list .list-item-content-wrap,
 #bookmark_list .list-item-content-wrap,
 #search_list .list-item-content-wrap {
-  margin: 0;
+  padding-left: 15px;
 }
 
 .index-contents-item {
   font-size: 16px;
-  margin: 0 20px;
+  margin: 0 5px;
   padding: 5px 0;
   line-height: 40px;
   white-space: nowrap;
@@ -343,7 +361,7 @@
 
 .index-bookmark-item {
   font-size: 16px;
-  margin: 0 20px;
+  margin: 0 5px;
   padding: 15px 0;
   height: 40px;
 }
@@ -396,7 +414,7 @@
 .search-box .icon-search {
   color: var(--search-placeholder);
   position: absolute;
-  top: 18px;
+  top: 16px;
   left: 23px;
   margin: auto;
   line-height: 20px;
@@ -409,15 +427,18 @@
   border-radius: 10px;
   background-color: var(--search-background);
   color: var(--default-color);
-  height: 36px;
+  height: 36px;q
   border: 0 none;
   padding: 0 10px 0 40px;
   margin: 0;
 }
+.search-input:focus {
+  outline: none;
+}
 
 .index-search-item {
   font-size: 16px;
-  margin: 0 20px;
+  margin: 0 5px;
   padding: 5px 0;
   line-height: 40px;
   white-space: nowrap;

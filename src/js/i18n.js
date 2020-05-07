@@ -1,19 +1,32 @@
+/*!
+ * @license MPL-2.0-no-copyleft-exception
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 import en from './i18n/en.js';
 import zh_CN from './i18n/zh_cn.js';
 
 const locales = [
-  { name: 'en', locale: en },
-  { name: 'zh-CN', locale: zh_CN },
-  { name: 'zh-Hans', locale: zh_CN },
+  { name: /^en/, lang: 'en', locale: en },
+  { name: /^zh-(?!.*TW|HK|Hant)/, lang: 'zh-CN', locale: zh_CN },
 ];
 
 /** @type {en} */
 const prefer = (function () {
   const languages = navigator.languages;
   const prefer = languages.reduce((match, lang) => {
-    return match || locales.find(locale => lang.startsWith(locale.name));
+    return match || locales.find(locale => locale.name.test(lang));
   }, null);
-  if (prefer) return prefer.locale;
+  if (prefer) {
+    document.addEventListener('DOMContentLoaded', () => {
+      document.documentElement.lang = prefer.lang;
+    });
+    return prefer.locale;
+  }
   return en;
 }());
 

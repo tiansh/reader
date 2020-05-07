@@ -1,7 +1,8 @@
 {
-  "short_name": "Reader",
-  "name": "Reader",
+  "short_name": "tReader",
+  "name": "tReader",
   "description": "Simple TXT Reader",
+  "categories": [ "books", "productivity" ],
   "icons": [
     {
       "src": "reader.png",
@@ -9,10 +10,9 @@
       "sizes": "180x180"
     }
   ],
-  "start_url": "index.html",
+  "start_url": "./",
   "background_color": "black",
   "display": "fullscreen",
-  "orientation": "portrait",
   "scope": ".",
   "theme_color": "black"
 }

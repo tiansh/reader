@@ -1,4 +1,4 @@
-const version = '20200425';
+const version = '20200507';
 
 const resourceList = [
   './css/normalize-8.0.1.css',
@@ -27,6 +27,7 @@ const resourceList = [
   './js/file.js',
   './js/config.js',
   './js/options.js',
+  './js/theme.js',
   './js/speech.js',
   './js/page.js',
   './js/router.js',
@@ -42,35 +43,27 @@ const resourceList = [
   './reader.png',
   './reader.svg',
   './favicon.ico',
-  './index.html',
+  './credits.html',
   './',
 ];
 
 const cacheKey = `page-cache-${version}`;
 
+const cacheFiles = async function () {
+  const cache = await caches.open(cacheKey);
+  await cache.addAll(resourceList);
+  const keys = await caches.keys();
+  await Promise.all(keys.map(async key => {
+    if (key === cacheKey) return;
+    await caches.delete(key);
+  }));
+};
+
 self.addEventListener('install', function (event) {
-  const cacheFiles = async function () {
-    const cache = await caches.open(cacheKey);
-    await cache.addAll(resourceList);
-  };
   event.waitUntil(cacheFiles());
 });
 
 self.addEventListener('fetch', function (event) {
-  const serveFile = async function (request) {
-    const response = await caches.matches(request);
-    return response;
-  };
   event.respondWith(caches.match(event.request));
-});
-
-self.addEventListener('activate', event => {
-  const deleteOutdateCache = async function () {
-    const keys = await caches.keys();
-    keys.map(key => {
-      if (key !== cacheKey) caches.delete(key);
-    });
-  };
-  event.waitUntil(deleteOutdateCache());
 });
 

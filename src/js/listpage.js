@@ -1,3 +1,12 @@
+/*!
+ * @license MPL-2.0-no-copyleft-exception
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 import Page from './page.js';
 import ItemList from './itemlist.js';
 import template from './template.js';
@@ -5,6 +14,7 @@ import text from './text.js';
 import file from './file.js';
 import i18n from './i18n.js';
 import dom from './dom.js';
+import config from './config.js';
 
 export default class ListPage extends Page {
   constructor() {
@@ -34,6 +44,7 @@ export default class ListPage extends Page {
   }
   async onActivate() {
     this.updateSort();
+    this.langTag = await config.get('cjk_lang_tag');
     await this.updateList();
   }
   async onInactivate() {
@@ -94,9 +105,13 @@ export default class ListPage extends Page {
     const render = (container, file) => {
       if (container.firstChild) return;
       const ref = template.create('fileListItem');
-      ref.get('title').textContent = file.title;
-      const date = file.lastAccessTime.toLocaleDateString();
+      const title = ref.get('title');
+      title.textContent = file.title;
+      title.lang = this.langTag;
+      const dateLang = i18n.getMessage('locale');
+      const date = file.lastAccessTime.toLocaleDateString(dateLang);
       ref.get('date').textContent = date;
+      ref.get('date').lang = dateLang;
       const percent = file.cursor ?
         (file.cursor / file.length * 100).toFixed(2) + '%' :
         i18n.getMessage('listNotYetRead');

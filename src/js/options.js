@@ -1,3 +1,12 @@
+/*!
+ * @license MPL-2.0-no-copyleft-exception
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 import config from './config.js';
 import i18n from './i18n.js';
 import template from './template.js';
@@ -11,6 +20,8 @@ class ConfigOption {
     /** @type {string} */
     this.default = null;
     this.initialized = false;
+    this.rendered = false;
+    this.normalizeConfig();
   }
   /** @returns {string} */
   get type() { throw Error('Unimplementated'); }
@@ -27,6 +38,7 @@ class ConfigOption {
     titleElement.classList.add('config-item-title');
     titleElement.textContent = this.title;
     this.container = itemElement;
+    this.rendered = true;
   }
   renderValue(value) { }
   isValidValue(value) { return true; }
@@ -40,7 +52,7 @@ class ConfigOption {
     const isValid = await this.isValidValue(value);
     if (!isValid) {
       await config.set(this.name, this.default);
-      this.renderValue(this.default);
+      if (this.rendered) this.renderValue(this.default);
     }
   }
   async setup(container, index) {
@@ -54,9 +66,6 @@ class ConfigOption {
         this.renderValue(value);
       });
     });
-  }
-  editConfig() {
-    alert(this.name);
   }
 }
 
@@ -151,6 +160,51 @@ class VoiceConfigOption extends ConfigOption {
   }
 }
 
+class TextConfigOption extends ConfigOption {
+  /** @param {{ name: string, title: string, default: string, description: string }} config */
+  constructor(config) {
+    super(config);
+    this.default = config.default;
+    this.label = config.label;
+    this.description = config.description;
+  }
+  get type() { return 'text'; }
+  isValidValue(value) { return typeof value === 'string'; }
+  render(container, index) {
+    super.render(container, index);
+    const itemElement = container.firstChild;
+    this.resultElement = itemElement.appendChild(document.createElement('span'));
+    this.resultElement.classList.add('config-item-value');
+    const detailIcon = itemElement.appendChild(template.icon('detail'));
+    detailIcon.classList.add('config-item-detail');
+  }
+  renderValue(value) {
+    this.resultElement.textContent = value;
+  }
+}
+
+
+class StubConfigOption extends ConfigOption {
+  setConfig(value) { }
+  getConfig(value) { }
+  renderValue(value) { }
+  isValidValue(value) { return true; }
+  async normalizeConfig() { }
+  async setup(container, index) {
+    if (this.initialized) return;
+    this.initialized = true;
+    this.render(container, index);
+  }
+}
+
+class CreditsConfigOption extends StubConfigOption {
+  get type() { return 'credits'; }
+}
+
+class AboutConfigOption extends StubConfigOption {
+  get type() { return 'about'; }
+}
+
 /**
  * @typedef {Object} ConfigGroup
  * @property {string} title
@@ -221,6 +275,12 @@ const options = [{
       text: i18n.getMessage('configTextParagraphSpacingNum', n),
     })),
     default: '0.2',
+  }), new TextConfigOption({
+    name: 'cjk_lang_tag',
+    title: i18n.getMessage('configTextLangTag'),
+    label: i18n.getMessage('configTextLangTagTitle'),
+    default: 'und',
+    description: i18n.getMessage('configTextLangTagDescription'),
   })],
 }, {
   title: i18n.getMessage('configPreprocessGroupTitle'),
@@ -267,6 +327,13 @@ const options = [{
       text: i18n.getMessage('configSpeechRateNum', rate),
     })),
     default: '1',
+  })],
+}, {
+  title: i18n.getMessage('configHelpGroupTitle'),
+  items: [new CreditsConfigOption({
+    title: i18n.getMessage('configHelpCredits'),
+  }), new AboutConfigOption({
+    title: i18n.getMessage('configHelpAbout'),
   })],
 }];
 
