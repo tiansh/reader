@@ -1,3 +1,12 @@
+/*!
+ * @license MPL-2.0-no-copyleft-exception
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 /** @typedef {[number, number]} Point */
 /** @typedef {'x'|'y'} Direction */
 
@@ -27,8 +36,10 @@ export class TouchGestureListener {
       startPos = [x, y];
       lastPos = [x, y];
       direction = null;
+      this.trigger('start', [x, y]);
     };
     const touchCancelHandler = () => {
+      this.trigger('end');
       if (direction) {
         const action = direction === 'x' ? 'cancelx' : 'cancely';
         this.trigger(action);
@@ -55,6 +66,7 @@ export class TouchGestureListener {
         touchCancelHandler();
         return;
       }
+      this.trigger('end');
       const [dx, dy] = [lastPos[0] - startPos[0], lastPos[1] - startPos[1]];
       const offset = direction === 'x' ? dx : direction === 'y' ? dy : 0;
       if (!direction) {
@@ -92,10 +104,10 @@ export class TouchGestureListener {
       moveListener.dispatch();
     };
   }
-  trigger(action, offset = null) {
+  trigger(action, meta = null) {
     if (!this.listeners.has(action)) return;
     this.listeners.get(action).forEach(listener => {
-      listener(offset);
+      listener(meta);
     });
   }
   addListener(action, listener) {
@@ -104,6 +116,8 @@ export class TouchGestureListener {
     }
     this.listeners.get(action).push(listener);
   }
+  onStart(listener) { return this.addListener('start', listener); }
+  onEnd(listener) { return this.addListener('end', listener); }
   onTouch(listener) { return this.addListener('touch', listener); }
   onTouchLeft(listener) { return this.addListener('touchleft', listener); }
   onTouchRight(listener) { return this.addListener('touchright', listener); }
@@ -149,6 +163,7 @@ export class TouchMoveListener {
         touchStart = false;
         return;
       }
+      if (event.button !== 0) return;
       mouseDown = true;
       this.triggerCallback('start', event.pageX, event.pageY);
       addGlobalMouseHandlers();
@@ -159,12 +174,17 @@ export class TouchMoveListener {
       removeGlobalMouseHandlers();
     };
     const mouseCancelHandler = event => {
-      if (mouseDown) this.triggerCallback('end');
+      if (mouseDown) this.triggerCallback('cancel');
       mouseDown = false;
       removeGlobalMouseHandlers();
     };
     const mouseMoveHandler = event => {
-      if (mouseDown) this.triggerCallback('move', event.pageX, event.pageY);
+      if (!mouseDown) return;
+      if (event.button !== 0) {
+        mouseCancelHandler();
+      } else {
+        this.triggerCallback('move', event.pageX, event.pageY);
+      }
     };
     const addGlobalTouchHandlers = () => {
       document.addEventListener('touchend', touchEndHandler);

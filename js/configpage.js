@@ -1,3 +1,12 @@
+/*!
+ * @license MPL-2.0-no-copyleft-exception
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 import Page from './page.js';
 import config from './config.js';
 import options from './options.js';
@@ -7,6 +16,35 @@ import ColorPicker from './color.js';
 import ItemList from './itemlist.js';
 import template from './template.js';
 import dom from './dom.js';
+import { TouchGestureListener } from './touch.js';
+import theme from './theme.js';
+
+const slideClose = function (container, callback) {
+  const minDistance = 20, activeWidth = 20;
+  const touchListener = new TouchGestureListener(container, {
+    minDistanceX: minDistance,
+    minDistanceY: minDistance,
+  });
+  let isLeftTouch = false, lastMove = null;
+  touchListener.onStart(([x, y]) => {
+    if (x > activeWidth) return;
+    isLeftTouch = true;
+    lastMove = null;
+  });
+  touchListener.onEnd(() => {
+    isLeftTouch = false;
+    container.classList.remove('config-page-close-slide');
+    if (lastMove > minDistance) callback();
+  });
+  touchListener.onMoveX(move => {
+    if (!isLeftTouch) return;
+    lastMove = move;
+    const slide = move > minDistance ? move : 0;
+    container.classList.add('config-page-close-slide');
+    container.style.setProperty('--close-slide-x', slide + 'px');
+  });
+  return touchListener;
+};
 
 class ConfigOptionPage {
   /**
@@ -29,6 +67,7 @@ class ConfigOptionPage {
     this.mainContent = container.querySelector('.config-page-content');
 
     this.onConfigValueChange = this.onConfigValueChange.bind(this);
+    this.hide = this.hide.bind(this);
   }
   show() {
     this.container.classList.add('config-option-page-show');
@@ -39,8 +78,10 @@ class ConfigOptionPage {
     this.isActive = true;
     this.lastFocus = document.activeElement;
     if (this.lastFocus.matches('button')) {
-      this.mainContent.querySelector('button, [tabindex="0"]').focus();
+      const target = this.mainContent.querySelector('button, [tabindex="0"]');
+      if (target) target.focus();
     }
+    this.touchListener = slideClose(this.container, this.hide);
   }
   hide() {
     this.container.classList.remove('config-option-page-show');
@@ -48,6 +89,10 @@ class ConfigOptionPage {
     dom.enableKeyboardFocus(this.page.configPageMain);
     this.isActive = false;
     if (this.lastFocus) this.lastFocus.focus();
+    if (this.touchListener) {
+      this.touchListener.dispatch();
+      this.touchListener = null;
+    }
   }
   onFirstActivate() {
     this.hide();
@@ -339,6 +384,71 @@ class VoiceConfigOptionPage extends SelectConfigOptionPage {
   }
 }
 
+class TextConfigOptionPage extends ConfigOptionPage {
+  constructor(container, mainPage) {
+    super(container, mainPage);
+    this.onInput = this.onInput.bind(this);
+  }
+  onFirstActivate() {
+    super.onFirstActivate();
+    this.inputTitle = this.container.querySelector('.config-option-text-title');
+    this.input = this.container.querySelector('.config-option-text-input');
+    this.description = this.container.querySelector('.config-option-text-description');
+    this.input.addEventListener('input', this.onInput);
+  }
+  async renderOptions() {
+    super.renderOptions();
+    const configOption = this.configOption;
+    this.inputTitle.textContent = configOption.label;
+    this.description.textContent = configOption.description;
+    this.input.value = await this.getValue();
+  }
+  async renderValue(value) {
+  }
+  onInput() {
+    if (!this.configOption) return;
+    this.setValue(this.input.value);
+  }
+}
+
+class CreditsConfigOptionPage extends ConfigOptionPage {
+  constructor(container, mainPage) {
+    super(container, mainPage);
+    this.themeChange = this.themeChange.bind(this);
+  }
+  getUrl() {
+    return './credits.html#' + theme.getCurrent();
+  }
+  onFirstActivate() {
+    super.onFirstActivate();
+    this.iframe = this.container.querySelector('iframe');
+    this.placeholder = document.createComment('');
+    this.iframe.parentNode.replaceChild(this.placeholder, this.iframe);
+  }
+  show() {
+    super.show();
+    this.iframe.src = this.getUrl();
+    theme.addChangeListener(this.themeChange);
+    this.placeholder.parentNode.replaceChild(this.iframe, this.placeholder);
+  }
+  hide() {
+    super.hide();
+    theme.removeChangeListener(this.themeChange);
+    if (this.iframe) {
+      this.iframe.parentNode.replaceChild(this.placeholder, this.iframe);
+    }
+  }
+  themeChange() {
+    this.iframe.src = this.getUrl();
+  }
+}
+
+class AboutConfigOptionPage extends ConfigOptionPage {
+  constructor(container, mainPage) {
+    super(container, mainPage);
+  }
+}
+
 export default class ConfigPage extends Page {
   constructor() {
     const configPage = document.getElementById('config_page');
@@ -361,11 +471,23 @@ export default class ConfigPage extends Page {
     this.voiceConfigPageElement = document.getElementById('config_page_voice');
     this.voiceConfigPage = new VoiceConfigOptionPage(this.voiceConfigPageElement, this);
 
+    this.textConfigPageElement = document.getElementById('config_page_text');
+    this.textConfigPage = new TextConfigOptionPage(this.textConfigPageElement, this);
+
+    this.creditsConfigPageElement = document.getElementById('config_page_credits');
+    this.creditsConfigPage = new CreditsConfigOptionPage(this.creditsConfigPageElement, this);
+
+    this.aboutConfigPageElement = document.getElementById('config_page_about');
+    this.aboutConfigPage = new AboutConfigOptionPage(this.aboutConfigPageElement, this);
+
     this.subConfigPages = [
       this.selectConfigPage,
       this.colorConfigPage,
       this.fontConfigPage,
       this.voiceConfigPage,
+      this.textConfigPage,
+      this.creditsConfigPage,
+      this.aboutConfigPage,
     ];
     /** @type {ConfigOptionPage} */
     this.activeSubConfigPage = null;
@@ -378,6 +500,7 @@ export default class ConfigPage extends Page {
     container.insertBefore(headerRef.get('root'), container.firstChild);
     const back = template.iconButton('back', i18n.getMessage('buttonBack'));
     headerRef.get('left').appendChild(back);
+    this.gotoList = this.gotoList.bind(this);
     back.addEventListener('click', () => { this.gotoList(); });
   }
   matchUrl(url) { return /^\/settings(\/.*)?$/.test(url); }
@@ -403,6 +526,9 @@ export default class ConfigPage extends Page {
       if (item.type === 'color') subPage = this.colorConfigPage;
       if (item.type === 'font') subPage = this.fontConfigPage;
       if (item.type === 'voice') subPage = this.voiceConfigPage;
+      if (item.type === 'text') subPage = this.textConfigPage;
+      if (item.type === 'credits') subPage = this.creditsConfigPage;
+      if (item.type === 'about') subPage = this.aboutConfigPage;
       if (this.activeSubConfigPage) {
         this.activeSubConfigPage.cleanUp();
       }
@@ -425,10 +551,12 @@ export default class ConfigPage extends Page {
   }
   async onActivate() {
     document.addEventListener('keydown', this.keyboardHandler);
+    this.touchListener = slideClose(this.configPageMain, this.gotoList);
   }
   async onInactivate() {
     this.subConfigPages.forEach(page => { page.onInactivate(); });
     document.removeEventListener('keydown', this.keyboardHandler);
+    if (this.touchListener) this.touchListener.dispatch();
   }
   isPreserve() { return false; }
   /** @param {KeyboardEvent} event */

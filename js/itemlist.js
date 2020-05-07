@@ -1,3 +1,12 @@
+/*!
+ * @license MPL-2.0-no-copyleft-exception
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 import { TouchGestureListener } from './touch.js';
 import template from './template.js';
 
@@ -165,6 +174,14 @@ export default class ItemList {
     this.clearList();
     this.list.push(...list);
     this.renderList();
+  }
+  appendList(list) {
+    const lastSize = this.list.length;
+    this.list.push(...list);
+    list.forEach((item, index) => {
+      const li = this.renderItem(item, lastSize + index);
+      this.listElement.appendChild(li);
+    });
   }
   setItem(item, index) {
     if (index < this.list.length) {

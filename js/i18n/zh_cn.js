@@ -1,4 +1,15 @@
+/*!
+ * @license MPL-2.0-no-copyleft-exception
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 export default {
+  locale: 'zh-CN',
+
   listSortTitle: '排序',
   listSortByDateRead: '按最后阅读时间',
   listSortByDateAdd: '按添加时间',
@@ -9,7 +20,7 @@ export default {
   listNotYetRead: '新',
   listEmptyTip: '点击加号图标导入文件',
 
-  readContentsTemplate: '目录模板',
+  readContentsTemplate: '目录模板\n使用星号(*)作通配符',
   readContentsEmpty: '暂无目录\n点击刷新按钮生成目录',
   readBookmarkEmpty: '暂无书签\n点击添加按钮添加书签',
   readSearchPlaceholder: '查找',
@@ -39,6 +50,9 @@ export default {
   configTextLineHeightNum: '{0}',
   configTextParagraphSpacing: '段间距',
   configTextParagraphSpacingNum: '{0} 行',
+  configTextLangTag: '语言标记',
+  configTextLangTagTitle: '语言标记',
+  configTextLangTagDescription: '语言标记用于标记文本的语言。语言标记可能会影响汉字的渲染和文字的换行。',
   configPreprocessGroupTitle: '预处理',
   configPreprocessMultipleNewLine: '压缩连续空行至',
   configPreprocessMultipleNewLineNum: '{0} 行',
@@ -63,6 +77,9 @@ export default {
     if (rate === 1) return '1x (默认)';
     return rate + 'x';
   },
+  configHelpGroupTitle: '帮助',
+  configHelpCredits: 'Open Source Credits',
+  configHelpAbout: '关于',
 
   buttonBack: '返回',
   buttonAdd: '添加文件',

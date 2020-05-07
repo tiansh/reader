@@ -1,9 +1,17 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 .config-page {
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
-  right: 0;
+  width: var(--window-width);
   background: var(--config-background);
 }
 
@@ -93,11 +101,13 @@
 }
 
 .config-option-page  {
-  display: none;
+  left: 100%;
+  transition: left ease 0.05s;
 }
 
 .config-option-page-show {
-  display: block;
+  left: 0;
+  transition: none;
 }
 
 .config-option-select-list {
@@ -112,6 +122,11 @@
   color: var(--config-content-active-color);
 }
 
+.select-config-option-item {
+  padding: 10px 0;
+  line-height: 30px;
+}
+
 #select_font_file {
   position: absolute;
   top: -100px;
@@ -120,5 +135,82 @@
 .font-select-section {
   background: var(--config-item-background);
   margin: 35px 0;
+}
+
+.config-page-close-slide {
+  left: var(--close-slide-x);
+}
+
+.config-page-close-slide::before {
+  content: " ";
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to right,
+    var(--default-background) 0, var(--default-background) var(--close-slide-x),
+    transparent var(--close-slide-x), transparent var(--close-slide-x));
+  opacity: 0.6;
+}
+
+.config-option-text {
+  margin-top: 35px;
+  background: var(--config-item-background);
+  border: 0 solid var(--config-border-color);
+  border-width: 1px 0;
+  height: 50px;
+  line-height: 50px;
+  position: relative;
+}
+
+.config-option-text-input {
+  background: transparent;
+  position: absolute;
+  border: 0 none;
+  margin: 0;
+  padding: 10px 15px 10px 120px;
+  color: inherit;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  box-sizing: border-box;
+  height: 50px;
+  line-height: 30px;
+  width: 100%;
+  outline: none;
+}
+
+.config-option-text-title {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 20px;
+}
+
+.config-option-text-description {
+  margin-top: 10px;
+  padding: 0 20px;
+  font-size: 16px;
+  color: var(--list-comment-color);
+}
+
+.config-credits-iframe {
+  border: 0 none;
+  width: 100%;
+  height: 100%;
+}
+
+.config-page-about {
+  padding: 0 20px;
+}
+
+.config-page-about pre {
+  white-space: normal;
+}
+
+.config-page-about:first-child {
+  margin-top: 35px;
 }
 

@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 :root {
   --content-padding-x: 20px;
   --content-padding-y: 20px;
@@ -45,11 +53,26 @@ a {
 
 .header-line {
   background: var(--header-background);
-  color: var(--header-color);
   height: 49px;
   font-size: 20px;
   border-bottom: 1px solid var(--header-border-color);
   line-height: 49px;
+  user-select: none;
+}
+
+.header-line button {
+  margin: 0 -10px;
+  color: var(--header-color);
+  height: 50px;
+  vertical-align: top;
+}
+
+.header-line .button-wrap {
+  padding: 10px;
+  line-height: 30px;
+  width: 30px;
+  height: 30px;
+  vertical-align: middle;
 }
 
 .footer-line {
@@ -60,6 +83,7 @@ a {
   height: 60px;
   width: var(--window-width);
   line-height: 60px;
+  user-select: none;
 }
 
 .icon-line {
@@ -76,6 +100,8 @@ a {
 .icon-line-item button {
   display: block;
   width: 100%;
+  height: 60px;
+  line-height: 60px;
 }
 
 .header-left,
@@ -95,6 +121,7 @@ a {
   right: 10px;
   z-index: 0;
   text-align: center;
+  font-weight: bold;
 }
 .header-right {
   right: 10px;
@@ -161,12 +188,14 @@ button.list-item-container:active {
 }
 
 .list-item-content-wrap {
-  margin: 0 15px;
+  padding: 0 15px;
   outline: none;
+  position: relative;
+  z-index: 1;
 }
 
 .item-list-selectable .list-item-content-wrap {
-  margin-left: 50px;
+  padding: 0 15px 0 50px;
 }
 
 .list-item-remove {

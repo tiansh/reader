@@ -1,6 +1,16 @@
+/*!
+ * @license MPL-2.0-no-copyleft-exception
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 import onResize from './onresize.js';
 import config from './config.js';
 import i18n from './i18n.js';
+import theme from './theme.js';
 
 onResize.addListener(([width, height]) => {
   const html = document.documentElement;
@@ -23,27 +33,11 @@ Array.from(document.querySelectorAll('[data-i18n]')).forEach(element => {
   element.textContent = i18n.getMessage(element.dataset.i18n, ...element.children);
 });
 
-; (function () {
-  let currentTheme = 'dark';
-  let autoUseLight = false;
-  const updateTheme = function () {
-    const useLightTheme = currentTheme === 'light' || currentTheme === 'auto' && autoUseLight;
-    const root = document.documentElement;
-    root.classList.add(useLightTheme ? 'light-theme' : 'dark-theme');
-    root.classList.remove(useLightTheme ? 'dark-theme' : 'light-theme');
-  };
-  const updateAutoTheme = function (useLightTheme) {
-    autoUseLight = useLightTheme;
-    updateTheme();
-  };
-  const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
-  updateAutoTheme(mediaQuery.matches);
-  mediaQuery.addListener(event => { updateAutoTheme(event.matches); });
-  const updateConfigTheme = theme => {
-    currentTheme = theme;
-    updateTheme();
-  };
-  config.addListener('theme', updateConfigTheme);
-  config.get('theme').then(updateConfigTheme);
-}());
-
+const updateTheme = function () {
+  const root = document.documentElement;
+  const isLight = theme.getCurrent() === 'light';
+  root.classList.add(isLight ? 'light-theme' : 'dark-theme');
+  root.classList.remove(isLight ? 'dark-theme' : 'light-theme');
+};
+theme.addChangeListener(updateTheme);
+updateTheme();

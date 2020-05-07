@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 .file-list-container {
   height: calc(var(--window-height) - 50px);
   overflow-x: hidden;
@@ -10,13 +18,12 @@
   top: -1000px;
 }
 
-.list-sort {
+button.list-sort {
   -moz-appearance: none;
   -webkit-appearance: none;
   background: none;
   border: none;
   color: inherit;
-  padding: 0 10px;
   margin: 0 0 0 20px;
   display: block;
   height: 52px;
@@ -65,10 +72,16 @@
 .screen-option-group {
   overflow: hidden;
   border-radius: 16px;
-  margin: 8px;
+  margin: 8px 0;
+  max-width: 600px;
+  display: block;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 16px);
 }
 
-.screen-option-item {
+button.screen-option-item {
   -moz-appearance: none;
   -webkit-appearance: none;
   outline-offset: -2px;
@@ -87,7 +100,7 @@
 
 .screen-option .button-wrap {
   margin: 0 -12px;
-  padding: 0 12px;
+  padding: 0 20px;
 }
 
 .screen-option-item:last-child {
@@ -112,7 +125,7 @@
 
 .file-item-content {
   margin: 0 -15px;
-  padding: 18px 45px;
+  padding: 18px 30px;
   height: 60px;
   display: block;
   transition: height, padding ease 0.1s;

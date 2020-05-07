@@ -1,3 +1,12 @@
+/*!
+ * @license MPL-2.0-no-copyleft-exception
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+*/
+
 import Page from './page.js';
 import text from './text.js';
 import file from './file.js';
@@ -207,7 +216,9 @@ class IndexContentsPage extends IndexSubPage {
       const element = container.appendChild(document.createElement('div'));
       element.classList.add('index-contents-item');
     }
-    container.firstChild.textContent = item.title;
+    const title = container.firstChild;
+    title.textContent = item.title;
+    title.lang = this.readPage.langTag;
   }
   getListItems() {
     const index = this.readPage.index;
@@ -235,6 +246,7 @@ class IndexBookmarkPage extends IndexSubPage {
     this.dateFormatter = new Intl.DateTimeFormat(navigator.language, {
       year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric',
     });
+    this.dateLang = navigator.language;
   }
   addBookmark() {
     const index = this.readPage.index;
@@ -263,11 +275,17 @@ class IndexBookmarkPage extends IndexSubPage {
     if (!container.firstChild) {
       const ref = template.create('bookmarkItem');
       container.appendChild(ref.get('root'));
-      ref.get('text').textContent = item.title;
-      ref.get('time').textContent = this.dateFormatter.format(item.createTime);
+      const text = ref.get('text');
+      text.textContent = item.title;
+      text.lang = this.readPage.langTag;
+      const time = ref.get('time');
+      time.textContent = this.dateFormatter.format(item.createTime);
+      time.lang = this.dateLang;
       const contents = this.indexPage.contentsPage.getContentsByCursor(item.cursor);
       if (contents) {
-        ref.get('contents').textContent = contents.title;
+        const contents = ref.get('contents');
+        contents.textContent = contents.title;
+        contents.lang = this.readPage.langTag;
       }
     }
   }
@@ -317,11 +335,11 @@ class IndexSearchPage extends IndexSubPage {
       event.preventDefault();
     });
   }
-  searchText(text) {
-    if (text) {
+  searchText(searchTerm) {
+    if (searchTerm) {
       this.clearSearch();
       this.emptyListSpan.textContent = i18n.getMessage('readSearchEmpty');
-      this.lastSearchText = text;
+      this.lastSearchText = searchTerm;
       this.lastSearchCursor = 0;
       this.lastSearchLine = 0;
       this.totalSearchHit = 0;
@@ -334,6 +352,8 @@ class IndexSearchPage extends IndexSubPage {
 
     const searchResult = this.lastSearchResult;
     searchResult.pop();
+    const lastSearchResultSize = searchResult.length;
+    if (lastSearchResultSize) this.itemList.removeItem(lastSearchResultSize);
     const searchLimit = 1000;
     let searchHit = 0;
     let cursor = this.lastSearchCursor, i = this.lastSearchLine;
@@ -352,7 +372,7 @@ class IndexSearchPage extends IndexSubPage {
     this.lastSearchLine = i;
     this.lastSearchCursor = cursor;
     this.totalSearchHit += searchHit;
-    this.itemList.setList(searchResult);
+    this.itemList.appendList(searchResult.slice(lastSearchResultSize));
   }
   clearSearch() {
     this.lastSearchResult = [];
@@ -373,6 +393,7 @@ class IndexSearchPage extends IndexSubPage {
       const reg = this.lastSearchReg;
       const element = container.appendChild(document.createElement('div'));
       element.classList.add('index-search-item');
+      element.lang = this.readPage.langTag;
       const line = item.line;
       const index = line.match(reg).index;
       const text = line.substr(Math.max(index - 10, 0), 200).trim().slice(0, 50);
@@ -497,7 +518,7 @@ class JumpPage extends ReadSubPage {
       this.hide();
     });
     this.coverElement.addEventListener('mousedown', event => {
-      this.hide();
+      if (event.button === 0) this.hide();
     });
   }
   onActivate() {
@@ -571,10 +592,10 @@ class ReadSpeech {
     if (!this.speaking) return;
     const ssu = event.target;
     this.pendingSsu.delete(ssu);
-    const nextPage = this.page.pages.next.cursor;
+    const nextPage = this.page.pages.current.nextCursor;
     const start = ssu.data.start + event.charIndex;
     const len = Math.max(0, Math.min(event.charLength || ssu.data.end - start, nextPage - start));
-    if (start > nextPage) {
+    if (nextPage && start > nextPage) {
       this.lastPageCursor = nextPage;
       this.page.nextPage();
     }
@@ -613,6 +634,7 @@ class ReadSpeech {
     speechSynthesis.speak(ssu);
   }
   async readMore() {
+    if (this.lastReset) return;
     if (!this.speaking) return;
     if (this.readMoreBusy) return;
     this.readMoreBusy = true;
@@ -628,43 +650,58 @@ class ReadSpeech {
     }
     this.readMoreBusy = false;
   }
-  start() {
+  async start() {
+    if (this.lastReset) return;
     if (this.speaking) return;
+    if (speechSynthesis.speaking || speechSynthesis.pending) return;
     this.readMoreBusy = false;
     const page = this.page;
     page.element.classList.add('read-speech');
     this.next = page.pages.current.cursor;
-    if (this.spoken && this.spoken > this.next && this.spoken < page.pages.next.cursor) {
+    do {
+      if (!this.spoken) break;
+      if (this.spoken < this.next) break;
+      if (!page.pages.next) break;
+      if (this.spoken >= page.pages.next.cursor) break;
       this.next = this.spoken;
-    }
+    } while (false);
     this.lastPageCursor = this.next;
     this.spoken = this.next;
     this.pendingSsu = new Set();
-    ; ((async () => {
-      // Safari hack, again
-      while (speechSynthesis.speaking || speechSynthesis.pending) {
-        speechSynthesis.cancel();
-        await new Promise(resolve => setTimeout(resolve, 0));
-      }
-      this.speaking = true;
-      this.readMore();
-    })());
+    this.speaking = true;
+    this.readMore();
   }
-  stop() {
+  async stop() {
+    if (!this.speaking) return;
     this.page.element.classList.remove('read-speech');
     this.clearHighlight();
     this.speaking = false;
     this.pendingSsu = null;
-    speechSynthesis.cancel();
+    while (speechSynthesis.speaking || speechSynthesis.pending) {
+      speechSynthesis.cancel();
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
   }
-  reset() {
-    if (!this.speaking) return;
-    this.stop();
-    this.start();
+  async reset() {
+    const token = this.lastReset = {};
+    await this.stop();
+    /*
+     * FIXME
+     * I don't know why!
+     * But safari doesn't work if we don't give a pause.
+     * I'm not sure how long would be suitable.
+     * I just make it work on my iPhone with 1s delay.
+     * This should be changed to something more meaningful.
+     */
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (token !== this.lastReset) return;
+    this.lastReset = null;
+    await this.start();
   }
-  toggle() {
-    if (this.speaking) this.stop();
-    else this.start();
+  async toggle() {
+    if (this.lastReset) return;
+    if (this.speaking) await this.stop();
+    else await this.start();
   }
   clearHighlight() {
     Array.from(document.querySelectorAll('.read-highlight')).forEach(container => {
@@ -676,6 +713,7 @@ class ReadSpeech {
     this.clearHighlight();
     this.lastHighlightStart = start;
     this.lastHighlightLength = length;
+    /** @type {HTMLElement} */
     const container = this.page.pages.current.container;
     const paragraphs = Array.from(container.querySelectorAll('p[data-start]'));
     const paragraph = paragraphs.reverse().find(p => p.dataset.start <= start);
@@ -694,17 +732,19 @@ class ReadSpeech {
     range.setEnd(node, endPos);
     const rects = Array.from(range.getClientRects());
     const highlight = container.querySelector('.read-highlight');
+    const containerRect = container.getBoundingClientRect();
     rects.forEach(rect => {
       const span = document.createElement('span');
-      ['top', 'left', 'width', 'height'].forEach(attr => {
-        span.style[attr] = rect[attr] + 'px';
-      });
+      span.style.top = (rect.top - containerRect.top) + 'px';
+      span.style.left = (rect.left - containerRect.left) + 'px';
+      span.style.width = rect.width + 'px';
+      span.style.height = rect.height + 'px';
       highlight.appendChild(span);
       return span;
     });
   }
   updateCursor(cursor) {
-    if (this.speaking) {
+    if (this.speaking || this.lastReset) {
       if (this.lastPageCursor === cursor) return;
       this.reset();
     } else {
@@ -728,7 +768,7 @@ class ControlPage extends ReadSubPage {
     this.container.insertBefore(headerRef.get('root'), this.container.firstChild);
     const backButton = template.iconButton('back', i18n.getMessage('buttonBack'));
     headerRef.get('left').appendChild(backButton);
-    this.bookTitleELement = headerRef.get('mid');
+    this.bookTitleElement = headerRef.get('mid');
     this.backButton = backButton;
     this.hide();
 
@@ -774,10 +814,11 @@ class ControlPage extends ReadSubPage {
       this.hide();
     });
     this.coverElement.addEventListener('mousedown', event => {
-      this.hide();
+      if (event.button === 0) this.hide();
     });
 
     const speechContainer = this.speechButton.closest('.icon-line-item');
+    speechContainer.hidden = speech.getPreferVoice() == null;
     speech.onPreferVoiceChange(voice => {
       if (!voice) speechContainer.hidden = true;
       else speechContainer.hidden = false;
@@ -795,7 +836,8 @@ class ControlPage extends ReadSubPage {
   onActivate() {
     super.onActivate();
 
-    this.bookTitleELement.textContent = this.readPage.meta.title;
+    this.bookTitleElement.textContent = this.readPage.meta.title;
+    this.bookTitleElement.lang = this.readPage.langTag;
     this.hide();
   }
   onInactivate() {
@@ -819,6 +861,13 @@ class ControlPage extends ReadSubPage {
     this.backButton.focus();
   }
 }
+
+/**
+ * @typedef {Object} PageRender
+ * @property {HTMLElement} container
+ * @property {number} cursor
+ * @property {number} nextCursor
+ */
 
 export default class ReadPage extends Page {
   constructor() {
@@ -862,6 +911,8 @@ export default class ReadPage extends Page {
     });
   }
   async onActivate({ id }) {
+    this.langTag = await config.get('cjk_lang_tag');
+
     this.meta = await file.getMeta(id);
     this.index = await file.getIndex(id);
     this.content = await file.content(id);
@@ -964,6 +1015,12 @@ export default class ReadPage extends Page {
     listener.onTouchLeft(wos(() => { this.prevPage(); }));
     listener.onTouchRight(wos(() => { this.nextPage(); }));
     listener.onTouchMiddle(wos(() => { this.controlPage.show(); }));
+    this.pagesContainer.addEventListener('contextmenu', event => {
+      if (this.isAnythingSelected()) return;
+      event.preventDefault();
+      if (this.controlPage.isCurrent) this.controlPage.hide();
+      else this.controlPage.show();
+    }, false);
   }
   keyboardEvents(event) {
     const current = this.subPages.find(page => page.isCurrent);
@@ -1007,6 +1064,8 @@ export default class ReadPage extends Page {
       } else if (offset > 0 && this.pages.isFirst) {
         move = Math.min(100, offset / 2);
       }
+      const width = window.innerWidth;
+      move = Math.max(-width, Math.min(width, move));
       this.pagesContainer.style.setProperty('--slide-x', move + 'px');
       this.pagesContainer.classList.add('read-content-pages-slide');
     } else {
@@ -1261,6 +1320,7 @@ export default class ReadPage extends Page {
       else if (next > 0) title.textContent = items[next - 1].title;
     }
     progress.textContent = (cursor / this.content.length * 100).toFixed(2) + '%';
+    container.lang = this.langTag;
     // 1. insert container into dom, so styles would applied to it
     this.pagesContainer.appendChild(container);
 
@@ -1297,6 +1357,7 @@ export default class ReadPage extends Page {
     this.pagesContainer.appendChild(container);
     const step = this.step();
     const content = this.content;
+    container.lang = this.langTag;
 
     const tryFill = function (nextCursor, body) {
       let low = 0, high = nextCursor;

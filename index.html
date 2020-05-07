@@ -1,16 +1,23 @@
 ﻿<!doctype html>
+<!--
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.
+This Source Code Form is "Incompatible With Secondary Licenses", as
+defined by the Mozilla Public License, v. 2.0.
+-->
 <html>
 <head>
 <meta charset="utf-8" />
-<title>Reader</title>
+<title>tReader</title>
 
 <meta name='viewport' content='width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no' />
 
 <link rel="manifest" href="manifest.webmanifest" />
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="application-name" content="Reader">
-<meta name="apple-mobile-web-app-title" content="Reader">
+<meta name="application-name" content="tReader">
+<meta name="apple-mobile-web-app-title" content="tReader">
 <meta name="msapplication-starturl" content="./">
 
 <link rel="icon" href="favicon.ico" sizes="16x16" />
@@ -27,7 +34,7 @@
   <input id="file" type="file" accept="text/plain" tabindex="-1" />
   <div class="file-list-container scroll" tabindex="-1">
     <div class="list-action">
-      <button class="list-sort">
+      <button type="button" class="list-sort">
         <div class="button-wrap" tabindex="-1">
           <span class="list-sort-title"><span data-i18n="listSortTitle"></span></span>
           <span class="list-sort-content"><span></span><span class="icon icon-detail" title="Detail"></span></span>
@@ -44,12 +51,12 @@
 <div class="list-sort-menu">
   <div class="list-sort-options screen-option" role="listbox">
     <div class="screen-option-group">
-      <button role="option" class="screen-option-item" data-option="dateread" data-option-default><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateRead"></span></div></button>
-      <button role="option" class="screen-option-item" data-option="dateadd"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateAdd"></span></div></button>
-      <button role="option" class="screen-option-item" data-option="title"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByTitle"></span></div></button>
+      <button type="button" role="option" class="screen-option-item" data-option="dateread" data-option-default><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateRead"></span></div></button>
+      <button type="button" role="option" class="screen-option-item" data-option="dateadd"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateAdd"></span></div></button>
+      <button type="button" role="option" class="screen-option-item" data-option="title"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByTitle"></span></div></button>
     </div>
     <div class="screen-option-group">
-      <button role="option" class="screen-option-item"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortCancel"></span></div></button>
+      <button type="button" role="option" class="screen-option-item"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortCancel"></span></div></button>
     </div>
   </div>
 </div>
@@ -62,9 +69,9 @@
     <div class="index-tab-group">
       <div class="tab-group" role="tablist" tabindex="0">
         <div class="tab-group-wrap" tabindex="-1">
-          <button id="read_index_contents_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_contents" tabindex="-1"></button>
-          <button id="read_index_bookmark_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_bookmark" tabindex="-1"></button>
-          <button id="read_index_search_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_search" tabindex="-1"></button>
+          <button type="button" id="read_index_contents_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_contents" tabindex="-1"></button>
+          <button type="button" id="read_index_bookmark_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_bookmark" tabindex="-1"></button>
+          <button type="button" id="read_index_search_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_search" tabindex="-1"></button>
         </div>
       </div>
     </div>
@@ -89,7 +96,9 @@
   </div>
   <div class="read-layer read-sub-page read-jump">
     <div class="read-jump-cover"></div>
-    <div class="footer-line"><div id="jump_range"></div></div>
+    <div class="footer-line">
+      <div id="jump_range"></div>
+    </div>
   </div>
 </div>
 <div class="page" id="config_page">
@@ -116,6 +125,32 @@
   <div id="config_page_voice" class="config-option-page config-page">
     <div class="config-page-content scroll">
       <div class="config-option-select-list"></div>
+    </div>
+  </div>
+  <div id="config_page_text" class="config-option-page config-page">
+    <div class="config-page-content scroll">
+      <div class="config-option-text">
+        <label>
+          <span class="config-option-text-title"></span>
+          <input class="config-option-text-input" type="text" />
+        </label>
+      </div>
+      <div class="config-option-text-description"></div>
+    </div>
+  </div>
+  <div id="config_page_credits" class="config-option-page config-page">
+    <div class="config-page-content">
+      <iframe src="about:blank" class="config-credits-iframe"></iframe>
+    </div>
+  </div>
+  <div id="config_page_about" class="config-option-page config-page">
+    <div class="config-page-content scroll config-page-about" lang="en">
+      <h2>tReader</h2>
+      <p>Copyright (c) 2020 <span lang="zh-Hans">田生</span></p>
+      <p>
+        This project is released under the Mozilla Public License 2.0 with no copyleft exception.
+        You may checkout LICENSE file for more detail. 
+      </p>
     </div>
   </div>
 </div>
