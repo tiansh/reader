@@ -210,7 +210,8 @@
   white-space: normal;
 }
 
-.config-page-about:first-child {
+.config-page-about h1 {
   margin-top: 35px;
+  font-size: 150%;
 }
 
