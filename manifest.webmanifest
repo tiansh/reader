@@ -11,9 +11,9 @@
     }
   ],
   "start_url": "./",
+  "scope": "./",
   "background_color": "black",
   "display": "fullscreen",
-  "scope": ".",
   "theme_color": "black"
 }
 
