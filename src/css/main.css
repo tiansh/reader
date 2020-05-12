@@ -55,14 +55,14 @@ a {
   background: var(--header-background);
   height: 49px;
   font-size: 20px;
-  border-bottom: 1px solid var(--header-border-color);
+  border-bottom: 1px solid var(--border-color);
   line-height: 49px;
   user-select: none;
 }
 
 .header-line button {
   margin: 0 -10px;
-  color: var(--header-color);
+  color: var(--active-color);
   height: 50px;
   vertical-align: top;
 }
@@ -79,7 +79,7 @@ a {
   position: absolute;
   bottom: 0;
   background: var(--header-background);
-  color: var(--header-color);
+  color: var(--active-color);
   height: 60px;
   width: var(--window-width);
   line-height: 60px;
@@ -136,7 +136,7 @@ a {
 
 .list-item {
   position: relative;
-  border: 0 solid var(--config-border-color);
+  border: 0 solid var(--border-color);
   border-width: 1px 0;
   margin-bottom: -1px;
 }

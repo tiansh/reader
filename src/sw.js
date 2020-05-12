@@ -1,4 +1,4 @@
-const version = '20200508';
+const version = '20200513';
 
 const resourceList = [
   './css/normalize-8.0.1.css',
@@ -10,6 +10,7 @@ const resourceList = [
   './css/listpage.css',
   './css/readpage.css',
   './css/configpage.css',
+  './css/widescr.css',
   './css/index.css',
   './css/icons.svg',
   './css/icons.woff',

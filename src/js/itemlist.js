@@ -212,6 +212,10 @@ export default class ItemList {
       this.selected.delete(index);
     }
   }
+  scrollIntoView(index) {
+    const element = this.elements.get(index);
+    element.scrollIntoView({ block: 'nearest' });
+  }
   clearSelectItem() {
     if (!this.selectable) return;
     Array.from(this.selected).forEach(n => this.setSelectItem(n, false));

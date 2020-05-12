@@ -54,6 +54,7 @@ class ReadSubPage {
     this.hide();
   }
   onInactivate() { }
+  updateSideIndex() { }
 }
 
 class IndexSubPage extends ReadSubPage {
@@ -147,6 +148,7 @@ class IndexSubPage extends ReadSubPage {
     this.itemList.clearSelectItem();
     if (current != null) {
       this.itemList.setSelectItem(current, true);
+      this.itemList.scrollIntoView(current);
     }
     this.currentContentsIndex = current;
   }
@@ -161,7 +163,9 @@ class IndexSubPage extends ReadSubPage {
   listItemRender() { }
   onItemClick(item) {
     this.readPage.setCursor(item.cursor);
-    this.indexPage.hide();
+    if (!this.readPage.useSideIndex) {
+      this.indexPage.hide();
+    }
   }
   pageButtonAction() { }
   setList(newList) {
@@ -307,7 +311,7 @@ class IndexBookmarkPage extends IndexSubPage {
     const bookmarks = this.readPage.index.bookmarks || [];
     const index = bookmarks.findIndex(i => i.cursor === bookmark.cursor);
     if (index === -1) return;
-    bookmarks.splice(index);
+    bookmarks.splice(index, 1);
     file.setIndex(this.readPage.index);
     if (this.itemList) {
       this.itemList.removeItem(index);
@@ -469,17 +473,27 @@ class IndexPage extends ReadSubPage {
     this.subPages.forEach(page => page.onInactivate());
   }
   slideShow(action, offset) {
+    const isCurrent = this.isCurrent;
     if (action === 'move') {
-      this.container.style.bottom = `calc(100vh - ${offset}px)`;
+      if (isCurrent) {
+        if (offset > 0) this.container.style.bottom = '0';
+        else this.container.style.bottom = `${-offset}px`;
+      } else {
+        this.container.style.bottom = `calc(100vh - ${offset}px)`;
+      }
       this.container.classList.add('read-index-slide');
     } else {
       this.container.classList.remove('read-index-slide');
-      if (action === 'down') {
+      if (action === 'down' && !isCurrent) {
         window.requestAnimationFrame(() => {
           this.show();
         });
+      } else if (action === 'up') {
+        this.hide();
+      } else if (isCurrent) {
+        this.container.style.bottom = '0';
       } else {
-        this.container.style.bottom = `100vh`;
+        this.container.style.bottom = '100vh';
       }
     }
   }
@@ -494,10 +508,36 @@ class IndexPage extends ReadSubPage {
     this.container.style.bottom = '0';
     if (page) this.showPage(this.subPageMap[page]);
     else this.showPage(this.subPages[this.currentActiveIndex]);
+    this.readPage.container.classList.add('read-show-index');
+    if (this.readPage.useSideIndex) {
+      dom.enableKeyboardFocus(this.readPage.controlPage.container);
+      window.requestAnimationFrame(() => {
+        this.readPage.onResize();
+      });
+    }
+  }
+  toggle(/** @type {'contents'|'bookmark'|'search'|null} */page = null) {
+    const subPage = this.subPageMap[page];
+    if (subPage.isCurrent) {
+      this.hide();
+    } else {
+      this.show(page);
+    }
   }
   hide() {
     super.hide();
     this.container.style.bottom = '100vh';
+    this.readPage.container.classList.remove('read-show-index');
+    if (this.readPage.useSideIndex) {
+      this.readPage.onResize();
+    }
+  }
+  updateSideIndex() {
+    if (this.readPage.useSideIndex) {
+      dom.enableKeyboardFocus(this.readPage.controlPage.container);
+    } else {
+      dom.disableKeyboardFocus(this.readPage.controlPage.container);
+    }
   }
 }
 
@@ -796,7 +836,7 @@ class ControlPage extends ReadSubPage {
     ].forEach(({ name, button }) => {
       button.addEventListener('click', event => {
         this.hide();
-        this.readPage.indexPage.show(name);
+        this.readPage.indexPage.toggle(name);
       });
     });
     this.jumpButton.addEventListener('click', event => {
@@ -872,6 +912,7 @@ class ControlPage extends ReadSubPage {
 export default class ReadPage extends Page {
   constructor() {
     super(document.querySelector('#read_page'));
+    this.useSideIndex = null;
     this.onResize = this.onResize.bind(this);
     this.keyboardEvents = this.keyboardEvents.bind(this);
     this.wheelEvents = this.wheelEvents.bind(this);
@@ -933,18 +974,20 @@ export default class ReadPage extends Page {
 
     await this.updateStyleConfig();
 
-    /** @type {{ prev: PageRender, current: PageRender, next: PageRender, isLast: boolean, isFirst: boolean }} */
-    this.pages = {};
-    window.requestAnimationFrame(() => {
-      this.updatePages();
-    });
-
     onResize.addListener(this.onResize);
 
     document.addEventListener('keydown', this.keyboardEvents);
     document.addEventListener('wheel', this.wheelEvents);
 
     this.subPages.forEach(page => { page.onActivate(); });
+
+    this.updateSideIndex();
+
+    /** @type {{ prev: PageRender, current: PageRender, next: PageRender, isLast: boolean, isFirst: boolean }} */
+    this.pages = {};
+    window.requestAnimationFrame(() => {
+      this.updatePages();
+    });
   }
   async onUpdate({ id }) {
     this.onInactivate();
@@ -958,16 +1001,31 @@ export default class ReadPage extends Page {
     this.pagesContainer = null;
     this.pageInfo = null;
     this.pages = null;
+    this.useSideIndex = null;
     onResize.removeListener(this.onResize);
     document.removeEventListener('keydown', this.keyboardEvents);
     document.removeEventListener('wheel', this.wheelEvents);
     this.subPages.forEach(page => { page.onInactivate(); });
     this.speech.stop();
   }
+  updateSideIndex() {
+    const sideIndex = window.innerWidth >= 960;
+    if (sideIndex === this.useSideIndex) return;
+    this.useSideIndex = sideIndex;
+    if (sideIndex) {
+      this.container.classList.add('read-page-wide');
+    } else {
+      this.container.classList.remove('read-page-wide');
+    }
+    this.subPages.forEach(page => {
+      page.updateSideIndex(sideIndex);
+    });
+  }
   gotoList() {
     this.router.go('list');
   }
   onResize() {
+    this.updateSideIndex();
     this.stepCache = null;
     this.disposePage(this.pages.prev);
     this.disposePage(this.pages.current);
@@ -1006,8 +1064,11 @@ export default class ReadPage extends Page {
     const cancelY = () => { this.indexPage.slideShow('cancel'); };
     listener.onMoveY(wos(distance => { this.indexPage.slideShow('move', distance); }, cancelY));
     listener.onSlideUp(wos(() => {
-      this.indexPage.slideShow('up');
-      this.controlPage.show();
+      if (this.indexPage.isCurrent) {
+        this.indexPage.slideShow('up');
+      } else {
+        this.controlPage.show();
+      }
     }, cancelY));
     listener.onSlideDown(wos(() => { this.indexPage.slideShow('down'); }, cancelY));
     listener.onCancelY(cancelY);
@@ -1044,6 +1105,9 @@ export default class ReadPage extends Page {
    * @param {WheelEvent} event
    */
   wheelEvents(event) {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (!target.closest('.read-content-pages')) return;
     if (this.wheelBusy) return;
     const deltaY = event.deltaY;
     if (!deltaY) return;
@@ -1191,6 +1255,7 @@ export default class ReadPage extends Page {
   }
   isTwoColumn() {
     if (window.innerWidth < 960) return false;
+    if (window.innerWidth < 1160 && this.useSideIndex && this.indexPage.isCurrent) return false;
     if (window.innerWidth < window.innerHeight * 1.2) return false;
     return true;
   }
@@ -1200,6 +1265,14 @@ export default class ReadPage extends Page {
     const textArea = (this.configs && this.configs.font_size || 18) ** 2;
     this.stepCache = Math.floor(area / textArea);
     return this.stepCache;
+  }
+  ignoreSpaces(cursor) {
+    const content = this.content;
+    let lineBreak = cursor - 1;
+    for (; /\s/.test(content[cursor]); cursor++) {
+      if (content[cursor] === '\n') lineBreak = cursor;
+    }
+    return lineBreak + 1;
   }
   /**
    * @param {number} cursor
@@ -1213,7 +1286,8 @@ export default class ReadPage extends Page {
     const paragraphs = [];
     /** @type {HTMLParagraphElement} */
     let paragraph = null;
-    let isOverflow = false, after = cursor;
+    let isOverflow = false;
+    let after = this.ignoreSpaces(cursor);
     while (true) {
       let pos = after;
       after += step;
@@ -1363,7 +1437,7 @@ export default class ReadPage extends Page {
       let low = 0, high = nextCursor;
       while (low <= high) {
         const mid = Math.max(Math.floor((low + high) / 2), high - step);
-        const trunk = content.slice(mid, nextCursor);
+        const trunk = content.slice(mid, nextCursor).replace(/\n\s*$/, '');
         body.innerHTML = '';
         trunk.split(/\n/).forEach(line => {
           const paragraph = body.appendChild(document.createElement('p'));

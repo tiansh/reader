@@ -12,24 +12,21 @@
   --active-color: #dcb13d;
 
   --header-background: #171717;
-  --header-border-color: #3d3d3d;
-  --header-color: #dcb13d;
+
+  --highlight-background: #ffffff50;
+  --border-color: #3d3d3d;
 
   --search-title-color: #808080;
-  --list-border-color: #3e3e41;
   --list-title-color: #f0f0f0;
   --list-comment-color: #98989e;
   --list-detail-color: #59595e;
   --list-active-background: #1e1e1e;
-
-  --highlight-background: #ffffff50;
 
   --menu-background: #323232;
   --menu-color: #fff;
 
   --search-placeholder: #98989e;
   --search-background: #1e1e1e;
-  --search-highlight-color: #dcb13d;
 
   --tabber-color: #98989e;
   --tabber-active-color: #fff;
@@ -44,9 +41,7 @@
   --config-background: #000;
   --config-title-color: #8f8e93;
   --config-content-color: #fff;
-  --config-content-active-color: #dcb13d;
   --config-item-background: #1c1c1e;
-  --config-border-color: #3d3d3d;
 
   --remove-background: #eb5545;
   --remove-color: #fff;

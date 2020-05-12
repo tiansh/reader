@@ -1,14 +1,14 @@
 # tReader
 
+https://tiansh.github.io/reader
+
 又一个 TXT 文本阅读器。
 
 自用为主。
 
 ## 使用
 
-https://tiansh.github.io/reader
-
-Safari 打开，选择“添加到主屏幕”，从主屏幕上找到并打开，就可以开始用了。
+Safari 打开 https://tiansh.github.io/reader ，选择“添加到主屏幕”，从主屏幕上找到并打开，就可以开始用了。
 
 Android 设备的话可能需要 Chrome 浏览器打开。作者没试过。
 
@@ -60,7 +60,44 @@ Android 的话作者没试过，有问题欢迎 PR。计算机上、以及 iOS S
 
 更改配色可以参考 `light.css`, `dark.css` 文件。更改阅读界面的样式可以参考 `readpage.css`。
 
-## Open Source Credit
+## 截屏
+
+<img src="./src/screenshot/1.png" alt="文件列表" width="250" />
+<img src="./src/screenshot/2.png" alt="文章内容" width="250" />
+<img src="./src/screenshot/3.png" alt="文章内容带控制按钮" width="250" />
+<img src="./src/screenshot/4.png" alt="文章目录" width="250" />
+<img src="./src/screenshot/5.png" alt="设置" width="250" />
+<img src="./src/screenshot/6.png" alt="大屏幕文章内容" width="512" />
+<img src="./src/screenshot/7.png" alt="大屏幕文章内容带目录" width="512" />
+
+<!--
+截屏中的《红楼梦》（曹雪芹、高鹗），因作者逝世已超过100年，文章属于公有领域
+下载自维基文库，经过编辑。导入时启用了繁简转换。
+-->
+
+## 常见问题
+
+### 填写目录模板
+
+阅读器没有预置识别目录的模板。如果你需要识别目录，需要自行填写目录模板。如果目录所在行的格式如上图所示“第二十三回　西厢记妙词通戏语　牡丹亭艳曲警芳心”，那么填写“第\*回 ”即可。
+
+目录模板中，“\*”表示此处可以出现任意数量的任意字符，使用半角空格表示此处可以出现任意空白字符。目录匹配时会要求目录行以给定模板的内容开头，前面不能有除空白字符以外的内容。
+
+除使用通配符外，使用“/”开头并结尾，也可以填写正则表达式。
+
+### 汉字字体错误/西文换行错误
+
+阅读器无法推断文章的语言，根据您的浏览器的设置不同，浏览器可能为汉字选用默认的字体。因此有可能为简体中文的文章选择了日语字体。导致显示的一些汉字出现笔画显示上与读者习惯不符的问题。同样的问题也出现在西文的换行上，浏览器可能默认使用英语的换行方式处理如德语的文章。
+
+如果您遇到此类问题，请在设置中填写语言标记，标明阅读的文章的语言。例如简体中文 `zh-Hans`，繁体中文 `zh-Hant`。
+
+此外，您还可以通过载入 ttf 文件定制字体。
+
+### 开启语音朗读后不能正常朗读且快速翻页
+
+语音朗读会使用系统中安装的语音。不同的语音针对不同的语言和地区。在阅读中文内容时，可能需要首先在设置中选择中文的朗读语音。这些语音一般以 `zh-` 开头。如果使用默认的英语朗读语音，朗读时会自动跳过汉字，导致快速翻页。
+
+## Open Source Credits
 
 * normalize.css: from normalize v8.0.1
     * MIT License; https://github.com/necolas/normalize.css
@@ -75,3 +112,4 @@ Android 的话作者没试过，有问题欢迎 PR。计算机上、以及 iOS S
 Copyright (C) 2020 田生
 
 This project is released under the Mozilla Public License 2.0 with no copyleft exception. You may checkout LICENSE file for more detail.
+

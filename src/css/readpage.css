@@ -31,7 +31,7 @@
 .read-content-page {
   box-sizing: border-box;
   position: absolute;
-  width: var(--window-width);
+  width: 100%;
   height: var(--window-height);
   top: 0;
   left: var(--slide-x);
@@ -201,6 +201,7 @@
   height: var(--window-height);
   top: auto;
   background: var(--default-background);
+  overflow: hidden;
 }
 
 .read-index:not(.read-index-slide) {
@@ -210,7 +211,7 @@
 .index-tab-group {
   position: absolute;
   bottom: 0;
-  width: var(--window-width);
+  width: 100%;
   padding: 5px 0;
   height: 40px;
 }
@@ -219,14 +220,15 @@
   --tab-index-current: 0;
   --read-index-slide-x: 0px;
   z-index: 9;
+  position: relative;
 }
 
 .index-tab-panel {
   position: absolute;
   top: 0;
   bottom: 56px;
-  width: var(--window-width);
-  left: calc(calc(calc(var(--tab-index) - var(--tab-index-current)) * var(--window-width)) + var(--read-index-slide-x));
+  width: 100%;
+  left: calc(calc(calc(var(--tab-index) - var(--tab-index-current)) * 100%) + var(--read-index-slide-x));
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: none;
@@ -427,10 +429,10 @@ button.tab-item:focus {
   border-radius: 10px;
   background-color: var(--search-background);
   color: var(--default-color);
-  height: 36px;q
-  border: 0 none;
+  height: 36px;
   padding: 0 10px 0 40px;
   margin: 0;
+  border: 1px solid var(--border-color);
 }
 .search-input:focus {
   outline: none;
@@ -447,12 +449,12 @@ button.tab-item:focus {
 }
 
 .index-search-item-more {
-  color: var(--search-highlight-color);
+  color: var(--active-color);
   text-align: center;
 }
 
 .index-search-item mark {
-  color: var(--search-highlight-color);
+  color: var(--active-color);
   background: none;
 }
 

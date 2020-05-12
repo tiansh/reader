@@ -9,16 +9,14 @@
 .light-theme {
   --default-background: #fff;
   --default-color: #000;
-  --active-color: #daaf50;
+  --active-color: #c1752b;
 
   --header-background: #f2f1f6;
-  --header-border-color: #c6c6c8;
-  --header-color: #daaf50;
 
   --highlight-background: #00000030;
+  --border-color: #c6c6c8;
 
   --search-title-color: #7e7e7e;
-  --list-border-color: #c6c6c6;
   --list-title-color: #000;
   --list-comment-color: #878789;
   --list-detail-color: #bcbcbe;
@@ -29,7 +27,6 @@
 
   --search-placeholder: #848389;
   --search-background: #e4e3e9;
-  --search-highlight-color: #daaf50;
 
   --tabber-color: #858587;
   --tabber-active-color: #fff;
@@ -44,9 +41,7 @@
   --config-background: #f2f1f6;
   --config-title-color: #717176;
   --config-content-color: #000;
-  --config-content-active-color: #daaf50;
   --config-item-background: #fff;
-  --config-border-color: #c6c6c8;
 
   --remove-background: #eb4d3d;
   --remove-color: #fff;
