@@ -60,7 +60,7 @@
   left: 15px;
   right: 0;
   height: 1px;
-  background: var(--config-border-color);
+  background: var(--border-color);
 }
 
 .config-item-title,
@@ -88,7 +88,7 @@
   width: 60px;
   height: 40px;
   margin: 5px 0;
-  border: 1px solid var(--config-border-color);
+  border: 1px solid var(--border-color);
 }
 
 .config-item-detail {
@@ -119,7 +119,7 @@
 .select-font-button-inner {
   line-height: 50px;
   text-align: center;
-  color: var(--config-content-active-color);
+  color: var(--active-color);
 }
 
 .select-config-option-item {
@@ -157,7 +157,7 @@
 .config-option-text {
   margin-top: 35px;
   background: var(--config-item-background);
-  border: 0 solid var(--config-border-color);
+  border: 0 solid var(--border-color);
   border-width: 1px 0;
   height: 50px;
   line-height: 50px;

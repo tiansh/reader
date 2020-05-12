@@ -1,7 +1,7 @@
 {
   "short_name": "tReader",
   "name": "tReader",
-  "description": "Simple TXT Reader",
+  "description": "A simple but customizable TXT file reader.",
   "categories": [ "books", "productivity" ],
   "icons": [
     {
@@ -14,6 +14,15 @@
   "scope": "./",
   "background_color": "black",
   "display": "fullscreen",
-  "theme_color": "black"
+  "theme_color": "black",
+  "screenshots": [
+    { "src": "./screenshot/1.png" },
+    { "src": "./screenshot/2.png" },
+    { "src": "./screenshot/3.png" },
+    { "src": "./screenshot/4.png" },
+    { "src": "./screenshot/5.png" },
+    { "src": "./screenshot/6.png" },
+    { "src": "./screenshot/7.png" }
+  ]
 }
 

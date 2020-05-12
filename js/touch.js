@@ -11,6 +11,9 @@
 /** @typedef {'x'|'y'} Direction */
 
 export class TouchGestureListener {
+  /**
+   * @param {HTMLElement} targetElement
+   */
   constructor(targetElement, { minDistanceX = 20, minDistanceY = 20, clickParts = 3, yRadian = Math.PI / 2 } = {}) {
     this.listeners = new Map();
     this.minDistanceX = minDistanceX;
@@ -71,12 +74,13 @@ export class TouchGestureListener {
       const offset = direction === 'x' ? dx : direction === 'y' ? dy : 0;
       if (!direction) {
         const parts = this.clickParts;
-        const x = startPos[0], w = window.innerWidth;
+        const rect = targetElement.getBoundingClientRect();
+        const x = startPos[0] - rect.x, w = rect.width;
         let action = 'touch';
         if (parts === 2) {
-          action = ['touchleft', 'touchright'][Math.floor(x * 2 / w)];
+          action = x < w / 2 ? 'touchleft' : 'touchright';
         } else if (parts === 3) {
-          action = ['touchleft', 'touchmiddle', 'touchright'][Math.floor(x * 3 / w)];
+          action = x < w / 3 ? 'touchleft' : x > w / 3 * 2 ? 'touchright' : 'touchmiddle';
         }
         this.trigger(action);
       } else {

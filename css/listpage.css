@@ -92,7 +92,7 @@ button.screen-option-item {
   height: 53px;
   line-height: 53px;
   font-size: 25px;
-  border-bottom: 1px solid var(--list-border-color);
+  border-bottom: 1px solid var(--border-color);
   background: var(--menu-background);
   color: var(--menu-color);
   text-align: left;
