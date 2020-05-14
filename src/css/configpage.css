@@ -25,6 +25,7 @@
   overflow-x: hidden;
   scrollbar-width: none;
   overscroll-behavior: none;
+  -webkit-user-select: none;
   user-select: none;
 }
 

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * This Source Code Form is "Incompatible With Secondary Licenses", as
  * defined by the Mozilla Public License, v. 2.0.
-*/
+ */
 
 .read-layer {
   position: absolute;
@@ -35,13 +35,10 @@
   height: var(--window-height);
   top: 0;
   left: var(--slide-x);
-  user-select: none;
+  -webkit-user-select: auto;
+  user-select: auto;
   overflow: hidden;
   overflow-wrap: break-word;
-}
-
-.read-content-pages-select .read-content-page {
-  user-select: text;
 }
 
 .read-content-pages:not(.read-content-pages-slide) .read-content-page {
@@ -190,10 +187,10 @@
   display: block;
 }
 
-.read-control .icon-speech-stop { display: none; }
-.read-speech .read-control .icon-speech-stop { display: inline; }
-.read-control .icon-speech { display: inline; }
-.read-speech .read-control .icon-speech { display: none; }
+  .read-control .icon-speech-stop { display: none; }
+  .read-speech .read-control .icon-speech-stop { display: inline; }
+  .read-control .icon-speech { display: inline; }
+  .read-speech .read-control .icon-speech { display: none; }
 
 .read-index {
   position: absolute;
@@ -503,4 +500,91 @@ button.tab-item:focus {
     --page-margin-y: 3vh;
   }
 }
+
+.read-page-wide .read-content-pages {
+  box-shadow: -1px 0 0 var(--border-color);
+}
+
+.read-page-wide .read-control .header-line {
+  width: 49px;
+  height: 100vh;
+  border-bottom: 0 none;
+  border-right: 1px solid var(--border-color);
+  left: -50px;
+  top: 0;
+}
+
+.read-page-wide .read-control.read-control-active .header-line {
+  left: 0;
+  transition: left step-start 0.05s;
+}
+
+.read-page-wide .read-control .footer-line {
+  transform-origin: left bottom;
+  transform: rotate(-90deg);
+  left: 100%;
+  width: 100vh;
+  height: 50px;
+  line-height: 50px;
+}
+
+.read-page-wide .read-control .footer-line .icon-line {
+  height: 50px;
+  width: auto;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+.read-page-wide .read-control .footer-line .icon-line-item {
+  flex: 0 0 50px;
+}
+
+.read-page-wide .read-control .footer-line .icon-line-item button {
+  height: 50px;
+  line-height: 50px;
+  transform: rotate(90deg);
+}
+
+.read-page-wide .read-index {
+  width: calc(var(--index-width) - 1px);
+  border-right: 1px solid var(--border-color);
+}
+
+.read-page-wide .read-index .header-left button {
+  transform: rotate(90deg);
+}
+
+.read-page-wide.read-show-index .read-layer {
+  left: var(--index-width);
+  right: 0;
+}
+
+.read-page-wide.read-show-index .read-index {
+  left: 0;
+}
+
+.read-page-wide.read-show-index .read-body-left {
+  right: calc(calc(50vw + calc(var(--page-margin-x) / 2)) - calc(var(--index-width) / 2));
+}
+
+.read-page-wide.read-show-index .read-body-right {
+  left: calc(calc(50vw + calc(var(--page-margin-x) / 2)) - 150px);
+}
+
+.read-page-wide {
+  --index-width: 300px;
+}
+
+@media screen and (min-width: 1200px) {
+  .read-page-wide {
+    --index-width: 25vw;
+  }
+}
+
+@media screen and (min-width: 2000px) {
+  .read-page-wide {
+    --index-width: 500px;
+  }
+}
+
 

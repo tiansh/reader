@@ -1057,20 +1057,33 @@ export default class ReadPage extends Page {
       }
     };
     const cancelX = () => { this.slidePage('cancel'); };
-    listener.onMoveX(wos(distance => { this.slidePage('move', distance); }, cancelX));
-    listener.onSlideLeft(wos(() => { this.slidePage('left'); }, cancelX));
-    listener.onSlideRight(wos(() => { this.slidePage('right'); }, cancelX));
+    listener.onMoveX(wos((distance, { touch }) => {
+      if (touch) this.slidePage('move', distance);
+      else cancelX();
+    }, cancelX));
+    listener.onSlideLeft(wos(({ touch }) => {
+      if (touch) this.slidePage('left');
+    }, cancelX));
+    listener.onSlideRight(wos(({ touch }) => {
+      if (touch) this.slidePage('right');
+    }, cancelX));
     listener.onCancelX(cancelX);
     const cancelY = () => { this.indexPage.slideShow('cancel'); };
-    listener.onMoveY(wos(distance => { this.indexPage.slideShow('move', distance); }, cancelY));
-    listener.onSlideUp(wos(() => {
+    listener.onMoveY(wos((distance, { touch }) => {
+      if (touch) this.indexPage.slideShow('move', distance);
+      else cancelY();
+    }, cancelY));
+    listener.onSlideUp(wos(({ touch }) => {
+      if (!touch) return;
       if (this.indexPage.isCurrent) {
         this.indexPage.slideShow('up');
       } else {
         this.controlPage.show();
       }
     }, cancelY));
-    listener.onSlideDown(wos(() => { this.indexPage.slideShow('down'); }, cancelY));
+    listener.onSlideDown(wos(({ touch }) => {
+      if (touch) this.indexPage.slideShow('down');
+    }, cancelY));
     listener.onCancelY(cancelY);
 
     listener.onTouchLeft(wos(() => { this.prevPage(); }));
