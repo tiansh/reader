@@ -32,6 +32,7 @@ button .icon {
   z-index: 0;
   width: 100%;
   box-sizing: border-box;
+  -webkit-user-select: none;
   user-select: none;
 }
 

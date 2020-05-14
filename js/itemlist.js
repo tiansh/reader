@@ -56,20 +56,42 @@ export default class ItemList {
     }
     this.renderList();
 
+    const getEventIndex = event => {
+      const target = event.target;
+      if (!(event.target instanceof HTMLElement)) return null;
+      const button = target.closest('.list-item-container');
+      if (!button) return null;
+      const content = button.querySelector('.list-item-content-wrap');
+      const index = this.list.findIndex((item, index) => this.elements.get(index) === content);
+      if (index === -1) return null;
+      return index;
+    };
+
     if (typeof this.onItemClick === 'function') {
       this.listElement.addEventListener('click', event => {
         if (this.hasRemove) {
           this.listElement.dispatchEvent(new Event('__hide_remove'));
         }
-        const target = event.target;
-        if (!(event.target instanceof HTMLElement)) return;
-        const button = target.closest('.list-item-container');
-        if (!button) return;
-        const content = button.querySelector('.list-item-content-wrap');
-        const index = this.list.findIndex((item, index) => this.elements.get(index) === content);
-        if (index === -1) return;
+        const index = getEventIndex(event);
+        if (index === null) return;
         const item = this.list[index];
         this.onItemClick(item, index);
+      });
+    }
+
+    if (this.hasRemove) {
+      this.listElement.addEventListener('contextmenu', event => {
+        const index = getEventIndex(event);
+        if (index === null) return;
+        const li = this.elements.get(index).closest('.list-item');
+        if (li.classList.contains('list-item-show-remove')) {
+          const deleteEvent = new KeyboardEvent('keydown', { code: 'Escape' });
+          li.dispatchEvent(deleteEvent);
+        } else {
+          const deleteEvent = new KeyboardEvent('keydown', { code: 'Delete' });
+          li.dispatchEvent(deleteEvent);
+        }
+        event.preventDefault();
       });
     }
   }
@@ -117,9 +139,15 @@ export default class ItemList {
           li.classList.remove('list-item-slide-remove');
           document.body.classList.remove('noscroll');
           window.requestAnimationFrame(() => {
-            if (action === 'show') showDelete = true;
-            if (action === 'hide') showDelete = false;
-            li.style.left = (showDelete ? -maxSlide : 0) + 'px';
+            if (action === 'show') {
+              showDelete = true;
+              li.style.left = -maxSlide + 'px';
+              li.classList.add('list-item-show-remove');
+            } else if (action === 'hide') {
+              showDelete = false;
+              li.style.left = '0px';
+              li.classList.remove('list-item-show-remove');
+            }
           });
           showDeleteMove = false;
         }

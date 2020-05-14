@@ -57,6 +57,7 @@ a {
   font-size: 20px;
   border-bottom: 1px solid var(--border-color);
   line-height: 49px;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -83,6 +84,7 @@ a {
   height: 60px;
   width: var(--window-width);
   line-height: 60px;
+  -webkit-user-select: none;
   user-select: none;
 }
 

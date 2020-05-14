@@ -10,6 +10,7 @@
   height: calc(var(--window-height) - 50px);
   overflow-x: hidden;
   overflow-y: auto;
+  -webkit-user-select: none;
   user-select: none;
 }
 
