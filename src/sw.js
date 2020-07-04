@@ -1,4 +1,4 @@
-const version = '20200515';
+const version = '20200704';
 
 const resourceList = [
   './css/normalize-8.0.1.css',

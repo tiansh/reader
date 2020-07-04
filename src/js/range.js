@@ -52,8 +52,8 @@ export default class RangeInput {
       }
       this.updateValue(pos);
     };
-    const mouseMove = pageX => {
-      const clientX = pageX - this.track.getClientRects().item(0).x;
+    const mouseMove = ({ position }) => {
+      const clientX = position[0] - this.track.getClientRects().item(0).x;
       const width = this.track.clientWidth;
       const ratio = clientX / width;
       setRatio(Math.min(Math.max(0, ratio), 1));
