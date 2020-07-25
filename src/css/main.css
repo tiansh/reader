@@ -82,7 +82,7 @@ a {
   background: var(--header-background);
   color: var(--active-color);
   height: 60px;
-  width: var(--window-width);
+  width: 100%;
   line-height: 60px;
   -webkit-user-select: none;
   user-select: none;
