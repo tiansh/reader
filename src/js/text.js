@@ -17,8 +17,8 @@ const encodings = [
   { encoding: 'utf-8', fatal: true },
   { encoding: 'gbk', fatal: true },
   { encoding: 'big5', fatal: true },
-  { encoding: 'utf-16le', fatal: false },
-  { encoding: 'utf-16be', fatal: false },
+  { encoding: 'utf-16le', fatal: true },
+  { encoding: 'utf-16be', fatal: true },
   { encoding: 'utf-8', fatal: false },
 ];
 
