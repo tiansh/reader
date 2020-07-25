@@ -197,6 +197,7 @@ class IndexContentsPage extends IndexSubPage {
     file.setIndex(this.readPage.index);
     this.setList(content.items.slice(0));
     this.indexPage.bookmarkPage.updateBookmarkList();
+    this.updateCurrentHighlight();
   }
   pageButtonAction() {
     this.refreshContents();
