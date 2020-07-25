@@ -186,7 +186,8 @@ class IndexContentsPage extends IndexSubPage {
       this.readPage.index.content = { template: '', items: [] };
     }
     const content = this.readPage.index.content;
-    content.template = prompt(i18n.getMessage('readContentsTemplate'), content.template) || '';
+    const input = prompt(i18n.getMessage('readContentsTemplate'), content.template);
+    content.template = (input == null ? content.template : input) || '';
     if (content.template) {
       content.items = text.generateContent(this.readPage.content, content.template);
       content.items.unshift({ title: this.readPage.meta.title, cursor: 0 });
