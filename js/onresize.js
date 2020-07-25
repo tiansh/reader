@@ -45,13 +45,14 @@ const updateSize = (function () {
     if (scheduled) return;
     scheduled = true;
     window.requestAnimationFrame(function () {
-      const [width, height] = [window.innerWidth, window.innerHeight];
-      if (width !== lastWidth || height !== lastHeight) {
-        adjustSize([width, height]);
-        lastWidth = width;
-        lastHeight = height;
-      }
       scheduled = false;
+      const html = document.documentElement;
+      const [width, height] = [html.clientWidth, html.clientHeight];
+      if (width === lastWidth && height === lastHeight) return;
+      adjustSize([width, height]);
+      lastWidth = width;
+      lastHeight = height;
+      updateSize();
     });
   };
 }());
@@ -60,6 +61,7 @@ updateSize();
 window.addEventListener('load', updateSize);
 window.addEventListener('resize', updateSize);
 window.addEventListener('orientationchange', updateSize);
+document.addEventListener('visibilitychange', updateSize);
 
 /** @returns {PageSize} */
 onResize.currentSize = function () {
