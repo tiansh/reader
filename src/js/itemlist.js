@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * This Source Code Form is "Incompatible With Secondary Licenses", as
  * defined by the Mozilla Public License, v. 2.0.
-*/
+ */
 
 import { TouchGestureListener } from './touch.js';
 import template from './template.js';
@@ -193,6 +193,9 @@ export default class ItemList {
   dispatch() {
     this.clearList();
     this.listElement.remove();
+  }
+  isListEmpty() {
+    return this.list.length === 0;
   }
   clearList() {
     this.list.splice(0);

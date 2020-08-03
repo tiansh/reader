@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * This Source Code Form is "Incompatible With Secondary Licenses", as
  * defined by the Mozilla Public License, v. 2.0.
-*/
+ */
 
 import Page from './page.js';
 import text from './text.js';
@@ -67,6 +67,7 @@ class IndexSubPage extends ReadSubPage {
    */
   constructor(container, tabItem, index, indexPage, readPage) {
     super(container, readPage);
+    this.isShow = false;
     this.tabItem = tabItem;
     this.pageIndex = index;
     this.indexPage = indexPage;
@@ -75,6 +76,7 @@ class IndexSubPage extends ReadSubPage {
     this.pageButtonAction = this.pageButtonAction.bind(this);
   }
   show() {
+    this.isShow = true;
     this.indexPage.container.style.setProperty('--tab-index-current', this.pageIndex);
     this.tabGroup.style.setProperty('--active-index', this.pageIndex);
     this.indexPage.currentActiveIndex = this.pageIndex;
@@ -83,6 +85,7 @@ class IndexSubPage extends ReadSubPage {
     dom.enableKeyboardFocus(this.container);
   }
   hide() {
+    this.isShow = false;
     this.container.setAttribute('aria-hidden', 'true');
     dom.disableKeyboardFocus(this.container);
   }
@@ -334,17 +337,31 @@ class IndexSearchPage extends IndexSubPage {
 
     this.searchForm = this.container.querySelector('.search-box form');
     this.searchInput = this.container.querySelector('.search-input');
+    this.searchPlaceholder = this.container.querySelector('.search-box-placehodler');
     this.searchForm.addEventListener('submit', event => {
       const text = this.searchInput.value;
       if (text) this.searchText(text);
       else this.clearSearch();
       event.preventDefault();
+      this.searchPlaceholder.focus();
     });
+  }
+  onActivate() {
+    super.onActivate();
+    this.searchInput.value = '';
+  }
+  show() {
+    super.show();
+    if (this.itemList.isListEmpty()) {
+      setTimeout(() => { // wait for css transition end
+        if (this.isShow) this.searchInput.focus();
+      }, 210);
+    }
   }
   searchText(searchTerm) {
     if (searchTerm) {
       this.clearSearch();
-      this.emptyListSpan.textContent = i18n.getMessage('readSearchEmpty');
+      this.emptyListSpan.textContent = i18n.getMessage('readSearchEmpty', searchTerm);
       this.lastSearchText = searchTerm;
       this.lastSearchCursor = 0;
       this.lastSearchLine = 0;
