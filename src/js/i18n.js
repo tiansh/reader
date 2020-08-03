@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * This Source Code Form is "Incompatible With Secondary Licenses", as
  * defined by the Mozilla Public License, v. 2.0.
-*/
+ */
 
 import en from './i18n/en.js';
 import zh_CN from './i18n/zh_cn.js';
