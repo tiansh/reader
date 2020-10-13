@@ -931,6 +931,7 @@ class ControlPage extends ReadSubPage {
 export default class ReadPage extends Page {
   constructor() {
     super(document.querySelector('#read_page'));
+    /** @type {boolean} */
     this.useSideIndex = null;
     this.onResize = this.onResize.bind(this);
     this.keyboardEvents = this.keyboardEvents.bind(this);
@@ -1044,6 +1045,7 @@ export default class ReadPage extends Page {
     this.router.go('list');
   }
   onResize() {
+    this.slidePage('cancel');
     this.updateSideIndex();
     this.stepCache = null;
     this.disposePage(this.pages.prev);
@@ -1215,6 +1217,7 @@ export default class ReadPage extends Page {
       `.dark-theme .read-content-page { color: ${configs.dark_text}; background: ${configs.dark_background}; }`,
       `.light-theme .read-content-page { color: ${configs.light_text}; background: ${configs.light_background}; }`,
       `.read-content-page { font-size: ${configs.font_size}px; line-height: ${configs.line_height}; }`,
+      `.read-content-page p { margin: 0; }`,
       `.read-content-page p:not(:first-child) { margin-top: ${configs.paragraph_spacing * configs.line_height * configs.font_size}px; }`,
       font ? `.read-content-page { font-family: CustomFont; }` : '',
     ].join('\n');
