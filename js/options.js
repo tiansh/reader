@@ -266,15 +266,15 @@ const options = [{
       value: String(n),
       text: i18n.getMessage('configTextLineHeightNum', n),
     })),
-    default: '1.3',
+    default: '1.5',
   }), new SelectConfigOption({
     name: 'paragraph_spacing',
     title: i18n.getMessage('configTextParagraphSpacing'),
-    select: [0, 0.2, 0.5, 1, 1.5, 2].map(n => ({
+    select: [0, 0.2, 0.5, 0.8, 1, 1.2, 1.5, 2].map(n => ({
       value: String(n),
       text: i18n.getMessage('configTextParagraphSpacingNum', n),
     })),
-    default: '0.2',
+    default: '0.5',
   }), new TextConfigOption({
     name: 'cjk_lang_tag',
     title: i18n.getMessage('configTextLangTag'),
