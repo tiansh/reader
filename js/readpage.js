@@ -201,6 +201,7 @@ class IndexContentsPage extends IndexSubPage {
     this.setList(content.items.slice(0));
     this.indexPage.bookmarkPage.updateBookmarkList();
     this.updateCurrentHighlight();
+    this.readPage.forceUpdatePages();
   }
   pageButtonAction() {
     this.refreshContents();
@@ -1174,6 +1175,15 @@ export default class ReadPage extends Page {
       if (action === 'left') this.nextPage();
       if (action === 'right') this.prevPage();
     });
+  }
+  forceUpdatePages() {
+    this.disposePage(this.pages.prev);
+    this.pages.prev = null;
+    this.disposePage(this.pages.current);
+    this.pages.current = null;
+    this.disposePage(this.pages.next);
+    this.pages.next = null;
+    this.updatePages();
   }
   nextPage() {
     if (this.pages.isLast) return;
