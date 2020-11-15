@@ -1046,7 +1046,7 @@ export default class ReadPage extends Page {
     this.router.go('list');
   }
   onResize() {
-    this.slidePage('cancel');
+    this.slideCancel();
     this.updateSideIndex();
     this.stepCache = null;
     this.disposePage(this.pages.prev);
@@ -1065,6 +1065,10 @@ export default class ReadPage extends Page {
       return true;
     }
     return false;
+  }
+  slideCancel() {
+    this.slidePage('cancel');
+    this.indexPage.slideShow('cancel');
   }
   listenPagesContainer() {
     const listener = new TouchGestureListener(this.pagesContainer, {
