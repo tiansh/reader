@@ -27,6 +27,8 @@ export default {
   readSearchInitial: '键入文本以查找',
   readSearchEmpty: '找不到 {0}',
   readSearchTooMany: '已找到 {0} 个结果，点击以继续查找',
+  readPagePrevious: '上一页',
+  readPageNext: '下一页',
 
   configThemeGroupTitle: '主题',
   configTheme: '主题',
@@ -81,6 +83,7 @@ export default {
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: '关于',
 
+  buttonRemove: '删除',
   buttonBack: '返回',
   buttonAdd: '添加文件',
   buttonSettings: '设置',
@@ -93,4 +96,8 @@ export default {
   buttonContentsRefresh: '刷新目录',
   buttonSearchClear: '清除搜索结果',
   buttonBookmarkAdd: '添加书签',
+
+  colorHueRange: '色相',
+  colorSaturationRange: '饱和度',
+  colorValueRange: '明度',
 };

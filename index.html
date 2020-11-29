@@ -51,20 +51,25 @@ defined by the Mozilla Public License, v. 2.0.
   </div>
 </div>
 <div class="list-sort-menu">
-  <div class="list-sort-options screen-option" role="listbox">
-    <div class="screen-option-group">
-      <button type="button" role="option" class="screen-option-item" data-option="dateread" data-option-default><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateRead"></span></div></button>
-      <button type="button" role="option" class="screen-option-item" data-option="dateadd"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateAdd"></span></div></button>
-      <button type="button" role="option" class="screen-option-item" data-option="title"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByTitle"></span></div></button>
+  <div class="backdrop"></div>
+  <div class="list-sort-options screen-option" role="menu">
+    <div class="screen-option-group" role="group">
+      <button type="button" role="menuitem" class="screen-option-item" data-option="dateread" data-option-default><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateRead"></span></div></button>
+      <button type="button" role="menuitem" class="screen-option-item" data-option="dateadd"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateAdd"></span></div></button>
+      <button type="button" role="menuitem" class="screen-option-item" data-option="title"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByTitle"></span></div></button>
     </div>
-    <div class="screen-option-group">
-      <button type="button" role="option" class="screen-option-item"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortCancel"></span></div></button>
+    <div class="screen-option-group" role="group">
+      <button type="button" role="menuitem" class="screen-option-item"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortCancel"></span></div></button>
     </div>
   </div>
 </div>
 <div class="page" id="read_page">
+  <div class="read-layer read-sub-page read-pages">
+    <button type="button" id="read_page_next" class="read-pages-button" tabindex="-1"></button>
+    <button type="button" id="read_page_prev" class="read-pages-button" tabindex="-1"></button>
+  </div>
   <div class="read-layer read-sub-page read-control">
-    <div class="footer-line"><div class="icon-line"></div></div>
+    <div class="footer-line"><div class="icon-line" role="toolbar"></div></div>
     <div class="read-control-cover"></div>
   </div>
   <div class="read-layer read-sub-page read-index">
@@ -166,9 +171,9 @@ defined by the Mozilla Public License, v. 2.0.
   <button type="button"><div class="button-wrap" tabindex="-1" data-ref="icon"></div></button>
 </template>
 <template id="header">
-  <div class="header-line">
+  <div class="header-line" role="navigation">
     <div class="header-left" data-ref="left"></div>
-    <div class="header-mid" data-ref="mid"></div>
+    <div class="header-mid" data-ref="mid" role="heading"></div>
     <div class="header-right" data-ref="right"></div>
   </div>
 </template>
@@ -183,16 +188,16 @@ defined by the Mozilla Public License, v. 2.0.
   <div class="file-item-content">
     <h2 class="file-title" data-ref="title"></h2>
     <div class="file-comment">
-      <div class="file-date" data-ref="date"></div>
+      <time class="file-date" data-ref="date"></time>
       <div class="file-detail" data-ref="detail"></div>
     </div>
   </div>
 </template>
 <template id="read_content_page">
   <div class="read-content-page read-content-page-processing">
-    <div class="read-body" data-ref="body"></div>
-    <div class="read-body read-body-left" data-ref="left"></div>
-    <div class="read-body read-body-right" data-ref="right"></div>
+    <article class="read-body" data-ref="body"></article>
+    <article class="read-body read-body-left" data-ref="left"></article>
+    <article class="read-body read-body-right" data-ref="right"></article>
     <div class="read-meta">
       <div class="read-title" data-ref="title"></div>
       <div class="read-progress" data-ref="progress"></div>

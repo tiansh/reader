@@ -27,6 +27,8 @@ export default {
   readSearchInitial: 'Input some words so you can find them in text...',
   readSearchEmpty: 'Cannot find "{0}"',
   readSearchTooMany: '{0} results found; Find More',
+  readPagePrevious: 'Previous Page',
+  readPageNext: 'Next Page',
 
   configThemeGroupTitle: 'Theme',
   configTheme: 'Theme',
@@ -81,6 +83,7 @@ export default {
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: 'About',
 
+  buttonRemove: 'Remove',
   buttonBack: 'Back',
   buttonAdd: 'Import File',
   buttonSettings: 'Settings',
@@ -93,4 +96,9 @@ export default {
   buttonContentsRefresh: 'Refresh Table of Contents',
   buttonSearchClear: 'Clear Search Result',
   buttonBookmarkAdd: 'Add Bookmark',
+
+  colorHueRange: 'Hue',
+  colorSaturationRange: 'Saturation',
+  colorValueRange: 'Value',
+
 };

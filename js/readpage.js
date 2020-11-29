@@ -487,6 +487,7 @@ class IndexPage extends ReadSubPage {
   onActivate() {
     super.onActivate();
     this.subPages.forEach(page => page.onActivate());
+    dom.disableKeyboardFocus(this.container);
   }
   onInactivate() {
     super.onInactivate();
@@ -529,12 +530,8 @@ class IndexPage extends ReadSubPage {
     if (page) this.showPage(this.subPageMap[page]);
     else this.showPage(this.subPages[this.currentActiveIndex]);
     this.readPage.container.classList.add('read-show-index');
-    if (this.readPage.useSideIndex) {
-      dom.enableKeyboardFocus(this.readPage.controlPage.container);
-      window.requestAnimationFrame(() => {
-        this.readPage.onResize();
-      });
-    }
+    this.updateSideIndex();
+    dom.enableKeyboardFocus(this.container);
   }
   toggle(/** @type {'contents'|'bookmark'|'search'|null} */page = null) {
     const subPage = this.subPageMap[page];
@@ -550,13 +547,23 @@ class IndexPage extends ReadSubPage {
     this.readPage.container.classList.remove('read-show-index');
     if (this.readPage.useSideIndex) {
       this.readPage.onResize();
+    } else {
+      this.readPage.controlPage.enable();
+      this.readPage.showContent();
     }
+    dom.disableKeyboardFocus(this.container);
   }
   updateSideIndex() {
+    if (!this.isCurrent) return;
     if (this.readPage.useSideIndex) {
-      dom.enableKeyboardFocus(this.readPage.controlPage.container);
+      window.requestAnimationFrame(() => {
+        this.readPage.onResize();
+      });
+      this.readPage.controlPage.enable();
+      this.readPage.showContent();
     } else {
-      dom.disableKeyboardFocus(this.readPage.controlPage.container);
+      this.readPage.controlPage.disable();
+      this.readPage.hideContent();
     }
   }
 }
@@ -593,6 +600,12 @@ class JumpPage extends ReadSubPage {
   show() {
     super.show();
     this.updateInputValue();
+    this.rangeBar.focus();
+    this.readPage.controlPage.disable();
+  }
+  hide() {
+    super.hide();
+    this.readPage.controlPage.enable();
   }
   onCursorChange() {
     this.updateInputValue();
@@ -620,6 +633,7 @@ class ReadSpeech {
 
     this.onBoundary = this.onBoundary.bind(this);
     this.onEnd = this.onEnd.bind(this);
+    this.onError = this.onError.bind(this);
   }
   listenEvents() {
     this.listenMediaDeviceChange();
@@ -679,6 +693,8 @@ class ReadSpeech {
     ssu.removeEventListener('boundary', this.onBoundary);
     ssu.removeEventListener('end', this.onEnd);
   }
+  onError(event) {
+  }
   readNext() {
     const current = this.next;
     const line = this.page.content.indexOf('\n', current) + 1;
@@ -690,6 +706,7 @@ class ReadSpeech {
     ssu.data = { start: current, end };
     ssu.addEventListener('boundary', this.onBoundary);
     ssu.addEventListener('end', this.onEnd);
+    ssu.addEventListener('error', this.onError);
     this.pendingSsu.add(ssu);
     speechSynthesis.speak(ssu);
   }
@@ -917,6 +934,14 @@ class ControlPage extends ReadSubPage {
     this.isShow = true;
     this.container.classList.add('read-control-active');
   }
+  disable() {
+    this.isEnabled = false;
+    this.container.classList.add('read-control-disabled');
+  }
+  enable() {
+    this.isEnabled = true;
+    this.container.classList.remove('read-control-disabled');
+  }
   focus() {
     this.backButton.focus();
   }
@@ -971,6 +996,9 @@ export default class ReadPage extends Page {
       this.container.scrollLeft = 0;
       event.preventDefault();
     });
+
+    this.pagesPanel = this.container.querySelector('.read-pages');
+    this.initPagesPanel(this.pagesPanel);
   }
   async onActivate({ id }) {
     this.langTag = await config.get('cjk_lang_tag');
@@ -1010,6 +1038,16 @@ export default class ReadPage extends Page {
       this.updatePages();
     });
   }
+  initPagesPanel(panel) {
+    /** @type {HTMLButtonElement} */
+    this.prevButton = panel.querySelector('#read_page_prev');
+    this.prevButton.title = i18n.getMessage('readPagePrevious');
+    this.prevButton.addEventListener('click', () => { this.prevPage(); });
+    /** @type {HTMLButtonElement} */
+    this.nextButton = panel.querySelector('#read_page_next');
+    this.nextButton.title = i18n.getMessage('readPageNext');
+    this.nextButton.addEventListener('click', () => { this.nextPage(); });
+  }
   async onUpdate({ id }) {
     this.onInactivate();
     this.onActivate({ id });
@@ -1029,14 +1067,36 @@ export default class ReadPage extends Page {
     this.subPages.forEach(page => { page.onInactivate(); });
     this.speech.stop();
   }
+  showContent() {
+    const container = this.pagesContainer;
+    const pagesPanel = this.pagesPanel;
+    [container, pagesPanel].forEach(element => {
+      if (!element) return;
+      element.classList.remove('read-content-hidden');
+      element.removeAttribute('aria-hidden');
+      dom.enableKeyboardFocus(element);
+    });
+  }
+  hideContent() {
+    const container = this.pagesContainer;
+    const pagesPanel = this.pagesPanel;
+    [container, pagesPanel].forEach(element => {
+      if (!element) return;
+      element.classList.add('read-content-hidden');
+      element.setAttribute('aria-hidden', 'true');
+      dom.disableKeyboardFocus(element);
+    });
+  }
   updateSideIndex() {
     const sideIndex = window.innerWidth >= 960;
     if (sideIndex === this.useSideIndex) return;
     this.useSideIndex = sideIndex;
     if (sideIndex) {
       this.container.classList.add('read-page-wide');
+      this.container.classList.remove('read-page-thin');
     } else {
       this.container.classList.remove('read-page-wide');
+      this.container.classList.add('read-page-thin');
     }
     this.subPages.forEach(page => {
       page.updateSideIndex(sideIndex);
@@ -1251,28 +1311,43 @@ export default class ReadPage extends Page {
     this.updateCursor(this.pages.current.cursor);
   }
   updatePages() {
-    const cursor = Math.max(this.meta.cursor || 0, 0);
+    const cursor = this.ignoreSpaces(Math.max(this.meta.cursor || 0, 0));
     const pages = this.pages;
+    // Current Page
     if (!pages.current) {
       if (cursor < this.content.length) {
         const current = this.layoutPageStartsWith(cursor);
-        this.pagesContainer.appendChild(current.container);
+        // Cursor corrupted
+        if (!current) { this.setCursor(0); return; }
+        this.addRenderedPage(current);
         pages.current = current;
       } else {
         const current = this.layoutPageEndsWith(this.content.length);
-        this.pagesContainer.appendChild(current.container);
         pages.current = current;
       }
     }
     pages.current.container.className = 'read-content-page read-content-page-current';
     pages.current.container.removeAttribute('aria-hidden');
+    const currentArticles = Array.from(pages.current.container.querySelectorAll('.read-body'));
+    if (!this.speech.speaking) {
+      currentArticles.forEach(article => {
+        const parent = article.parentNode;
+        const placeholder = document.createElement('span');
+        parent.replaceChild(placeholder, article);
+        parent.replaceChild(article, placeholder);
+        article.setAttribute('aria-live', 'polite');
+      });
+    } else {
+      currentArticles.forEach(article => {
+        article.removeAttribute('aria-live');
+      });
+    }
+    // Next Page
     if (!pages.next && !pages.isLast) {
       const next = this.layoutPageStartsWith(pages.current.nextCursor);
-      if (next) {
-        this.pagesContainer.appendChild(next.container);
-      } else {
-        pages.isLast = true;
-      }
+      if (next) this.addRenderedPage(next);
+      this.nextButton.disabled = !next;
+      pages.isLast = !next;
       pages.next = next;
     }
     if (pages.next) {
@@ -1280,13 +1355,12 @@ export default class ReadPage extends Page {
       pages.next.container.setAttribute('aria-hidden', 'true');
       pages.isLast = false;
     }
+    // Previous Page
     if (!pages.prev && !pages.isFirst) {
       const prev = this.layoutPageEndsWith(pages.current.cursor);
-      if (prev) {
-        this.pagesContainer.appendChild(prev.container);
-      } else {
-        pages.isFirst = true;
-      }
+      if (prev) this.addRenderedPage(prev);
+      this.prevButton.disabled = !prev;
+      pages.isFirst = !prev;
       pages.prev = prev;
     }
     if (pages.prev) {
@@ -1295,12 +1369,15 @@ export default class ReadPage extends Page {
       pages.isFirst = false;
     }
   }
-  /**
-   * @param {PageRender} page
-   */
+  /** @param {PageRender} page */
   disposePage(page) {
     if (!page) return;
     page.container.remove();
+  }
+  /** @param {PageRender} page */
+  addRenderedPage(page) {
+    if (page.container.isConnected) return;
+    this.pagesContainer.appendChild(page.container);
   }
   isTwoColumn() {
     if (window.innerWidth < 960) return false;
@@ -1316,9 +1393,10 @@ export default class ReadPage extends Page {
     return this.stepCache;
   }
   ignoreSpaces(cursor) {
-    const content = this.content;
+    const content = this.content, length = content.length;
     let lineBreak = cursor - 1;
     for (; /\s/.test(content[cursor]); cursor++) {
+      if (cursor === length) return length;
       if (content[cursor] === '\n') lineBreak = cursor;
     }
     return lineBreak + 1;
@@ -1329,6 +1407,8 @@ export default class ReadPage extends Page {
    * @returns {number}
    */
   layoutPageColumn(cursor, body) {
+    body.setAttribute('aria-setsize', this.content.length);
+    body.setAttribute('aria-posinset', cursor);
     // 2. fill texts until it overflow the content
     const step = this.step();
     /** @type {HTMLParagraphElement[]} */
@@ -1355,6 +1435,10 @@ export default class ReadPage extends Page {
       if (isOverflow) break;
       if (body.clientHeight !== body.scrollHeight) {
         isOverflow = true;
+      }
+      if (body.clientHeight > window.innerHeight) {
+        // Maybe CSS failed to load. We should stop crazy things to prevent frozen browsers.
+        break;
       }
     }
     let nextCursor;
@@ -1425,10 +1509,11 @@ export default class ReadPage extends Page {
   }
   /**
    * @param {number} cursor
+   * @param {boolean} live
    * @returns {PageRender}
    */
   layoutPageStartsWith(cursor) {
-    if (cursor >= this.content.length) {
+    if (this.ignoreSpaces(cursor) >= this.content.length) {
       return null;
     }
     const ref = template.create('readContentPage');
@@ -1469,6 +1554,7 @@ export default class ReadPage extends Page {
   }
   /**
    * @param {number} nextCursor
+   * @param {boolean} live
    * @returns {PageRender}
    */
   layoutPageEndsWith(nextCursor) {
@@ -1503,11 +1589,18 @@ export default class ReadPage extends Page {
     };
 
     let prevCursor = null;
+    const body = ref.get('body');
+    const left = ref.get('left');
+    const right = ref.get('right');
+
     if (this.isTwoColumn()) {
-      prevCursor = tryFill(nextCursor, ref.get('right'));
-      prevCursor = tryFill(prevCursor, ref.get('left'));
+      body.remove();
+      let leftCursor = tryFill(nextCursor, right);
+      prevCursor = tryFill(leftCursor, left);
     } else {
-      prevCursor = tryFill(nextCursor, ref.get('body'));
+      left.remove();
+      right.remove();
+      prevCursor = tryFill(nextCursor, body);
     }
 
     this.pagesContainer.removeChild(container);

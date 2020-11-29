@@ -14,15 +14,18 @@ export default class Page {
     this.active = false;
     /** @type {import('router.js').default} */
     this.router = null;
+    this.hide();
   }
   setRouter(router) {
     this.router = router;
   }
   show() {
     this.element.classList.add('active-page');
+    this.element.removeAttribute('aria-hidden');
   }
   hide() {
     this.element.classList.remove('active-page');
+    this.element.setAttribute('aria-hidden', 'true');
   }
   async onFirstActivate() { }
   async onActivate() { }

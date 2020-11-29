@@ -7,7 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-const version = '20201115';
+const version = '20201129';
 
 const resourceList = [
   './css/normalize-8.0.1.css',

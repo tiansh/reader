@@ -57,7 +57,7 @@ button.list-sort {
   justify-content: flex-end;
 }
 
-.screen-option::before {
+.backdrop {
   content: " ";
   position: absolute;
   top: 0;
@@ -67,7 +67,7 @@ button.list-sort {
   background: var(--default-background);
   color: var(--default-color);
   opacity: 0.6;
-  z-index: -1;
+  z-index: 1;
 }
 
 .screen-option-group {

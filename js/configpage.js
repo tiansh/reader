@@ -63,6 +63,8 @@ class ConfigOptionPage {
 
     this.titleElement = headerRef.get('mid');
     this.backButton = back;
+    const index = ConfigOptionPage.index = ConfigOptionPage.index + 1 || 1;
+    this.titleElement.id = 'config_option_' + index;
 
     this.mainContent = container.querySelector('.config-page-content');
 
@@ -71,6 +73,7 @@ class ConfigOptionPage {
   }
   show() {
     this.container.classList.add('config-option-page-show');
+    this.container.setAttribute('aria-hidden', 'false');
     this.page.configPageMain.setAttribute('aria-hidden', 'true');
     dom.disableKeyboardFocus(this.page.configPageMain);
     this.mainContent.scrollTop = 0;
@@ -85,6 +88,7 @@ class ConfigOptionPage {
   }
   hide() {
     this.container.classList.remove('config-option-page-show');
+    this.container.setAttribute('aria-hidden', 'true');
     this.page.configPageMain.setAttribute('aria-hidden', 'false');
     dom.enableKeyboardFocus(this.page.configPageMain);
     this.isActive = false;
@@ -164,6 +168,7 @@ class SelectConfigOptionPage extends ConfigOptionPage {
       emptyListRender: this.emptyListRender,
     });
     this.value = null;
+    this.itemList.listElement.setAttribute('aria-labelby', this.titleElement.id);
   }
   cleanUp() {
     super.cleanUp();
@@ -194,6 +199,7 @@ class ColorConfigOptionPage extends ConfigOptionPage {
   constructor(container, mainPage) {
     super(container, mainPage);
     this.colorPickerElement = this.container.querySelector('.config-option-color-picker');
+    this.colorPickerElement.setAttribute('aria-labelby', this.titleElement.id);
   }
   renderOptions() {
     super.renderOptions();
@@ -541,6 +547,7 @@ export default class ConfigPage extends Page {
     options.forEach(group => {
       const titleElement = configList.appendChild(document.createElement('div'));
       titleElement.classList.add('config-title');
+      titleElement.setAttribute('role', 'heading');
       titleElement.textContent = group.title;
       const groupElement = configList.appendChild(document.createElement('div'));
       groupElement.classList.add('config-group');
