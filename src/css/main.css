@@ -68,6 +68,10 @@ a {
   vertical-align: top;
 }
 
+.header-mid:empty {
+  display: none;
+}
+
 .header-line .button-wrap {
   padding: 10px;
   line-height: 30px;
@@ -141,6 +145,7 @@ a {
   border: 0 solid var(--border-color);
   border-width: 1px 0;
   margin-bottom: -1px;
+  overflow: hidden;
 }
 
 .list-item:last-child {
@@ -240,6 +245,12 @@ button.list-item-container:active {
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+.list-item.list-item-slide-remove,
+.list-item.list-item-show-remove {
+  overflow: visible;
+}
+
 
 .noscroll .scroll {
   overflow: hidden;

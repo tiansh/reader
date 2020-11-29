@@ -30,8 +30,8 @@ const langIndex = lang => {
   const len = languages.length;
   const index = languages.indexOf(lang);
   if (index !== -1) return index;
-  const prefix = languages.map(lang => lang.split('-')[0]);
-  const prefixIndex = prefix.indexOf(lang.split('-')[0]);
+  const prefix = languages.map(lang => lang.split(/[-_]/)[0]);
+  const prefixIndex = prefix.indexOf(lang.split(/[-_]/)[0]);
   if (prefixIndex !== -1) return len + prefixIndex;
   return len * 2;
 };

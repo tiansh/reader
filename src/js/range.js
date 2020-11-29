@@ -23,15 +23,24 @@ export default class RangeInput {
    * @param {RangeConfig} config
    */
   constructor(outer, config) {
-    this.container = outer.appendChild(document.createElement('div'));
+    this.outer = outer.appendChild(document.createElement('div'));
+    this.outer.classList.add('range-outer');
+
+    this.container = this.outer.appendChild(document.createElement('div'));
+    this.inputContainer = this.outer.appendChild(document.createElement('div'));
+    this.input = this.inputContainer.appendChild(document.createElement('input'));
+    this.input.type = 'number';
     this.setConfig(config);
 
     /** @type {((value: number) => any)[]} */
     this.onValueChange = [];
 
     this.container.classList.add('range-container');
-    this.container.setAttribute('role', 'slide');
+    this.container.setAttribute('role', 'slider');
     this.container.setAttribute('tabindex', '0');
+    this.container.setAttribute('aria-orientation', 'horizontal');
+    this.inputContainer.classList.add('range-number-container');
+    this.input.classList.add('range-number');
     this.wrap = this.container.appendChild(document.createElement('div'));
     this.wrap.classList.add('range-wrap');
     this.wrap.setAttribute('tabindex', '-1');
@@ -64,6 +73,10 @@ export default class RangeInput {
 
     this.keyboardHandler = this.keyboardHandler.bind(this);
     this.container.addEventListener('keydown', this.keyboardHandler);
+
+    this.inputHandler = this.inputHandler.bind(this);
+    this.input.addEventListener('input', this.inputHandler);
+    this.input.addEventListener('blur', () => { this.renderValue(this.value); });
   }
   /**
    * @param {RangeConfig} config
@@ -74,7 +87,11 @@ export default class RangeInput {
 
     this.container.setAttribute('aria-valuemin', this.config.min);
     this.container.setAttribute('aria-valuemax', this.config.max);
-    this.container.setAttribute('aria-valuenow', this.value);
+    this.container.setAttribute('aria-valuenow', this.textValue());
+    this.input.min = this.config.min;
+    this.input.max = this.config.max;
+    this.input.step = this.config.step;
+    this.input.value = this.textValue();
   }
   getConfig() {
     return this.config;
@@ -100,19 +117,22 @@ export default class RangeInput {
     this.updatePendingValue = null;
     this.value = value;
     this.onValueChange.forEach(callback => {
-      callback(value);
+      callback(this.value);
     });
-    this.renderValue(value);
+    this.renderValue();
   }
   /** @param {(value: number) => any} callback */
   onChange(callback) {
     this.onValueChange.push(callback);
   }
-  renderValue(value) {
+  renderValue() {
     const config = this.config;
-    const ratio = (value - config.min) / (config.max - config.min);
+    const ratio = (this.value - config.min) / (config.max - config.min);
     this.container.style.setProperty('--range-ratio', ratio);
-    this.container.setAttribute('aria-valuenow', value);
+    this.container.setAttribute('aria-valuenow', this.textValue());
+    if (document.activeElement !== this.input) {
+      this.input.value = this.textValue();
+    }
   }
   normalizeConfig(config) {
     let min = Number.isFinite(config.min) ? config.min : 0;
@@ -133,6 +153,9 @@ export default class RangeInput {
       return this.config.max;
     }
     return Math.round((config.value - this.config.min) / this.config.step) * this.config.step + this.config.min;
+  }
+  textValue() {
+    return Number(this.value).toFixed(-Math.round(Math.log(this.config.step) / Math.log(10)));
   }
   /** @param {KeyboardEvent} event */
   keyboardHandler(event) {
@@ -155,9 +178,13 @@ export default class RangeInput {
     this.updateValue(newValue);
     event.preventDefault();
   }
+  inputHandler(event) {
+    const newValue = this.normalizeValue(Object.assign({}, this.config, { value: +this.input.value }));
+    this.updateValue(newValue);
+  }
   dispatch() {
     this.listener.dispatch();
-    this.container.removeEventListener('keydown', this.keyboardHandler);
     this.container.remove();
+    this.input.remove();
   }
 }

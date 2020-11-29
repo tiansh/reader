@@ -38,7 +38,9 @@ class ConfigOption {
     titleElement.classList.add('config-item-title');
     titleElement.textContent = this.title;
     this.container = itemElement;
+    this.titleElement = titleElement;
     this.rendered = true;
+    this.titleElement.id = 'config_item_' + index;
   }
   renderValue(value) { }
   isValidValue(value) { return true; }
@@ -87,6 +89,9 @@ class SelectConfigOption extends ConfigOption {
     this.resultElement.classList.add('config-item-value');
     const detailIcon = itemElement.appendChild(template.icon('detail'));
     detailIcon.classList.add('config-item-detail');
+    this.resultElement.id = 'config_item_value_' + index;
+    this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
+    this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
   }
   renderValue(value) {
     this.resultElement.textContent = this.select.find(i => i.value === value).text;
@@ -111,9 +116,13 @@ class ColorConfigOption extends ConfigOption {
     this.resultElement.classList.add('config-item-value', 'config-item-color-value');
     const detailIcon = itemElement.appendChild(template.icon('detail'));
     detailIcon.classList.add('config-item-detail');
+    this.resultElement.id = 'config_item_value_' + index;
+    this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
+    this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
   }
   renderValue(value) {
     this.resultElement.style.backgroundColor = value;
+    this.resultElement.setAttribute('aria-label', value);
   }
 }
 
@@ -137,6 +146,9 @@ class FontConfigOption extends ConfigOption {
     this.resultElement.classList.add('config-item-value');
     const detailIcon = itemElement.appendChild(template.icon('detail'));
     detailIcon.classList.add('config-item-detail');
+    this.resultElement.id = 'config_item_value_' + index;
+    this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
+    this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
   }
   renderValue(value) {
     const id = value ? 'configTextFontFamilyCustom' : 'configTextFontFamilyDefault';
@@ -177,12 +189,14 @@ class TextConfigOption extends ConfigOption {
     this.resultElement.classList.add('config-item-value');
     const detailIcon = itemElement.appendChild(template.icon('detail'));
     detailIcon.classList.add('config-item-detail');
+    this.resultElement.id = 'config_item_value_' + index;
+    this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
+    this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
   }
   renderValue(value) {
     this.resultElement.textContent = value;
   }
 }
-
 
 class StubConfigOption extends ConfigOption {
   setConfig(value) { }
@@ -254,7 +268,7 @@ const options = [{
   }), new SelectConfigOption({
     name: 'font_size',
     title: i18n.getMessage('configTextFontSize'),
-    select: [10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28].map(n => ({
+    select: [10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 36, 40, 48, 56, 64].map(n => ({
       value: String(n),
       text: i18n.getMessage('configTextFontSizeNum', n),
     })),

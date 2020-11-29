@@ -8,6 +8,7 @@
  */
 
 import RangeInput from './range.js';
+import i18n from './i18n.js';
 
 class Color {
   constructor(/** @type {number} */r, /** @type {number} */g, /** @type {number} */b) {
@@ -54,16 +55,19 @@ export default class ColorPicker {
     this.hueBar.classList.add('color-picker-hue');
     this.hueRange = new RangeInput(this.hueBar, { min: 0, max: 360, step: 0.1 });
     this.hueRange.onChange(hue => { this.setHSV({ hue }); });
+    this.hueBar.setAttribute('aria-label', i18n.getMessage('colorHueRange'));
 
     this.saturationBar = this.container.appendChild(document.createElement('div'));
     this.saturationBar.classList.add('color-picker-saturation');
     this.saturationRange = new RangeInput(this.saturationBar, { min: 0, max: 1, step: 0.001 });
     this.saturationRange.onChange(saturation => { this.setHSV({ saturation }); });
+    this.saturationBar.setAttribute('aria-label', i18n.getMessage('colorSaturationRange'));
 
     this.valueBar = this.container.appendChild(document.createElement('div'));
     this.valueBar.classList.add('color-picker-value');
     this.valueRange = new RangeInput(this.valueBar, { min: 0, max: 1, step: 0.001 });
     this.valueRange.onChange(value => { this.setHSV({ value }); });
+    this.valueBar.setAttribute('aria-label', i18n.getMessage('colorValueRange'));
 
     this.candidateList = this.container.appendChild(document.createElement('ul'));
     this.candidateList.classList.add('color-picker-candidate-list');
@@ -108,6 +112,7 @@ export default class ColorPicker {
     const [tr, tg, tb] = [sr, sg, sb].map(c => c * v);
     this.color = new Color(tr, tg, tb);
     this.container.style.setProperty('--color-picker-color', this.color.toHex());
+    this.result.setAttribute('aria-label', this.color.toHex());
   }
   setHSV({ hue, saturation, value }) {
     if (hue != null) this.setHue(hue);

@@ -34,6 +34,9 @@ const i18n = {};
 
 export default i18n;
 
+/**
+ * @param {keyof typeof prefer} name
+ */
 i18n.getMessage = function (name, ...placeholders) {
   const message = Object.prototype.hasOwnProperty.call(prefer, name) ? prefer[name] : en[name];
   if (typeof message === 'string') {

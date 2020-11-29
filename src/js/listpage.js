@@ -102,6 +102,10 @@ export default class ListPage extends Page {
 
     this.clearList();
 
+    /**
+     * @param {HTMLElement} container
+     * @param {import('./storage.js').ReaderFileMeta} file
+     */
     const render = (container, file) => {
       if (container.firstChild) return;
       const ref = template.create('fileListItem');
@@ -112,6 +116,7 @@ export default class ListPage extends Page {
       const date = file.lastAccessTime.toLocaleDateString(dateLang);
       ref.get('date').textContent = date;
       ref.get('date').lang = dateLang;
+      ref.get('date').setAttribute('datetime', file.lastAccessTime.toISOString());
       const percent = file.cursor ?
         (file.cursor / file.length * 100).toFixed(2) + '%' :
         i18n.getMessage('listNotYetRead');

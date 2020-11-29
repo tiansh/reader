@@ -38,6 +38,7 @@ dom.enableKeyboardFocus = function (element) {
   focusMemory.delete(element);
   const elements = Array.from(element.querySelectorAll('input, select, textarea, button, object, a[href], [tabindex]'));
   elements.forEach(element => {
+    if (element.getAttribute('tabindex') !== '-1') return;
     if (!map.has(element)) return;
     const tabindex = map.get(element);
     if (tabindex == null) element.removeAttribute('tabindex');

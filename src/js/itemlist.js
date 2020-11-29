@@ -9,6 +9,7 @@
 
 import { TouchGestureListener } from './touch.js';
 import template from './template.js';
+import i18n from './i18n.js';
 
 /**
  * @template {any} ListItemType
@@ -94,6 +95,12 @@ export default class ItemList {
         event.preventDefault();
       });
     }
+
+    this.listElement.addEventListener('scroll', event => {
+      if (this.listElement.scrollLeft !== 0) {
+        this.listElement.scrollLeft = 0;
+      }
+    });
   }
   renderItem(item, index) {
     const li = document.createElement('li');
@@ -106,8 +113,8 @@ export default class ItemList {
     if (this.selectable) {
       const icon = container.appendChild(template.icon('checkmark'));
       icon.classList.add('list-item-selected-icon');
-      li.setAttribute('role', 'option');
-      li.setAttribute('aria-selected', 'false');
+      container.setAttribute('role', 'option');
+      container.setAttribute('aria-selected', 'false');
     }
     const content = container.appendChild(document.createElement('div'));
     content.classList.add('list-item-content-wrap');
@@ -118,10 +125,12 @@ export default class ItemList {
       li.classList.add('list-item-has-remove');
 
       const removeRef = template.create('listRemoveAction');
-      removeRef.get('button').addEventListener('click', () => {
+      const removeButton = removeRef.get('button');
+      removeButton.addEventListener('click', () => {
         const index = this.list.indexOf(item);
         if (index !== -1) this.onRemove(item, index);
       });
+      removeButton.setAttribute('aria-label', i18n.getMessage('buttonRemove'));
       li.appendChild(removeRef.get('root'));
 
       const maxSlide = 120, overSlide = 20;
@@ -148,6 +157,7 @@ export default class ItemList {
               li.style.left = '0px';
               li.classList.remove('list-item-show-remove');
             }
+            li.scrollLeft = 0;
           });
           showDeleteMove = false;
         }
@@ -175,6 +185,13 @@ export default class ItemList {
             slideDelete('hide');
           }
         }
+      });
+
+      removeButton.addEventListener('focus', event => {
+        slideDelete('show');
+      });
+      removeButton.addEventListener('blur', event => {
+        slideDelete('hide');
       });
 
     }
@@ -232,13 +249,14 @@ export default class ItemList {
   setSelectItem(index, selected) {
     if (!this.selectable) return;
     const element = this.elements.get(index);
-    const container = element.closest('.list-item');
+    const li = element.closest('.list-item');
+    const container = li.querySelector('.list-item-container');
     if (selected) {
-      container.classList.add('list-item-selected');
+      li.classList.add('list-item-selected');
       container.setAttribute('aria-selected', 'true');
       this.selected.add(index);
     } else {
-      container.classList.remove('list-item-selected');
+      li.classList.remove('list-item-selected');
       container.setAttribute('aria-selected', 'false');
       this.selected.delete(index);
     }
@@ -256,6 +274,7 @@ export default class ItemList {
     return Array.from(this.selected).map(n => this.list[n]);
   }
   renderRemoveItem(element) {
+    element.setAttribute('aria-hidden', 'true');
     element.classList.add('list-item-remove-ani');
     element.style.height = element.clientHeight + 'px';
     window.requestAnimationFrame(() => {
@@ -288,6 +307,8 @@ export default class ItemList {
     this.renderRemoveItem(element);
 
     this.indexMapping(i => i === index ? null : i - (i > index));
+
+    this.focusItemContent(index);
   }
   insertItem(item, index) {
     if (index < 0 || index > this.list.length) return;
@@ -296,6 +317,11 @@ export default class ItemList {
     this.indexMapping(i => i + (i >= index));
     const li = this.renderItem(item, index);
     next.parentNode.insertBefore(li, next);
+  }
+  focusItemContent(index) {
+    if (!this.list.length) return;
+    const element = this.elements.get(Math.min(index, this.list.length - 1));
+    element.focus();
   }
 }
 

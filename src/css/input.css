@@ -24,16 +24,33 @@ button .icon {
   padding: 0;
 }
 
-.range-container {
+.range-outer {
   padding: 10px;
+  height: 40px;
+  display: flex;
+}
+
+.range-number-container {
+  flex: 0 0 80px;
+  line-height: 40px;
+}
+
+.range-number {
+  width: 100%;
+  background: var(--default-background);
+  color: var(--default-color);
+  border: 1px solid var(--border-color);
+}
+
+.range-container {
   height: 40px;
   position: relative;
   --range-ratio: 0;
   z-index: 0;
-  width: 100%;
   box-sizing: border-box;
   -webkit-user-select: none;
   user-select: none;
+  flex: 1 1 100%;
 }
 
 .range-wrap {
@@ -91,7 +108,7 @@ button .icon {
   margin: 20px 10px;
 }
 
-.color-picker .range-container {
+.color-picker .range-outer {
   margin-top: 10px;
 }
 
