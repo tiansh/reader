@@ -336,7 +336,7 @@ const options = [{
   }), new SelectConfigOption({
     name: 'speech_rate',
     title: i18n.getMessage('configSpeechRate'),
-    select: [...Array(16)].map((_, i) => i / 10 + 0.5).map(rate => ({
+    select: [...Array(101)].map((_, i) => i / 10).slice(1).map(rate => ({
       value: String(rate),
       text: i18n.getMessage('configSpeechRateNum', rate),
     })),
