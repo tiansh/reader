@@ -533,26 +533,43 @@ button.tab-item:focus {
 }
 
 .read-page-wide .read-control .header-line {
-  width: 49px;
-  height: 100vh;
-  border-bottom: 0 none;
-  border-right: 1px solid var(--border-color);
-  left: -50px;
-  top: 0;
+  transform-origin: left top;
+  transform: rotate(90deg);
+  width: 100vh;
+  top: auto;
+  left: 0;
+  height: 50px;
+  line-height: 50px;
 }
 
 .read-page-wide .read-control.read-control-active .header-line {
-  left: 0;
-  transition: left step-start 0.05s;
+  left: 50px;
+  transition: left ease 0.05s;
+}
+
+.read-page-wide .read-control .header-line button {
+  transform: rotate(-90deg);
+}
+
+.read-page-wide .read-control .header-line .header-mid {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 .read-page-wide .read-control .footer-line {
   transform-origin: left bottom;
   transform: rotate(-90deg);
-  left: 100%;
+  left: calc(100% + 50px);
   width: 100vh;
   height: 50px;
   line-height: 50px;
+}
+
+.read-page-wide .read-control.read-control-active .footer-line {
+  left: 100%;
+  transition: left ease 0.05s;
 }
 
 .read-page-wide .read-control .footer-line .icon-line {
