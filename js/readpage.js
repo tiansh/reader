@@ -666,15 +666,21 @@ class ReadSpeech {
     if (!this.speaking) return;
     const ssu = event.target;
     this.pendingSsu.delete(ssu);
-    const nextPage = this.page.pages.current.nextCursor;
     const start = ssu.data.start + event.charIndex;
-    const len = Math.max(0, Math.min(event.charLength || ssu.data.end - start, nextPage - start));
-    if (nextPage && start > nextPage) {
-      this.lastPageCursor = nextPage;
-      this.page.nextPage();
+    if (this.page.pages.current) {
+      const nextPage = this.page.pages.current.nextCursor;
+      if (nextPage && start >= nextPage) {
+        this.lastPageCursor = nextPage;
+        this.page.nextPage();
+      } else {
+        const len = Math.max(0, Math.min(event.charLength || ssu.data.end - start, nextPage - start));
+        const renderHighlight = this.highlightChars(start, len);
+        if (!renderHighlight) {
+          this.page.resetPages();
+        }
+      }
     }
     this.spoken = start;
-    this.highlightChars(start, len);
     this.readMore();
   }
   onEnd(event) {
@@ -786,23 +792,30 @@ class ReadSpeech {
     });
   }
   highlightChars(start, length) {
-    if (this.lastHighlightStart === start && this.lastHighlightLength === length) return;
+    if (this.lastHighlightStart === start) {
+      if (this.lastHighlightLength === length) {
+        return null;
+      }
+    }
     this.clearHighlight();
     this.lastHighlightStart = start;
     this.lastHighlightLength = length;
+
+    if (!this.page.pages.current) return null;
     /** @type {HTMLElement} */
     const container = this.page.pages.current.container;
     const paragraphs = Array.from(container.querySelectorAll('p[data-start]'));
     const paragraph = paragraphs.reverse().find(p => p.dataset.start <= start);
-    if (!paragraph) return;
+    if (!paragraph) return false;
     const range = document.createRange();
     const paragraphStart = Number(paragraph.dataset.start);
     const node = paragraph.firstChild;
-    if (!node) return;
+    if (!node) return false;
+
     const contentLength = node.textContent.length;
     const startPos = start - paragraphStart;
     if (startPos >= contentLength) {
-      return;
+      return startPos === contentLength;
     }
     const endPos = Math.min(startPos + length, contentLength);
     range.setStart(node, startPos);
@@ -810,15 +823,27 @@ class ReadSpeech {
     const rects = Array.from(range.getClientRects());
     const highlight = container.querySelector('.read-highlight');
     const containerRect = container.getBoundingClientRect();
-    rects.forEach(rect => {
+    const configs = this.page.configs;
+    const lineHeight = Number.parseFloat(configs.font_size) *
+      Number.parseFloat(configs.line_height);
+    const highlightSpanList = rects.map(rect => {
+      if (rect.top > window.innerHeight) return null;
+      if (rect.left > window.innerWidth) return null;
       const span = document.createElement('span');
-      span.style.top = (rect.top - containerRect.top) + 'px';
       span.style.left = (rect.left - containerRect.left) + 'px';
       span.style.width = rect.width + 'px';
-      span.style.height = rect.height + 'px';
+      const top = rect.top - containerRect.top;
+      if (rect.height <= lineHeight) {
+        span.style.top = top + 'px';
+        span.style.height = rect.height + 'px';
+      } else {
+        span.style.top = (top + (rect.height - lineHeight) / 2) + 'px';
+        span.style.height = lineHeight + 'px';
+      }
       highlight.appendChild(span);
       return span;
     });
+    return highlightSpanList.filter(x => x != null).length > 0;
   }
   updateCursor(cursor) {
     if (this.speaking || this.lastReset) {
@@ -1105,7 +1130,7 @@ export default class ReadPage extends Page {
   gotoList() {
     this.router.go('list');
   }
-  onResize() {
+  resetPages() {
     this.slideCancel();
     this.updateSideIndex();
     this.stepCache = null;
@@ -1114,6 +1139,9 @@ export default class ReadPage extends Page {
     this.disposePage(this.pages.next);
     this.pages = {};
     this.updatePages();
+  }
+  onResize() {
+    this.resetPages();
   }
   isAnythingSelected() {
     const selection = document.getSelection();
@@ -1276,11 +1304,17 @@ export default class ReadPage extends Page {
     file.setMeta(this.meta);
   }
   async updateStyleConfig() {
+    /** @type {
+     ('light_text' | 'light_background' | 'dark_text' | 'dark_background' |
+      'font_size' | 'font_family' | 'font_list' |
+      'line_height' | 'paragraph_spacing')[]
+     * } */
     const keys = [
       'light_text', 'light_background', 'dark_text', 'dark_background',
       'font_size', 'font_family', 'font_list',
       'line_height', 'paragraph_spacing',
     ];
+    /** @type {{ [key in typeof keys[0]]?: string }} */
     const configs = Object.fromEntries(await Promise.all(keys.map(async key => [key, await config.get(key)])));
     const font = configs.font_family && Array.isArray(configs.font_list) &&
       configs.font_list.find(font => font.id === configs.font_family).content || null;
@@ -1447,7 +1481,7 @@ export default class ReadPage extends Page {
       const rect = body.getBoundingClientRect();
       const firstOut = paragraphs.slice(0).reverse().find(p => {
         return p.getBoundingClientRect().top < rect.bottom;
-      });
+      }) || paragraphs[0];
       const startPos = Number(firstOut.dataset.start);
       const textNode = firstOut.firstChild;
       let low, high;
