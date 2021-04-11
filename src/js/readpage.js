@@ -621,6 +621,12 @@ class ReadSpeech {
    * @param {ReadPage} page
    */
   constructor(page) {
+    if (ReadSpeech.instance) {
+      ReadSpeech.instance.page = page;
+      return ReadSpeech.instance;
+    }
+    ReadSpeech.instance = this;
+
     this.readBuffer = 500;
     this.maxPendingSsuSize = 10;
 
@@ -667,17 +673,21 @@ class ReadSpeech {
     const ssu = event.target;
     this.pendingSsu.delete(ssu);
     const start = ssu.data.start + event.charIndex;
+    if (this.page.container.ownerDocument !== document) {
+      this.stop();
+      return;
+    }
     if (this.page.pages.current) {
+      const currentPage = this.page.pages.current.cursor;
       const nextPage = this.page.pages.current.nextCursor;
       if (nextPage && start >= nextPage) {
         this.lastPageCursor = nextPage;
         this.page.nextPage();
-      } else {
+      } else if (currentPage <= start) {
         const len = Math.max(0, Math.min(event.charLength || ssu.data.end - start, nextPage - start));
-        const renderHighlight = this.highlightChars(start, len);
-        if (!renderHighlight) {
-          this.page.resetPages();
-        }
+        this.highlightChars(start, len);
+      } else {
+        this.page.resetPages();
       }
     }
     this.spoken = start;
