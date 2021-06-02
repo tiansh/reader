@@ -7,10 +7,9 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-import onResize from './onresize.js';
-import config from './config.js';
-import i18n from './i18n.js';
-import theme from './theme.js';
+import onResize from '../ui/util/onresize.js';
+import i18n from '../i18n/i18n.js';
+import theme from '../theme/theme.js';
 
 onResize.addListener(([width, height]) => {
   const html = document.documentElement;

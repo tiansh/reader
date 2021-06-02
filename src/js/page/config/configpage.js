@@ -7,17 +7,18 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-import Page from './page.js';
-import config from './config.js';
-import options from './options.js';
-import speech from './speech.js';
-import i18n from './i18n.js';
-import ColorPicker from './color.js';
-import ItemList from './itemlist.js';
-import template from './template.js';
-import dom from './dom.js';
-import { TouchGestureListener } from './touch.js';
-import theme from './theme.js';
+import Page from '../page.js';
+import speech from '../../text/speech.js';
+import config from '../../data/config.js';
+import options from '../../data/options.js';
+import i18n from '../../i18n/i18n.js';
+import theme from '../../theme/theme.js';
+import template from '../../ui/util/template.js';
+import dom from '../../ui/util/dom.js';
+import { TouchGestureListener } from '../../ui/util/touch.js';
+import ItemList from '../../ui/component/itemlist.js';
+import ColorPicker from '../../ui/component/color.js';
+
 
 const slideClose = function (container, callback) {
   const minDistance = 20, activeWidth = 20;

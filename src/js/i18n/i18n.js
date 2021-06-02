@@ -7,8 +7,8 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-import en from './i18n/en.js';
-import zh_CN from './i18n/zh_cn.js';
+import en from './locale/en.js';
+import zh_CN from './locale/zh_cn.js';
 
 const locales = [
   { name: /^en/, lang: 'en', locale: en },

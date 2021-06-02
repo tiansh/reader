@@ -8,8 +8,8 @@
  */
 
 import config from './config.js';
-import i18n from './i18n.js';
-import template from './template.js';
+import i18n from '../i18n/i18n.js';
+import template from '../ui/util/template.js';
 
 
 class ConfigOption {

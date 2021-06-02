@@ -219,11 +219,18 @@
 
 .read-index {
   position: absolute;
-  bottom: var(--window-height);
   height: var(--window-height);
-  top: auto;
   background: var(--default-background);
   overflow: hidden;
+}
+
+.read-page-flip .read-index {
+  top: auto;
+  bottom: calc(var(--window-height) - var(--slide-offset));
+}
+
+.read-page-flip .read-index.read-sub-page-current {
+  bottom: 0;
 }
 
 .read-index:not(.read-index-slide) {
@@ -603,7 +610,7 @@ button.tab-item:focus {
   right: 0;
 }
 
-.read-page-wide.read-show-index .read-index {
+.read-page-wide.read-show-index.read-page-flip .read-index {
   left: 0;
 }
 

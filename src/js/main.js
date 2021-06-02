@@ -7,11 +7,11 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-import Router from './router.js';
-import ListPage from './listpage.js';
-import ReadPage from './readpage.js';
-import ConfigPage from './configpage.js';
-import './mainpage.js';
+import Router from './page/router.js';
+import ListPage from './page/list/listpage.js';
+import ReadPage from './page/read/readpage.js';
+import ConfigPage from './page/config/configpage.js';
+import './page/common.js';
 
 const router = new Router({
   list: new ListPage(),

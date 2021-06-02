@@ -7,7 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-import config from './config.js';
+import config from '../data/config.js';
 
 const text = {};
 
@@ -110,7 +110,7 @@ const maxEmptyLine = async function (text) {
 const chineseConvert = async function (text) {
   const setting = await config.get('chinese_convert');
   if (setting === 'disable') return text;
-  const convertFile = setting === 's2t' ? './data/s2t.json' : './data/t2s.json';
+  const convertFile = setting === 's2t' ? './data/han/s2t.json' : './data/han/t2s.json';
   const table = await fetch(convertFile).then(r => r.json()), root = table[0];
   let output = '';
   let state = 0;

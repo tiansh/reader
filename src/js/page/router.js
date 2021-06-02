@@ -8,7 +8,7 @@
  */
 
 import Page from './page.js';
-import config from './config.js';
+import config from '../data/config.js';
 
 export default class Router {
   constructor(pages, fallback) {

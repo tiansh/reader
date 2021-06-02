@@ -7,14 +7,14 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-import Page from './page.js';
-import ItemList from './itemlist.js';
-import template from './template.js';
-import text from './text.js';
-import file from './file.js';
-import i18n from './i18n.js';
-import dom from './dom.js';
-import config from './config.js';
+import Page from '../page.js';
+import file from '../../data/file.js';
+import text from '../../text/text.js';
+import config from '../../data/config.js';
+import i18n from '../../i18n/i18n.js';
+import template from '../../ui/util/template.js';
+import dom from '../../ui/util/dom.js';
+import ItemList from '../../ui/component/itemlist.js';
 
 export default class ListPage extends Page {
   constructor() {

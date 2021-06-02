@@ -8,7 +8,7 @@
  */
 
 import RangeInput from './range.js';
-import i18n from './i18n.js';
+import i18n from '../../i18n/i18n.js';
 
 class Color {
   constructor(/** @type {number} */r, /** @type {number} */g, /** @type {number} */b) {

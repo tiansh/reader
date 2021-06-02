@@ -25,8 +25,8 @@ defined by the Mozilla Public License, v. 2.0.
 <link rel="icon" href="favicon.ico" sizes="16x16" />
 <link rel="apple-touch-icon" sizes="180x180" href="./reader.png" />
 
-<link rel="stylesheet" href="css/normalize-8.0.1.css" />
-<link rel="stylesheet" href="css/index.css" />
+<link rel="stylesheet" href="./css/normalize-8.0.1.css" />
+<link rel="stylesheet" href="./css/index.css" />
 
 <style id="custom_font"></style>
 <style id="custom_style"></style>
@@ -64,10 +64,6 @@ defined by the Mozilla Public License, v. 2.0.
   </div>
 </div>
 <div class="page" id="read_page">
-  <div class="read-layer read-sub-page read-pages">
-    <button type="button" id="read_page_next" class="read-pages-button" tabindex="-1"></button>
-    <button type="button" id="read_page_prev" class="read-pages-button" tabindex="-1"></button>
-  </div>
   <div class="read-layer read-sub-page read-control">
     <div class="footer-line"><div class="icon-line" role="toolbar"></div></div>
     <div class="read-control-cover"></div>
@@ -205,6 +201,15 @@ defined by the Mozilla Public License, v. 2.0.
     <div class="read-highlight"></div>
   </div>
 </template>
+<template id="read_content_flip">
+  <div class="read-text read-text-flip">
+    <div class="read-content-pages" data-ref="pages"></div>
+    <div class="read-layer read-sub-page read-pages">
+      <button type="button" id="read_page_next" class="read-pages-button" tabindex="-1" data-ref="next"></button>
+      <button type="button" id="read_page_prev" class="read-pages-button" tabindex="-1" data-ref="prev"></button>
+    </div>
+  </div>
+</template>
 <template id="bookmark_item">
   <div class="index-bookmark-item">
     <div class="bookmark-text" data-ref="text"></div>
@@ -214,6 +219,6 @@ defined by the Mozilla Public License, v. 2.0.
     </div>
   </div>
 </template>
-<script src="js/main.js" type="module"></script>
+<script src="./js/main.js" type="module"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-import { TouchMoveListener } from './touch.js';
+import { TouchMoveListener } from '../util/touch.js';
 
 /**
  * @typedef {Object} RangeConfig

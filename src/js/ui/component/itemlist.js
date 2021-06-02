@@ -7,9 +7,9 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-import { TouchGestureListener } from './touch.js';
-import template from './template.js';
-import i18n from './i18n.js';
+import { TouchGestureListener } from '../util/touch.js';
+import template from '../util/template.js';
+import i18n from '../../i18n/i18n.js';
 
 /**
  * @template {any} ListItemType

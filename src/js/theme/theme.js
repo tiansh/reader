@@ -7,7 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-import config from './config.js';
+import config from '../data/config.js';
 
 const theme = {};
 
