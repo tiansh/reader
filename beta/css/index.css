@@ -1,0 +1,17 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+ */
+
+@import "./theme/light.css";
+@import "./theme/dark.css";
+@import "./icons/icons.css";
+@import "./common/input.css";
+@import "./common/main.css";
+@import "./page/listpage.css";
+@import "./page/readpage.css";
+@import "./page/configpage.css";
+

@@ -1,0 +1,53 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+ */
+
+.dark-theme {
+  --default-background: #000;
+  --default-color: #fff;
+  --active-color: #dcb13d;
+
+  --header-background: #171717;
+
+  --highlight-background: #ffffff50;
+  --border-color: #3d3d3d;
+
+  --search-title-color: #808080;
+  --list-title-color: #f0f0f0;
+  --list-comment-color: #98989e;
+  --list-detail-color: #59595e;
+  --list-active-background: #1e1e1e;
+
+  --menu-background: #323232;
+  --menu-color: #fff;
+
+  --search-placeholder: #98989e;
+  --search-background: #1e1e1e;
+
+  --tabber-color: #98989e;
+  --tabber-active-color: #fff;
+  --tabber-background: #1e1e1e;
+  --tabber-active-background: #515151;
+
+  --range-lower-color: #5a595e;
+  --range-upper-color: #424146;
+  --range-thumb-color: #fff;
+  --range-thumb-border-color: #fff;
+
+  --config-background: #000;
+  --config-title-color: #8f8e93;
+  --config-content-color: #fff;
+  --config-item-background: #1c1c1e;
+
+  --remove-background: #eb5545;
+  --remove-color: #fff;
+
+  --alert-cover-background: #0007;
+  --alert-background: #262626;
+  --alert-text: #fff;
+}
+
