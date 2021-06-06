@@ -78,6 +78,8 @@ export default class ReadSpeech {
     const ssu = event.target;
     if (ssu.data.end === this.page.content.length) {
       this.stop();
+    } else if (!this.page.textPage) {
+      this.stop();
     } else {
       this.page.textPage.clearHighlight();
       if (this.pendingSsu && this.pendingSsu.has(ssu)) {

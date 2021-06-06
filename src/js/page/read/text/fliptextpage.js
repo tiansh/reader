@@ -199,31 +199,31 @@ export default class FlipTextPage extends TextPage {
     this.slidePage('cancel');
     this.readPage.slideIndexPage('cancel');
   }
-  nextPage() {
+  nextPage(isUserTrigger = true) {
     if (this.pages.isLast) return;
     this.disposePage(this.pages.prev);
     this.pages.prev = this.pages.current;
     this.pages.current = this.pages.next;
     this.pages.next = null;
-    this.updatePages();
+    this.updatePages(isUserTrigger);
   }
-  prevPage() {
+  prevPage(isUserTrigger = true) {
     if (this.pages.isFirst) return;
     this.disposePage(this.pages.next);
     this.pages.next = this.pages.current;
     this.pages.current = this.pages.prev;
     this.pages.prev = null;
-    this.updatePages();
+    this.updatePages(isUserTrigger);
   }
-  resetPage() {
+  resetPage(isUserTrigger = false) {
     this.slideCancel();
     this.stepCache = null;
     this.disposePages();
     this.pages.isLast = null;
     this.pages.isFirst = null;
-    this.updatePages();
+    this.updatePages(isUserTrigger);
   }
-  updatePages() {
+  updatePages(isUserTrigger) {
     const content = this.readPage.getContent();
     const cursor = this.ignoreSpaces(Math.max(this.readPage.getCursor() || 0, 0));
     const pages = this.pages;
@@ -283,7 +283,11 @@ export default class FlipTextPage extends TextPage {
       pages.prev.container.setAttribute('aria-hidden', 'true');
       pages.isFirst = false;
     }
-    this.readPage.setCursor(this.pages.current.cursor);
+    if (isUserTrigger) {
+      this.readPage.setCursor(this.pages.current.cursor);
+    } else {
+      this.readPage.updateCursor(this.pages.current.cursor);
+    }
   }
   /** @param {PageRender} page */
   disposePage(page) {
@@ -305,7 +309,7 @@ export default class FlipTextPage extends TextPage {
   }
   isTwoColumn() {
     if (window.innerWidth < 960) return false;
-    if (window.innerWidth < 1160 && this.readPage.isSideIndexActive()) return false;
+    if (window.innerWidth < 1260 && this.readPage.isSideIndexActive()) return false;
     if (window.innerWidth < window.innerHeight * 1.2) return false;
     return true;
   }
@@ -554,7 +558,7 @@ export default class FlipTextPage extends TextPage {
       const nextPage = this.pages.next.cursor;
       const nextNextPage = this.pages.next.nextCursor;
       if (nextPage && start >= nextPage && start <= nextNextPage) {
-        this.nextPage();
+        this.nextPage(false);
         return null;
       }
     }

@@ -56,16 +56,16 @@ export default class ControlPage extends ReadSubPage {
     ].forEach(({ name, button }) => {
       button.addEventListener('click', event => {
         this.hide();
-        this.readPage.indexPage.toggle(name);
+        this.readPage.toggleIndexPage(name);
       });
     });
     this.jumpButton.addEventListener('click', event => {
       this.hide();
-      this.readPage.jumpPage.show();
+      this.readPage.showJumpPage();
     });
     this.speechButton.addEventListener('click', event => {
       this.hide();
-      this.readPage.speech.toggle();
+      this.readPage.toggleSpeech();
     });
     this.backButton.addEventListener('click', event => {
       this.readPage.gotoList();
@@ -96,8 +96,8 @@ export default class ControlPage extends ReadSubPage {
   onActivate() {
     super.onActivate();
 
-    this.bookTitleElement.textContent = this.readPage.meta.title;
-    this.bookTitleElement.lang = this.readPage.langTag;
+    this.bookTitleElement.textContent = this.readPage.getMeta().title;
+    this.bookTitleElement.lang = this.readPage.getLang();
     this.hide();
   }
   onInactivate() {

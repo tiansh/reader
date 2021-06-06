@@ -94,9 +94,9 @@ export default class ReadPage extends Page {
     this.useSideIndex = null;
     document.removeEventListener('keydown', this.keyboardEvents);
     this.subPages.forEach(page => { page.onInactivate(); });
+    this.speech.stop();
     this.textPage.onInactivate();
     this.textPage = null;
-    this.speech.stop();
   }
   gotoList() {
     this.router.go('list');
@@ -146,6 +146,13 @@ export default class ReadPage extends Page {
   slideIndexPage(action, offset) {
     this.indexPage.slideShow(action, offset);
   }
+  toggleIndexPage(name) {
+    const indexActived = this.isIndexActive;
+    this.indexPage.toggle(name);
+    if (!indexActived && this.isSideIndexActive) {
+      this.textPage.onResize();
+    }
+  }
   isControlActive() {
     return this.controlPage.isCurrent;
   }
@@ -163,19 +170,29 @@ export default class ReadPage extends Page {
   isJumpActive() {
     return this.jumpPage.isCurrent;
   }
+  showJumpPage() {
+    return this.jumpPage.show();
+  }
   isSubpageActived() {
     return this.isIndexActive() || this.isControlActive() || this.isJumpActive();
+  }
+  toggleSpeech() {
+    return this.speech.toggle();
   }
   getCursor() {
     return this.meta.cursor;
   }
   setCursor(cursor) {
     if (this.meta.cursor === cursor) return;
+    this.updateCursor(cursor);
+    this.speech.cursorChange(cursor);
+  }
+  updateCursor(cursor) {
+    if (this.meta.cursor === cursor) return;
     this.meta.cursor = cursor;
     file.setMeta(this.meta);
     this.subPages.forEach(page => page.cursorChange(cursor));
     this.textPage.cursorChange(cursor);
-    this.speech.cursorChange(cursor);
   }
   getContent() { return this.content; }
   getMeta() { return this.meta; }
