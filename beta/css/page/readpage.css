@@ -234,6 +234,9 @@
 }
 
 .read-index:not(.read-index-slide) {
+  transition: top ease-out 0.1s, height ease-out 0.1s;
+}
+.read-index.read-sub-page-current:not(.read-index-slide) {
   transition: top ease-out 0.1s;
 }
 
