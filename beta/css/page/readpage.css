@@ -225,16 +225,16 @@
 }
 
 .read-page-flip .read-index {
-  top: auto;
-  bottom: calc(var(--window-height) - var(--slide-offset));
+  top: calc(calc(var(--window-height) * -1) + var(--slide-offset));
+  bottom: auto;
 }
 
 .read-page-flip .read-index.read-sub-page-current {
-  bottom: 0;
+  top: 0;
 }
 
 .read-index:not(.read-index-slide) {
-  transition: bottom ease-out 0.1s;
+  transition: top ease-out 0.1s;
 }
 
 .index-tab-group {
@@ -614,12 +614,16 @@ button.tab-item:focus {
   left: 0;
 }
 
+.read-page-wide.read-show-index .read-body {
+  left: calc(var(--page-margin-x) + var(--index-width));
+}
+
 .read-page-wide.read-show-index .read-body-left {
-  right: calc(calc(50vw + calc(var(--page-margin-x) / 2)) - calc(var(--index-width) / 2));
+  right: calc(calc(calc(100vw + var(--page-margin-x)) - var(--index-width)) / 2);
 }
 
 .read-page-wide.read-show-index .read-body-right {
-  left: calc(calc(50vw + calc(var(--page-margin-x) / 2)) - 150px);
+  left: calc(calc(calc(100vw + var(--page-margin-x)) + var(--index-width)) / 2);
 }
 
 .read-page-wide {
