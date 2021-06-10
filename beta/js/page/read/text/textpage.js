@@ -10,6 +10,7 @@
 import ReadPage from '../readpage.js';
 import config from '../../../data/config.js';
 import dom from '../../../ui/util/dom.js';
+import onResize from '../../../ui/util/onresize.js';
 
 export default class TextPage {
   /**
@@ -20,6 +21,7 @@ export default class TextPage {
     this.isCurrent = false;
     this.keyboardEvents = this.keyboardEvents.bind(this);
     this.wheelEvents = this.wheelEvents.bind(this);
+    this.onResize = this.onResize.bind(this);
   }
   async onActivate({ id }) {
     this.isCurrent = true;
@@ -32,6 +34,8 @@ export default class TextPage {
     document.addEventListener('keydown', this.keyboardEvents);
     document.addEventListener('wheel', this.wheelEvents);
 
+    this.lastRenderSize = [this.container.clientWidth, this.container.clientHeight];
+    onResize.addListener(this.onResize);
   }
   createContainer() {
     return document.createElement('div');
@@ -44,6 +48,8 @@ export default class TextPage {
 
     document.removeEventListener('keydown', this.keyboardEvents);
     document.removeEventListener('wheel', this.wheelEvents);
+
+    onResize.removeListener(this.onResize);
   }
   removeContainer(container) {
     container.remove();
@@ -67,9 +73,17 @@ export default class TextPage {
   isInPage(cursor) {
     return false;
   }
+  onResize() {
+    const size = [this.container.clientWidth, this.container.clientHeight];
+    if (this.lastRenderSize.some((value, index) => value !== size[index])) {
+      this.lastRenderSize = size;
+      this.resizeEvent();
+    }
+  }
   forceUpdate() { }
   keyboardEvents(event) { }
   wheelEvents(event) { }
+  resizeEvent() { }
   clearHighlight() { }
   highlightChars(start, length) { }
   cursorChange(cursor) { }

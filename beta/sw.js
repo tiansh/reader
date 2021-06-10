@@ -7,7 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-const version = '20210606';
+const version = '20210610';
 
 const resourceList = [
   './credits.html',

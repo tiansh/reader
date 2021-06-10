@@ -13,5 +13,6 @@
 @import "./common/main.css";
 @import "./page/listpage.css";
 @import "./page/readpage.css";
+@import "./page/flipreadpage.css";
 @import "./page/configpage.css";
 

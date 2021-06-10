@@ -72,6 +72,8 @@ export default class ControlPage extends ReadSubPage {
     });
     this.coverElement.addEventListener('touchstart', event => {
       this.hide();
+      event.stopPropagation();
+      event.preventDefault();
     });
     this.coverElement.addEventListener('mousedown', event => {
       if (event.button === 0) this.hide();

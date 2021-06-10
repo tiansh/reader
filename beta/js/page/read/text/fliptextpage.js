@@ -9,7 +9,6 @@
 
 import TextPage from './textpage.js';
 import ReadPage from '../readpage.js';
-import onResize from '../../../ui/util/onresize.js';
 import i18n from '../../../i18n/i18n.js';
 import template from '../../../ui/util/template.js';
 import { TouchGestureListener } from '../../../ui/util/touch.js';
@@ -35,7 +34,6 @@ export default class FlipTextPage extends TextPage {
    */
   constructor(readPage) {
     super(readPage);
-    this.onResize = this.onResize.bind(this);
   }
   async onActivate({ id }) {
     await super.onActivate({ id });
@@ -44,15 +42,13 @@ export default class FlipTextPage extends TextPage {
     window.requestAnimationFrame(() => {
       this.updatePages();
     });
-    onResize.addListener(this.onResize);
   }
   async onInactivate() {
     await super.onInactivate();
     this.pages = null;
-    onResize.removeListener(this.onResize);
   }
   createContainer() {
-    const container = template.create('read_content_flip');
+    const container = template.create('read_text_flip');
     this.pagesContainer = container.get('pages');
 
     const listener = new TouchGestureListener(this.pagesContainer, {
@@ -161,7 +157,7 @@ export default class FlipTextPage extends TextPage {
     super.wheelEvents(event);
     const target = event.target;
     if (!(target instanceof Element)) return;
-    if (!target.closest('.read-content-pages')) return;
+    if (!target.closest('.read-text-pages')) return;
     if (this.wheelBusy) return;
     const deltaY = event.deltaY;
     if (!deltaY) return;
@@ -185,10 +181,10 @@ export default class FlipTextPage extends TextPage {
       const width = window.innerWidth;
       move = Math.max(-width, Math.min(width, move));
       this.pagesContainer.style.setProperty('--slide-x', move + 'px');
-      this.pagesContainer.classList.add('read-content-pages-slide');
+      this.pagesContainer.classList.add('read-text-pages-slide');
     } else {
       this.pagesContainer.style.setProperty('--slide-x', '0px');
-      this.pagesContainer.classList.remove('read-content-pages-slide');
+      this.pagesContainer.classList.remove('read-text-pages-slide');
     }
     window.requestAnimationFrame(() => {
       if (action === 'left') this.nextPage();
@@ -233,15 +229,12 @@ export default class FlipTextPage extends TextPage {
         const current = this.layoutPageStartsWith(cursor);
         // Cursor corrupted
         if (!current) { this.setCursor(0); return; }
-        this.addRenderedPage(current);
         pages.current = current;
       } else {
         const current = this.layoutPageEndsWith(content.length);
         pages.current = current;
       }
     }
-    pages.current.container.className = 'read-content-page read-content-page-current';
-    pages.current.container.removeAttribute('aria-hidden');
     // Active screen reader only if speech synthesis is not enabled
     const currentArticles = Array.from(pages.current.container.querySelectorAll('.read-body'));
     if (!this.readPage.isSpeaking()) {
@@ -260,29 +253,36 @@ export default class FlipTextPage extends TextPage {
     // Next Page
     if (!pages.next && !pages.isLast) {
       const next = this.layoutPageStartsWith(pages.current.nextCursor);
-      if (next) this.addRenderedPage(next);
       this.nextButton.disabled = !next;
       pages.isLast = !next;
       pages.next = next;
     }
-    if (pages.next) {
-      pages.next.container.className = 'read-content-page read-content-page-next';
-      pages.next.container.setAttribute('aria-hidden', 'true');
-      pages.isLast = false;
-    }
     // Previous Page
     if (!pages.prev && !pages.isFirst) {
       const prev = this.layoutPageEndsWith(pages.current.cursor);
-      if (prev) this.addRenderedPage(prev);
       this.prevButton.disabled = !prev;
       pages.isFirst = !prev;
       pages.prev = prev;
     }
-    if (pages.prev) {
-      pages.prev.container.className = 'read-content-page read-content-page-prev';
-      pages.prev.container.setAttribute('aria-hidden', 'true');
-      pages.isFirst = false;
-    }
+    /** @type {('prev'|'current'|'next')[]} */
+    const pageNames = ['prev', 'current', 'next'];
+    pageNames.forEach(name => {
+      const page = pages[name];
+      if (!page) return;
+      const container = page.container;
+      container.classList.remove('read-text-page-prev');
+      container.classList.remove('read-text-page-current');
+      container.classList.remove('read-text-page-next');
+      container.classList.add({
+        prev: 'read-text-page-prev',
+        current: 'read-text-page-current',
+        next: 'read-text-page-next',
+      }[name]);
+      container.setAttribute('aria-hidden', name === 'current' ? 'false' : 'true');
+      this.addRenderedPage(page);
+    });
+    pages.isLast = pages.next == null;
+    pages.isFirst = pages.prev == null;
     if (isUserTrigger) {
       this.readPage.setCursor(this.pages.current.cursor);
     } else {
@@ -438,7 +438,7 @@ export default class FlipTextPage extends TextPage {
     if (this.ignoreSpaces(cursor) >= content.length) {
       return null;
     }
-    const ref = template.create('readContentPage');
+    const ref = template.create('read_text_flip_page');
     const container = ref.get('root');
     const title = ref.get('title');
     const progress = ref.get('progress');
@@ -471,7 +471,7 @@ export default class FlipTextPage extends TextPage {
 
     // 5. Everything done
     this.pagesContainer.removeChild(container);
-    container.classList.remove('read-content-page-processing');
+    container.classList.remove('read-text-page-processing');
     return { container, cursor, nextCursor };
   }
   /**
@@ -483,7 +483,7 @@ export default class FlipTextPage extends TextPage {
     if (!nextCursor) {
       return null;
     }
-    const ref = template.create('readContentPage');
+    const ref = template.create('read_text_flip_page');
     const container = ref.get('root');
     this.pagesContainer.appendChild(container);
     const step = this.step();
@@ -626,7 +626,7 @@ export default class FlipTextPage extends TextPage {
       this.resetPage();
     }
   }
-  onResize() {
+  resizeEvent() {
     this.resetPage();
   }
 }

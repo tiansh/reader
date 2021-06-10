@@ -99,31 +99,30 @@ export default class IndexPage extends ReadSubPage {
     targetPage.show();
   }
   show(/** @type {'contents'|'bookmark'|'search'|null} */page = null) {
+    const actived = this.isCurrent;
     super.show();
     if (page) this.showPage(this.subPageMap[page]);
     else this.showPage(this.subPages[this.currentActiveIndex]);
-    this.readPage.container.classList.add('read-show-index');
     dom.enableKeyboardFocus(this.container);
-  }
-  toggle(/** @type {'contents'|'bookmark'|'search'|null} */page = null) {
-    const subPage = this.subPageMap[page];
-    if (subPage.isCurrent) {
-      this.hide();
-    } else {
-      this.show(page);
+    if (this.isCurrent !== actived) {
+      this.readPage.updateIndexRender();
     }
   }
   hide() {
+    const actived = this.isCurrent;
     super.hide();
-    this.readPage.container.classList.remove('read-show-index');
-    if (this.readPage.useSideIndex) {
-      this.readPage.onResize();
-    } else {
-      this.readPage.controlPage.enable();
-      if (this.readPage.textPage) {
-        this.readPage.textPage.show();
-      }
-    }
     dom.disableKeyboardFocus(this.container);
+    if (this.isCurrent !== actived) {
+      this.readPage.updateIndexRender();
+    }
+  }
+  isSubPageActive(/** @type {'contents'|'bookmark'|'search'} */page = null) {
+    const subPage = this.subPageMap[page];
+    return subPage && subPage.isShow;
+  }
+  cursorChange() {
+    this.subPages.forEach(page => {
+      page.cursorChange();
+    });
   }
 }
