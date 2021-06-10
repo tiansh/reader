@@ -7,6 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
+
 import speech from '../../../text/speech.js';
 import ReadPage from '../readpage.js';
 
@@ -34,6 +35,8 @@ export default class ReadSpeech {
     this.onBoundary = this.onBoundary.bind(this);
     this.onEnd = this.onEnd.bind(this);
     this.onError = this.onError.bind(this);
+    /** @type {WeakMap<SpeechSynthesisUtterance, { start: number, end: number }>} */
+    this.ssuInfo = new WeakMap();
   }
   listenEvents() {
     this.listenMediaDeviceChange();
@@ -64,8 +67,9 @@ export default class ReadSpeech {
     const boundaryCursor = this.boundaryCursor = {};
     const ssu = event.target;
     this.pendingSsu.delete(ssu);
-    const start = ssu.data.start + event.charIndex;
-    const len = Math.max(0, Math.min(event.charLength || ssu.data.end - start));
+    const ssuInfo = this.getSsuInfo(ssu);
+    const start = ssuInfo.start + event.charIndex;
+    const len = Math.max(0, Math.min(event.charLength || ssuInfo.end - start));
     this.page.textPage.highlightChars(start, len);
     this.spoken = start;
     this.readMore();
@@ -76,7 +80,8 @@ export default class ReadSpeech {
   onEnd(event) {
     if (!this.speaking) return;
     const ssu = event.target;
-    if (ssu.data.end === this.page.content.length) {
+    const ssuInfo = this.getSsuInfo(ssu);
+    if (ssuInfo.end === this.page.content.length) {
       this.stop();
     } else if (!this.page.textPage) {
       this.stop();
@@ -84,7 +89,7 @@ export default class ReadSpeech {
       this.page.textPage.clearHighlight();
       if (this.pendingSsu && this.pendingSsu.has(ssu)) {
         this.pendingSsu.delete(ssu);
-        this.spoken = ssu.data.end;
+        this.spoken = ssuInfo.end;
         this.readMore();
       }
     }
@@ -92,6 +97,11 @@ export default class ReadSpeech {
     ssu.removeEventListener('end', this.onEnd);
   }
   onError(event) {
+  }
+  getSsuInfo(ssu) {
+    const info = this.ssuInfo.get(ssu);
+    if (!info) this.reset();
+    return info;
   }
   readNext() {
     const current = this.next;
@@ -101,7 +111,7 @@ export default class ReadSpeech {
     const text = this.page.content.slice(current, end).trimRight();
     if (!text) return;
     const ssu = speech.prepare(text);
-    ssu.data = { start: current, end };
+    this.ssuInfo.set(ssu, { start: current, end });
     ssu.addEventListener('boundary', this.onBoundary);
     ssu.addEventListener('end', this.onEnd);
     ssu.addEventListener('error', this.onError);
@@ -182,3 +192,4 @@ export default class ReadSpeech {
     }
   }
 }
+
