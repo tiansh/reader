@@ -189,8 +189,17 @@ defined by the Mozilla Public License, v. 2.0.
     </div>
   </div>
 </template>
-<template id="read_content_page">
-  <div class="read-content-page read-content-page-processing">
+<template id="read_text_flip">
+  <div class="read-layer read-text-flip read-text">
+    <div class="read-text-pages" data-ref="pages"></div>
+    <div class="read-text-page-buttons">
+      <button type="button" id="read_page_next" class="read-pages-button" tabindex="-1" data-ref="next"></button>
+      <button type="button" id="read_page_prev" class="read-pages-button" tabindex="-1" data-ref="prev"></button>
+    </div>
+  </div>
+</template>
+<template id="read_text_flip_page">
+  <div class="read-text-page read-text-page-processing">
     <article class="read-body" data-ref="body"></article>
     <article class="read-body read-body-left" data-ref="left"></article>
     <article class="read-body read-body-right" data-ref="right"></article>
@@ -199,15 +208,6 @@ defined by the Mozilla Public License, v. 2.0.
       <div class="read-progress" data-ref="progress"></div>
     </div>
     <div class="read-highlight"></div>
-  </div>
-</template>
-<template id="read_content_flip">
-  <div class="read-text read-text-flip">
-    <div class="read-content-pages" data-ref="pages"></div>
-    <div class="read-layer read-sub-page read-pages">
-      <button type="button" id="read_page_next" class="read-pages-button" tabindex="-1" data-ref="next"></button>
-      <button type="button" id="read_page_prev" class="read-pages-button" tabindex="-1" data-ref="prev"></button>
-    </div>
   </div>
 </template>
 <template id="bookmark_item">

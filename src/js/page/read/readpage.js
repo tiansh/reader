@@ -112,6 +112,27 @@ export default class ReadPage extends Page {
       else this.controlPage.focus();
     }
   }
+  updateIndexRender(resized = this.useSideIndex) {
+    const active = this.isIndexActive();
+    if (active) {
+      this.container.classList.add('read-show-index');
+    } else {
+      this.container.classList.remove('read-show-index');
+    }
+    if (resized) {
+      if (active && !this.useSideIndex) {
+        this.controlPage.disable();
+        this.textPage.hide();
+      } else {
+        this.controlPage.enable();
+        this.textPage.show();
+      }
+      window.requestAnimationFrame(() => {
+        this.onResize();
+      });
+      this.textPage.onResize();
+    }
+  }
   updateSideIndex() {
     const sideIndex = window.innerWidth >= 960;
     if (sideIndex === this.useSideIndex) return;
@@ -123,22 +144,12 @@ export default class ReadPage extends Page {
       this.container.classList.remove('read-page-wide');
       this.container.classList.add('read-page-thin');
     }
-
-    if (this.indexPage.isCurrent) {
-      if (this.useSideIndex) {
-        window.requestAnimationFrame(() => {
-          this.onResize();
-        });
-        this.controlPage.enable();
-        this.textPage.show();
-      } else {
-        this.controlPage.disable();
-        this.textPage.hide();
-      }
+    if (this.isIndexActive()) {
+      this.updateIndexRender(true);
     }
   }
   isIndexActive() {
-    return this.indexPage.isCurrent;
+    return this.indexPage && this.indexPage.isCurrent;
   }
   isSideIndexActive() {
     return this.useSideIndex && this.indexPage.isCurrent;
@@ -146,11 +157,11 @@ export default class ReadPage extends Page {
   slideIndexPage(action, offset) {
     this.indexPage.slideShow(action, offset);
   }
-  toggleIndexPage(name) {
-    const indexActived = this.isIndexActive;
-    this.indexPage.toggle(name);
-    if (!indexActived && this.isSideIndexActive) {
-      this.textPage.onResize();
+  toggleIndexPage(page) {
+    if (this.isIndexActive() && this.indexPage.isSubPageActive(page)) {
+      this.indexPage.hide();
+    } else {
+      this.indexPage.show(page);
     }
   }
   isControlActive() {
