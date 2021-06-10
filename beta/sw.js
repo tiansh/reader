@@ -7,10 +7,9 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-const version = '20210610';
+const version = '2021061002';
 
 const resourceList = [
-  './credits.html',
   './css/common/input.css',
   './css/common/main.css',
   './css/icons/icons.css',
@@ -21,6 +20,7 @@ const resourceList = [
   './css/page/configpage.css',
   './css/page/listpage.css',
   './css/page/readpage.css',
+  './css/page/flipreadpage.css',
   './css/index.css',
   './css/normalize-8.0.1.css',
   './data/han/s2t.json',
@@ -30,7 +30,6 @@ const resourceList = [
   './js/data/options.js',
   './js/data/storage.js',
   './js/i18n/i18n.js',
-  './js/i18n/locale',
   './js/i18n/locale/en.js',
   './js/i18n/locale/zh_cn.js',
   './js/ui/component/color.js',
@@ -65,6 +64,7 @@ const resourceList = [
   './reader.png',
   './reader.svg',
   './favicon.ico',
+  './credits.html',
   './',
 ];
 
