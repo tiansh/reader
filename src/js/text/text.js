@@ -56,19 +56,27 @@ text.parseFilename = function (filename) {
 
 /**
  * @param {string} text
+ * @returns {RegExp}
+ */
+text.useRegExpForContent = function (template) {
+  if (/\/.*\/[a-zA-Z]*/.test(template)) {
+    const [_, reg, flags] = template.match(/\/(.*)\/(.*)/);
+    try {
+      return new RegExp(reg, flags);
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+};
+
+/**
+ * @param {string} text
  * @param {string} template
  */
 text.generateContent = function (text, template) {
   const maxLength = 100;
-  let matchReg = null;
-  if (/\/.*\/[a-zA-Z]*/.test(template)) {
-    const [_, reg, flags] = template.match(/\/(.*)\/(.*)/);
-    try {
-      matchReg = new RegExp(reg, flags);
-    } catch (e) {
-      matchReg = null;
-    }
-  }
+  let matchReg = text.useRegExpForContent(template);
   if (!matchReg) {
     const escape = template.replace(/./g, c => {
       if (c === ' ') return '\\s+';

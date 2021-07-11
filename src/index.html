@@ -82,6 +82,14 @@ defined by the Mozilla Public License, v. 2.0.
       <div class="index-tab-container">
         <div id="contents_list" class="index-list scroll" tabindex="-1"></div>
       </div>
+      <div id="read_index_contents_config" class="">
+        <div class="config-option-text">
+          <form action="/"><label><span class="config-option-text-title" data-i18n="readContentsTemplate"></span><input class="config-option-text-input" type="text" enterkeyhint="done"></label></form>
+        </div>
+        <div class="config-option-text-description" data-i18n="readContentsTemplateDescription"></div>
+        <div class="contents-history-title"><span data-i18n="readContentsTemplateHistory"></span></div>
+        <div class="contents-history-list scroll" tabindex="-1"></div>
+      </div>
     </div>
     <div id="read_index_bookmark" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_bookmark_tab">
       <div class="index-tab-container">
@@ -136,7 +144,7 @@ defined by the Mozilla Public License, v. 2.0.
       <div class="config-option-text">
         <label>
           <span class="config-option-text-title"></span>
-          <input class="config-option-text-input" type="text" />
+          <input class="config-option-text-input" type="text" enterkeyhint="done" />
         </label>
       </div>
       <div class="config-option-text-description"></div>
@@ -169,7 +177,7 @@ defined by the Mozilla Public License, v. 2.0.
 <template id="header">
   <div class="header-line" role="navigation">
     <div class="header-left" data-ref="left"></div>
-    <div class="header-mid" data-ref="mid" role="heading"></div>
+    <div class="header-mid" data-ref="mid" role="heading" aria-level="2"></div>
     <div class="header-right" data-ref="right"></div>
   </div>
 </template>

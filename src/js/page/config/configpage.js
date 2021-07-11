@@ -10,7 +10,7 @@
 import Page from '../page.js';
 import speech from '../../text/speech.js';
 import config from '../../data/config.js';
-import options from '../../data/options.js';
+import { optionList } from '../../data/options.js';
 import i18n from '../../i18n/i18n.js';
 import theme from '../../theme/theme.js';
 import template from '../../ui/util/template.js';
@@ -545,7 +545,7 @@ export default class ConfigPage extends Page {
         subPage.show();
       }
     };
-    options.forEach(group => {
+    optionList.forEach(group => {
       const titleElement = configList.appendChild(document.createElement('div'));
       titleElement.classList.add('config-title');
       titleElement.setAttribute('role', 'heading');
