@@ -252,6 +252,15 @@ button.tab-item:focus {
   z-index: 1;
 }
 
+.read-page-wide #read_index_contents_config {
+  right: auto;
+  width: calc(var(--index-width) - 1px);
+}
+
+#read_index_contents_config .header-left button {
+  transform: none;
+}
+
 .contents-history-title {
   line-height: 32px;
   padding: 10px 15px;
