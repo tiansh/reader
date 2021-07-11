@@ -219,12 +219,30 @@ class AboutConfigOption extends StubConfigOption {
   get type() { return 'about'; }
 }
 
+class ValueConfigOption extends ConfigOption {
+  /** @param {{ name: string, title: string, default: any, validator?: (any) => boolean, normalize: (any) => any }} config */
+  constructor(config) {
+    super(config);
+    this.isValidValue = config.validator || (() => true);
+    this.normalizeConfig = config.normalize || (value => value);
+  }
+  get type() { return 'value'; }
+  async setConfig(value) {
+    const setValue = this.normalizeConfig(this.isValidValue(value) ? value : null);
+    await config.set(this.name, setValue);
+  }
+  async getConfig(defaultValue) {
+    const value = await config.get(this.name, defaultValue);
+    return this.normalizeConfig(value);
+  }
+}
+
 /**
  * @typedef {Object} ConfigGroup
  * @property {string} title
  * @property {ConfigOption[]} items
  */
-/** @type {ConfigGroup[]} */
+/** @type {(ConfigGroup & { list?: boolean })[]} */
 const options = [{
   title: i18n.getMessage('configThemeGroupTitle'),
   items: [new SelectConfigOption({
@@ -349,7 +367,24 @@ const options = [{
   }), new AboutConfigOption({
     title: i18n.getMessage('configHelpAbout'),
   })],
+}, {
+  list: false,
+  items: [new ValueConfigOption({
+    name: 'contents_history',
+    default: [],
+    description: i18n.getMessage('readContentsTemplateDescription'),
+    validator: value => Array.isArray(value) &&
+      value.every(item => typeof item === 'string'),
+    normalize: value => Array.isArray(value) ?
+      value.filter((item, index) => (
+        typeof item === 'string' && item &&
+        value.indexOf(item) === index
+      )).slice(0, 10) : [],
+  })],
 }];
 
-export default options;
+/** @type {ConfigGroup[]} */
+export const optionList = options.filter(group => group.list !== false);
+export const optionSet = new Set(options.flatMap(group => group.items));
+export const optionMap = new Map(options.flatMap(group => group.items.map(item => [item.name, item])));
 

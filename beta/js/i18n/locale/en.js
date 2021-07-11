@@ -20,7 +20,10 @@ export default {
   listNotYetRead: 'NEW',
   listEmptyTip: 'Tap the add mark import files',
 
-  readContentsTemplate: 'Template for the table of content\nuse asterisk (*) for wildcard',
+  readContentsTemplate: 'Template',
+  readContentsTemplateDescription: 'Template for the table of content: Use asterisk (*) for wildcard',
+  readContentsTemplateHistory: 'Recent',
+  readContentsTemplateClear: 'Clear Recent',
   readContentsEmpty: 'No table of contents yet.\nYou may click refresh button to build one.',
   readBookmarkEmpty: 'No bookmarks yet.\nYou may click add bookmark button to add one.',
   readSearchPlaceholder: 'Find what',

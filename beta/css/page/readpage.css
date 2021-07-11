@@ -207,6 +207,10 @@ button.tab-item:focus {
   overflow-y: auto;
 }
 
+.index-list[hidden] {
+  display: none;
+}
+
 .index-list .item-list {
   flex: 1 0  auto;
   position: relative;
@@ -236,6 +240,40 @@ button.tab-item:focus {
 #contents_list .list-item-selected,
 #bookmark_list .list-item-selected {
   background: var(--list-active-background);
+}
+
+#read_index_contents_config {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--default-background);
+  z-index: 1;
+}
+
+.contents-history-title {
+  line-height: 32px;
+  padding: 10px 15px;
+  margin-top: 35px;
+  background: var(--alert-background);
+}
+
+button.contents-history-clear {
+  float: right;
+  line-height: 32px;
+  width: 32px;
+  height: 32px;
+  color: var(--active-color);
+}
+
+.contents-history-item {
+  padding: 10px 0;
+  line-height: 32px;
+}
+
+.contents-history-item-regex {
+  speak-as: literal-punctuation;
 }
 
 .index-bookmark-item {

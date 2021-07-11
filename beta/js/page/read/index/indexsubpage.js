@@ -46,12 +46,13 @@ export default class IndexSubPage extends ReadSubPage {
     this.container.setAttribute('aria-hidden', 'true');
     dom.disableKeyboardFocus(this.container);
   }
+  /** @returns {HTMLButtonElement} */
   createPageButton() { }
   onFirstActivate() {
     super.onFirstActivate();
 
     const headerRef = template.create('header');
-    this.container.insertBefore(headerRef.get('root'), this.container.firstChild);
+    this.headerElement = this.container.insertBefore(headerRef.get('root'), this.container.firstChild);
     const backButton = template.iconButton('back', i18n.getMessage('buttonBack'));
     this.backButton = headerRef.get('left').appendChild(backButton);
     this.pageButton = this.createPageButton();

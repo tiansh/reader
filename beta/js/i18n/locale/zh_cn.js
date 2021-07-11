@@ -20,7 +20,10 @@ export default {
   listNotYetRead: '新',
   listEmptyTip: '点击加号图标导入文件',
 
-  readContentsTemplate: '目录模板\n使用星号(*)作通配符',
+  readContentsTemplate: '目录模板',
+  readContentsTemplateDescription: '使用星号(*)作通配符',
+  readContentsTemplateHistory: '最近设置模板',
+  readContentsTemplateClear: '清空',
   readContentsEmpty: '暂无目录\n点击刷新按钮生成目录',
   readBookmarkEmpty: '暂无书签\n点击添加按钮添加书签',
   readSearchPlaceholder: '查找',
