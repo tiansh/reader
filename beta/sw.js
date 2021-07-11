@@ -7,7 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-const version = '20210711';
+const version = '20210712';
 
 const resourceList = [
   './css/common/input.css',

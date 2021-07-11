@@ -71,10 +71,10 @@ text.useRegExpForContent = function (template) {
 };
 
 /**
- * @param {string} text
+ * @param {string} article
  * @param {string} template
  */
-text.generateContent = function (text, template) {
+text.generateContent = function (article, template) {
   const maxLength = 100;
   let matchReg = text.useRegExpForContent(template);
   if (!matchReg) {
@@ -89,7 +89,7 @@ text.generateContent = function (text, template) {
   }
   const content = [];
   let cursor = 0;
-  text.split('\n').forEach(line => {
+  article.split('\n').forEach(line => {
     let match = false;
     if (line.length <= maxLength) {
       if (matchReg.test(line)) {
