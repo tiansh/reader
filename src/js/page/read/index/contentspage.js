@@ -60,11 +60,27 @@ class IndexContentsTemplatePage {
 
     this.hide();
   }
-  renderTemplateHistoryList(list) {
+  /**
+   * @param {string[]} history
+   */
+  renderTemplateHistoryList(history) {
+    if (!history || !history.length) {
+      this.templateTitle.hidden = true;
+      if (this.templateList) {
+        this.templateList.dispatch();
+        this.templateList = null;
+      }
+      return;
+    }
+    const list = history.slice(0);
     const onItemClick = template => {
       this.addHistory(template);
       this.contentsPage.refreshContents(template);
       this.hide();
+    };
+    const onRemove = async (item, index) => {
+      this.templateList.removeItem(index);
+      await this.historyOption.setConfig(list);
     };
     const render = (container, item) => {
       if (container.firstChild) return;
@@ -76,23 +92,16 @@ class IndexContentsTemplatePage {
         element.classList.add('contents-history-item-regex');
       }
     };
-    if (!list || !list.length) {
-      this.templateTitle.hidden = true;
-      if (this.templateList) {
-        this.templateList.dispatch();
-        this.templateList = null;
-      }
-    } else {
-      this.templateTitle.hidden = false;
-      if (this.templateList) {
-        this.templateList.dispatch();
-      }
-      this.templateList = new ItemList(this.templateListElement, {
-        list,
-        onItemClick,
-        render,
-      });
+    this.templateTitle.hidden = false;
+    if (this.templateList) {
+      this.templateList.dispatch();
     }
+    this.templateList = new ItemList(this.templateListElement, {
+      list,
+      onItemClick,
+      onRemove,
+      render,
+    });
   }
   show() {
     if (!this.container) return;
@@ -132,12 +141,15 @@ class IndexContentsTemplatePage {
       }
       this.container.hidden = true;
     }
+    if (this.container.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
   }
   async addHistory(template) {
     const history = await this.historyOption.getConfig();
     const result = history.filter(item => item !== template);
     result.unshift(template);
-    result.splice(5);
+    result.splice(20);
     await this.historyOption.setConfig(result);
   }
 }

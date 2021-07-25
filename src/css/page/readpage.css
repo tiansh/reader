@@ -261,6 +261,10 @@ button.tab-item:focus {
   transform: none;
 }
 
+#read_index_contents_config .index-tab-container {
+  overflow-y: auto;
+}
+
 .contents-history-title {
   line-height: 32px;
   padding: 10px 15px;
