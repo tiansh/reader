@@ -119,14 +119,14 @@ export default class ReadPage extends Page {
     } else {
       this.container.classList.remove('read-show-index');
     }
+    if (active && !this.useSideIndex) {
+      this.controlPage.disable();
+      this.textPage.hide();
+    } else {
+      this.controlPage.enable();
+      this.textPage.show();
+    }
     if (resized) {
-      if (active && !this.useSideIndex) {
-        this.controlPage.disable();
-        this.textPage.hide();
-      } else {
-        this.controlPage.enable();
-        this.textPage.show();
-      }
       window.requestAnimationFrame(() => {
         this.onResize();
       });
