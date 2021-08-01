@@ -37,6 +37,7 @@ button .icon {
 
 .range-number {
   width: 100%;
+  box-sizing: border-box;
   background: var(--default-background);
   color: var(--default-color);
   border: 1px solid var(--border-color);
@@ -51,6 +52,7 @@ button .icon {
   -webkit-user-select: none;
   user-select: none;
   flex: 1 1 100%;
+  margin-right: 10px;
 }
 
 .range-wrap {
