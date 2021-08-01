@@ -24,8 +24,6 @@ import { TouchGestureListener } from '../../../ui/util/touch.js';
  * @property {PageRender} prev
  * @property {PageRender} current
  * @property {PageRender} next
- * @property {boolean} isLast
- * @property {boolean} isFirst
  */
 
 export default class FlipTextPage extends TextPage {
@@ -173,9 +171,9 @@ export default class FlipTextPage extends TextPage {
   slidePage(action, offset) {
     if (action === 'move') {
       let move = offset;
-      if (offset < 0 && this.pages.isLast) {
+      if (offset < 0 && !this.pages.next) {
         move = Math.max(-100, offset / 2);
-      } else if (offset > 0 && this.pages.isFirst) {
+      } else if (offset > 0 && !this.pages.prev) {
         move = Math.min(100, offset / 2);
       }
       const width = window.innerWidth;
@@ -196,7 +194,7 @@ export default class FlipTextPage extends TextPage {
     this.readPage.slideIndexPage('cancel');
   }
   nextPage(isUserTrigger = true) {
-    if (this.pages.isLast) return;
+    if (!this.pages.next) return;
     this.disposePage(this.pages.prev);
     this.pages.prev = this.pages.current;
     this.pages.current = this.pages.next;
@@ -204,7 +202,7 @@ export default class FlipTextPage extends TextPage {
     this.updatePages(isUserTrigger);
   }
   prevPage(isUserTrigger = true) {
-    if (this.pages.isFirst) return;
+    if (!this.pages.prev) return;
     this.disposePage(this.pages.next);
     this.pages.next = this.pages.current;
     this.pages.current = this.pages.prev;
@@ -215,8 +213,6 @@ export default class FlipTextPage extends TextPage {
     this.slideCancel();
     this.stepCache = null;
     this.disposePages();
-    this.pages.isLast = null;
-    this.pages.isFirst = null;
     this.updatePages(isUserTrigger);
   }
   updatePages(isUserTrigger) {
@@ -251,19 +247,17 @@ export default class FlipTextPage extends TextPage {
       });
     }
     // Next Page
-    if (!pages.next && !pages.isLast) {
+    if (!pages.next && pages.current.nextCursor < content.length) {
       const next = this.layoutPageStartsWith(pages.current.nextCursor);
-      this.nextButton.disabled = !next;
-      pages.isLast = !next;
       pages.next = next;
     }
+    this.nextButton.disabled = !pages.next;
     // Previous Page
-    if (!pages.prev && !pages.isFirst) {
+    if (!pages.prev && pages.current.cursor > 0) {
       const prev = this.layoutPageEndsWith(pages.current.cursor);
-      this.prevButton.disabled = !prev;
-      pages.isFirst = !prev;
       pages.prev = prev;
     }
+    this.prevButton.disabled = !pages.prev;
     /** @type {('prev'|'current'|'next')[]} */
     const pageNames = ['prev', 'current', 'next'];
     pageNames.forEach(name => {
@@ -281,8 +275,6 @@ export default class FlipTextPage extends TextPage {
       container.setAttribute('aria-hidden', name === 'current' ? 'false' : 'true');
       this.addRenderedPage(page);
     });
-    pages.isLast = pages.next == null;
-    pages.isFirst = pages.prev == null;
     if (isUserTrigger) {
       this.readPage.setCursor(this.pages.current.cursor);
     } else {
@@ -356,13 +348,13 @@ export default class FlipTextPage extends TextPage {
       if (body.clientHeight !== body.scrollHeight) {
         isOverflow = true;
       }
-      if (body.clientHeight > window.innerHeight) {
+      if (body.clientHeight > window.innerHeight * 4) {
         // Maybe CSS failed to load. We should stop crazy things to prevent frozen browsers.
         break;
       }
     }
     let nextCursor;
-    if (body.clientHeight !== body.scrollHeight) {
+    if (isOverflow) {
       // 3. find out where the overflow happened
       const rect = body.getBoundingClientRect();
       const firstOut = paragraphs.slice(0).reverse().find(p => {

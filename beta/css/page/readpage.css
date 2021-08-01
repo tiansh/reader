@@ -393,7 +393,7 @@ button.contents-history-clear {
 }
 
 #jump_range {
-  width: calc(100% - 20px);
+  width: 100%;
 }
 
 .read-jump-cover {

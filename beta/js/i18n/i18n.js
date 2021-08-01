@@ -12,7 +12,7 @@ import zh_CN from './locale/zh_cn.js';
 
 const locales = [
   { name: /^en/, lang: 'en', locale: en },
-  { name: /^zh-(?!.*TW|HK|Hant)/, lang: 'zh-CN', locale: zh_CN },
+  { name: /^zh-(?!.*TW|HK|MO|Hant)/, lang: 'zh-CN', locale: zh_CN },
 ];
 
 /** @type {en} */
@@ -20,14 +20,11 @@ const prefer = (function () {
   const languages = navigator.languages;
   const prefer = languages.reduce((match, lang) => {
     return match || locales.find(locale => locale.name.test(lang));
-  }, null);
-  if (prefer) {
-    document.addEventListener('DOMContentLoaded', () => {
-      document.documentElement.lang = prefer.lang;
-    });
-    return prefer.locale;
-  }
-  return en;
+  }, null) || locales[0];
+  document.addEventListener('DOMContentLoaded', () => {
+    document.documentElement.lang = prefer.lang;
+  });
+  return prefer.locale;
 }());
 
 const i18n = {};
