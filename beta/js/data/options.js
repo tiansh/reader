@@ -22,6 +22,10 @@ class ConfigOption {
     this.initialized = false;
     this.rendered = false;
     this.normalizeConfig();
+    if (!ConfigOption.globalIndex) {
+      ConfigOption.globalIndex = 0;
+    }
+    this.index = ConfigOption.globalIndex++;
   }
   /** @returns {string} */
   get type() { throw Error('Unimplementated'); }
@@ -29,9 +33,8 @@ class ConfigOption {
   getConfig(value) { return config.get(this.name, value); }
   /**
    * @param {HTMLElement} container
-   * @param {number} index
    */
-  render(container, index) {
+  render(container) {
     const itemElement = container.appendChild(document.createElement('div'));
     itemElement.classList.add('config-item');
     const titleElement = itemElement.appendChild(document.createElement('div'));
@@ -40,7 +43,7 @@ class ConfigOption {
     this.container = itemElement;
     this.titleElement = titleElement;
     this.rendered = true;
-    this.titleElement.id = 'config_item_' + index;
+    this.titleElement.id = 'config_item_' + this.index;
   }
   renderValue(value) { }
   isValidValue(value) { return true; }
@@ -57,10 +60,10 @@ class ConfigOption {
       if (this.rendered) this.renderValue(this.default);
     }
   }
-  async setup(container, index) {
+  async setup(container) {
     if (this.initialized) return;
     this.initialized = true;
-    this.render(container, index);
+    this.render(container);
     await this.normalizeConfig();
     await config.get(this.name).then(value => {
       this.renderValue(value);
@@ -82,14 +85,14 @@ class SelectConfigOption extends ConfigOption {
   isValidValue(value) {
     return this.select.find(item => item.value === value) != null;
   }
-  render(container, index) {
-    super.render(container, index);
+  render(container) {
+    super.render(container);
     const itemElement = container.firstChild;
     this.resultElement = itemElement.appendChild(document.createElement('span'));
     this.resultElement.classList.add('config-item-value');
     const detailIcon = itemElement.appendChild(template.icon('detail'));
     detailIcon.classList.add('config-item-detail');
-    this.resultElement.id = 'config_item_value_' + index;
+    this.resultElement.id = 'config_item_value_' + this.index;
     this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
     this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
   }
@@ -109,14 +112,14 @@ class ColorConfigOption extends ConfigOption {
   isValidValue(value) {
     return /^#[a-f0-9]{6}$/i.test(value);
   }
-  render(container, index) {
-    super.render(container, index);
+  render(container) {
+    super.render(container);
     const itemElement = container.firstChild;
     this.resultElement = itemElement.appendChild(document.createElement('span'));
     this.resultElement.classList.add('config-item-value', 'config-item-color-value');
     const detailIcon = itemElement.appendChild(template.icon('detail'));
     detailIcon.classList.add('config-item-detail');
-    this.resultElement.id = 'config_item_value_' + index;
+    this.resultElement.id = 'config_item_value_' + this.index;
     this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
     this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
   }
@@ -139,14 +142,14 @@ class FontConfigOption extends ConfigOption {
     if (!Array.isArray(allFonts)) return false;
     return allFonts.find(font => font.id === value);
   }
-  render(container, index) {
-    super.render(container, index);
+  render(container) {
+    super.render(container);
     const itemElement = container.firstChild;
     this.resultElement = itemElement.appendChild(document.createElement('span'));
     this.resultElement.classList.add('config-item-value');
     const detailIcon = itemElement.appendChild(template.icon('detail'));
     detailIcon.classList.add('config-item-detail');
-    this.resultElement.id = 'config_item_value_' + index;
+    this.resultElement.id = 'config_item_value_' + this.index;
     this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
     this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
   }
@@ -164,8 +167,8 @@ class VoiceConfigOption extends ConfigOption {
     this.default = config.default;
   }
   get type() { return 'voice'; }
-  render(container, index) {
-    super.render(container, index);
+  render(container) {
+    super.render(container);
     const itemElement = container.firstChild;
     const detailIcon = itemElement.appendChild(template.icon('detail'));
     detailIcon.classList.add('config-item-detail');
@@ -182,14 +185,14 @@ class TextConfigOption extends ConfigOption {
   }
   get type() { return 'text'; }
   isValidValue(value) { return typeof value === 'string'; }
-  render(container, index) {
-    super.render(container, index);
+  render(container) {
+    super.render(container);
     const itemElement = container.firstChild;
     this.resultElement = itemElement.appendChild(document.createElement('span'));
     this.resultElement.classList.add('config-item-value');
     const detailIcon = itemElement.appendChild(template.icon('detail'));
     detailIcon.classList.add('config-item-detail');
-    this.resultElement.id = 'config_item_value_' + index;
+    this.resultElement.id = 'config_item_value_' + this.index;
     this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
     this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
   }
@@ -204,10 +207,10 @@ class StubConfigOption extends ConfigOption {
   renderValue(value) { }
   isValidValue(value) { return true; }
   async normalizeConfig() { }
-  async setup(container, index) {
+  async setup(container) {
     if (this.initialized) return;
     this.initialized = true;
-    this.render(container, index);
+    this.render(container);
   }
 }
 

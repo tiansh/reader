@@ -181,6 +181,10 @@ a {
 button.list-item-container:active {
   background: var(--list-active-background);
 }
+button.list-item-container.hover {
+  outline: none;
+  background: var(--list-active-background);
+}
 
 .list-item-selected-icon {
   position: absolute;

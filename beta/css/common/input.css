@@ -172,3 +172,9 @@ button .icon {
   outline-offset: -2px;
 }
 
+input[type="button"].hover,
+button[type="button"].hover {
+  outline: var(--active-color) solid 2px;
+  outline-offset: -2px;
+}
+

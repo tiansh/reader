@@ -17,6 +17,24 @@ onResize.addListener(([width, height]) => {
   html.style.setProperty('--window-height', height + 'px');
 });
 
+// Only add .hover className when user use a mouse
+// mouseover will sometime not triggered after touchstart
+let inTouch = false;
+document.documentElement.addEventListener('touchstart', function (event) {
+  inTouch = true;
+}, { passive: true, useCapture: false });
+document.documentElement.addEventListener('mousemove', function (event) {
+  inTouch = false;
+}, { passive: true, useCapture: false });
+document.documentElement.addEventListener('mouseover', function (event) {
+  const button = event.target.closest('button');
+  if (button && !inTouch) button.classList.add('hover');
+}, { passive: true, useCapture: false });
+document.documentElement.addEventListener('mouseout', function (event) {
+  const button = event.target.closest('button');
+  if (button) button.classList.remove('hover');
+}, { passive: true, useCapture: false });
+
 document.body.addEventListener('touchmove', function (event) {
   const target = event.target;
   do {

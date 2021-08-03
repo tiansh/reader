@@ -85,7 +85,7 @@ export default class TextPage {
   wheelEvents(event) { }
   resizeEvent() { }
   clearHighlight() { }
-  highlightChars(start, length) { }
+  highlightChars(start, length) { return false; }
   cursorChange(cursor) { }
   async updateStyleConfig() {
     this.customFont = document.querySelector('#custom_font');

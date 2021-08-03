@@ -10,6 +10,7 @@
 export default {
   locale: 'zh-CN',
 
+  listFilterClear: '取消过滤',
   listSortTitle: '排序',
   listSortByDateRead: '按最后阅读时间',
   listSortByDateAdd: '按添加时间',
@@ -18,6 +19,7 @@ export default {
   listImportTip: '正在读取文本……',
   listImportFail: '读取文本时发生错误\n文本可能使用了不支持的字符编码',
   listNotYetRead: '新',
+  listEmptySearchTip: '找不到搜索的文件',
   listEmptyTip: '点击加号图标导入文件',
 
   readContentsTemplate: '目录模板',
