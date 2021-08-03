@@ -31,7 +31,7 @@ export default class IndexSearchPage extends IndexSubPage {
     super.onFirstActivate();
 
     this.searchForm = this.container.querySelector('.search-box form');
-    this.searchInput = this.container.querySelector('.search-input');
+    this.searchInput = this.searchForm.querySelector('input');
     this.searchPlaceholder = this.container.querySelector('.search-box-placehodler');
     this.searchForm.addEventListener('submit', event => {
       const text = this.searchInput.value;

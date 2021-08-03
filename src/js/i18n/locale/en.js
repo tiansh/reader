@@ -10,6 +10,7 @@
 export default {
   locale: 'en',
 
+  listFilterClear: 'Clear Search',
   listSortTitle: 'Sort by',
   listSortByDateRead: 'Date Read',
   listSortByDateAdd: 'Date Add',
@@ -18,6 +19,7 @@ export default {
   listImportTip: 'Reading text file...',
   listImportFail: 'Something wrong when reading text file. Maybe the encoding is not supported.',
   listNotYetRead: 'NEW',
+  listEmptySearchTip: 'Cannot find files match searching',
   listEmptyTip: 'Tap the add mark import files',
 
   readContentsTemplate: 'Template',

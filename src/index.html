@@ -34,23 +34,30 @@ defined by the Mozilla Public License, v. 2.0.
 <body>
 <div class="page" id="list_page">
   <input id="file" type="file" accept="text/plain" tabindex="-1" aria-hidden="true" />
-  <div class="file-list-container scroll" tabindex="-1">
+  <div id="file_list_container" class="file-list-container scroll" tabindex="-1">
     <div class="list-action">
-      <button type="button" class="list-sort">
-        <div class="button-wrap" tabindex="-1">
-          <span class="list-sort-title"><span data-i18n="listSortTitle"></span></span>
-          <span class="list-sort-content"><span></span><span class="icon icon-detail" title="Detail"></span></span>
+      <div class="list-filter">
+        <div class="search-box">
+          <span class="icon icon-search"></span><input type="search" class="search-input" />
         </div>
-      </button>
+      </div>
+      <div class="list-sort">
+        <button type="button" class="list-sort">
+          <div class="button-wrap" tabindex="-1">
+            <span class="list-sort-title"><span data-i18n="listSortTitle"></span></span>
+            <span class="list-sort-content"><span></span><span class="icon icon-detail" title="Detail"></span></span>
+          </div>
+        </button>
+      </div>
     </div>
-    <div id="file_list"></div>
+    <div role="main" id="file_list"></div>
     <div id="import_tip">
       <div class="tip-cover"></div>
       <div class="tip-content"><span data-i18n="listImportTip"></span></div>
     </div>
   </div>
 </div>
-<div class="list-sort-menu">
+<div id="list_sort_menu" class="list-sort-menu">
   <div class="backdrop"></div>
   <div class="list-sort-options screen-option" role="menu">
     <div class="screen-option-group" role="group">
@@ -117,32 +124,32 @@ defined by the Mozilla Public License, v. 2.0.
 </div>
 <div class="page" id="config_page">
   <div class="config-page-main config-page">
-    <div class="config-page-content scroll" tabindex="-1"></div>
+    <div role="main" class="config-page-content scroll" tabindex="-1"></div>
   </div>
   <div id="config_page_select" class="config-option-page config-page">
-    <div class="config-page-content scroll">
+    <div role="main" class="config-page-content scroll">
       <div class="config-option-select-list"></div>
     </div>
   </div>
   <div id="config_page_color" class="config-option-page config-page">
-    <div class="config-page-content scroll">
+    <div role="main" class="config-page-content scroll">
       <div class="config-option-color-picker"></div>
     </div>
   </div>
   <div id="config_page_font" class="config-option-page config-page">
-    <div class="config-page-content scroll">
+    <div role="main" class="config-page-content scroll">
       <input id="select_font_file" type="file" />
       <div class="font-select-section"></div>
       <div class="config-option-select-list"></div>
     </div>
   </div>
   <div id="config_page_voice" class="config-option-page config-page">
-    <div class="config-page-content scroll">
+    <div role="main" class="config-page-content scroll">
       <div class="config-option-select-list"></div>
     </div>
   </div>
   <div id="config_page_text" class="config-option-page config-page">
-    <div class="config-page-content scroll">
+    <div role="main" class="config-page-content scroll">
       <div class="config-option-text">
         <label>
           <span class="config-option-text-title"></span>
@@ -153,12 +160,12 @@ defined by the Mozilla Public License, v. 2.0.
     </div>
   </div>
   <div id="config_page_credits" class="config-option-page config-page">
-    <div class="config-page-content">
+    <div role="main" class="config-page-content">
       <iframe src="about:blank" class="config-credits-iframe"></iframe>
     </div>
   </div>
   <div id="config_page_about" class="config-option-page config-page">
-    <div class="config-page-content scroll config-page-about" lang="en">
+    <div role="main" class="config-page-content scroll config-page-about" lang="en">
       <h1>tReader</h1>
       <p>Copyright (c) 2020 <span lang="zh-Hans">田生</span></p>
       <p>
@@ -201,7 +208,7 @@ defined by the Mozilla Public License, v. 2.0.
 </template>
 <template id="read_text_flip">
   <div class="read-layer read-text-flip read-text">
-    <div class="read-text-pages" data-ref="pages"></div>
+    <div class="read-text-pages" role="main" data-ref="pages"></div>
     <div class="read-text-page-buttons">
       <button type="button" id="read_page_next" class="read-pages-button" tabindex="-1" data-ref="next"></button>
       <button type="button" id="read_page_prev" class="read-pages-button" tabindex="-1" data-ref="prev"></button>

@@ -33,19 +33,29 @@ export default class ListPage extends Page {
     /** @type {HTMLInputElement} */
     this.fileButton = document.querySelector('#file');
 
+    this.fileListContainer = document.querySelector('#file_list_container');
     this.fileListElement = document.querySelector('#file_list');
-
-    this.sortButton = document.querySelector('.list-sort');
-    this.sortContent = document.querySelector('.list-sort-content');
-    this.sortMenu = document.querySelector('.list-sort-menu');
+    this.searchContainer = this.fileListContainer.querySelector('.list-filter');
+    this.searchInput = this.searchContainer.querySelector('.list-filter input');
+    this.searchClearButton = template.iconButton('remove', i18n.getMessage('listFilterClear'));
+    this.sortButton = this.fileListContainer.querySelector('.list-sort');
+    this.sortContent = this.fileListContainer.querySelector('.list-sort-content');
+    this.sortMenu = document.querySelector('#list_sort_menu');
     this.importTip = document.querySelector('#import_tip');
+
+    this.searchClearButton.classList.add('list-filter-clear');
+    this.searchContainer.appendChild(this.searchClearButton);
     this.initialListener();
-    this.options = { sortBy: 'dateread' };
+    this.options = { sortBy: 'dateread', search: '' };
   }
   async onActivate() {
     this.updateSort();
     this.langTag = await config.get('cjk_lang_tag');
     await this.updateList();
+  }
+  show() {
+    super.show();
+    this.scrollToList();
   }
   async onInactivate() {
     this.clearList();
@@ -76,6 +86,18 @@ export default class ListPage extends Page {
     this.configButton.addEventListener('click', event => {
       this.router.go('config');
     });
+    this.searchInput.addEventListener('focus', event => {
+      this.fileListContainer.scrollTop = 0;
+    });
+    this.searchInput.addEventListener('input', event => {
+      this.options.search = this.searchInput.value;
+      this.updateList();
+    });
+    this.searchClearButton.addEventListener('click', event => {
+      this.options.search = this.searchInput.value = '';
+      this.updateList();
+    });
+    this.sortMenuKeyboardHandler = this.sortMenuKeyboardHandler.bind(this);
     this.sortButton.addEventListener('click', event => {
       this.showSortMenu();
     });
@@ -94,9 +116,13 @@ export default class ListPage extends Page {
       this.hideSortMenu();
     });
   }
+  scrollToList() {
+    this.fileListContainer.scrollTop = 105;
+  }
   async updateList() {
     const token = this.lastToken = {};
     const files = await file.list();
+    this.searchFiles(files);
     this.sortFiles(files);
     if (token !== this.lastToken) return;
 
@@ -132,7 +158,11 @@ export default class ListPage extends Page {
     };
     const emptyListRender = container => {
       const text = container.appendChild(document.createElement('div'));
-      text.textContent = i18n.getMessage('listEmptyTip');
+      if (this.options.search) {
+        text.textContent = i18n.getMessage('listEmptySearchTip');
+      } else {
+        text.textContent = i18n.getMessage('listEmptyTip');
+      }
     };
     this.fileList = new ItemList(this.fileListElement, {
       list: files.slice(0),
@@ -153,7 +183,13 @@ export default class ListPage extends Page {
     const activeItem = menuItems.find(item => item.dataset.option === this.options.sortBy);
     this.sortContent.querySelector('span').textContent = activeItem.textContent;
   }
-  sortFiles(/** @type {import('./storage.js').ReaderFileMeta[]} */files) {
+  searchFiles(/** @type {import('../../data/storage.js').ReaderFileMeta[]} */files) {
+    for (let i = 0; i < files.length;) {
+      if (files[i].title.includes(this.options.search)) i++;
+      else files.splice(i, 1);
+    }
+  }
+  sortFiles(/** @type {import('../../data/storage.js').ReaderFileMeta[]} */files) {
     const sortBy = this.options.sortBy;
     const cmp = {
       dateread: (a, b) => b.lastAccessTime - a.lastAccessTime,
@@ -162,15 +198,26 @@ export default class ListPage extends Page {
     }[sortBy];
     files.sort(cmp);
   }
+  /** @param {KeyboardEvent} event */
+  sortMenuKeyboardHandler(event) {
+    if (event.code === 'Escape') {
+      this.hideSortMenu();
+    }
+  }
   showSortMenu() {
     this.sortMenu.style.display = 'block';
     this.element.setAttribute('aria-hidden', 'true');
     dom.disableKeyboardFocus(this.element);
+    document.addEventListener('keydown', this.sortMenuKeyboardHandler);
+    if (document.activeElement === this.sortButton) {
+      this.sortMenu.querySelector('button').focus();
+    }
   }
   hideSortMenu() {
     this.sortMenu.style.display = 'none';
     this.element.setAttribute('aria-hidden', 'false');
     dom.enableKeyboardFocus(this.element);
+    document.removeEventListener('keydown', this.sortMenuKeyboardHandler);
   }
 }
 
