@@ -62,25 +62,29 @@ export default class ReadSpeech {
       });
     });
   }
+  /** @param {SpeechSynthesisEvent} event */
   onBoundary(event) {
     if (!this.speaking) return;
     const boundaryCursor = this.boundaryCursor = {};
     const ssu = event.target;
     this.pendingSsu.delete(ssu);
     const ssuInfo = this.getSsuInfo(ssu);
-    const start = ssuInfo.start + event.charIndex;
-    const len = Math.max(0, Math.min(event.charLength || ssuInfo.end - start));
-    this.page.textPage.highlightChars(start, len);
+    if (!ssuInfo) return;
+    const start = ssuInfo.start + (event.charIndex || 0);
+    const len = Math.max(0, Math.min(event.charLength || Infinity, ssuInfo.end - start));
+    const highlight = this.page.textPage.highlightChars(start, len);
     this.spoken = start;
     this.readMore();
     if (this.boundaryCursor === boundaryCursor) {
       this.boundaryCursor = null;
     }
   }
+  /** @param {SpeechSynthesisEvent} event */
   onEnd(event) {
     if (!this.speaking) return;
     const ssu = event.target;
     const ssuInfo = this.getSsuInfo(ssu);
+    if (!ssuInfo) return;
     if (ssuInfo.end === this.page.content.length) {
       this.stop();
     } else if (!this.page.textPage) {
