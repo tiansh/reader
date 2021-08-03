@@ -522,8 +522,8 @@ export default class ConfigPage extends Page {
      * @param {ConfigOption} item
      * @param {number} index
      */
-    const itemRender = (container, item, index) => {
-      item.setup(container, index);
+    const itemRender = (container, item) => {
+      item.setup(container);
     };
     /** @param {ConfigOption} item */
     const onItemClick = async item => {
@@ -552,7 +552,11 @@ export default class ConfigPage extends Page {
       titleElement.textContent = group.title;
       const groupElement = configList.appendChild(document.createElement('div'));
       groupElement.classList.add('config-group');
-      new ItemList(groupElement, { list: group.items, onItemClick, render: itemRender });
+      new ItemList(groupElement, {
+        list: group.items,
+        onItemClick,
+        render: itemRender,
+      });
     });
 
     this.subConfigPages.forEach(page => { page.onFirstActivate(); });
