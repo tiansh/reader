@@ -72,7 +72,11 @@ export default class ReadSpeech {
     if (!ssuInfo) return;
     const start = ssuInfo.start + (event.charIndex || 0);
     const len = Math.max(0, Math.min(event.charLength || Infinity, ssuInfo.end - start));
-    const highlight = this.page.textPage.highlightChars(start, len);
+    if (Number.isInteger(start) && Number.isInteger(len) && start >= 0 && len >= 0) {
+      this.page.textPage.highlightChars(start, len);
+    } else {
+      this.reset();
+    }
     this.spoken = start;
     this.readMore();
     if (this.boundaryCursor === boundaryCursor) {

@@ -135,7 +135,7 @@ export default class FlipTextPage extends TextPage {
    */
   keyboardEvents(event) {
     super.keyboardEvents(event);
-    const current = this.readPage.isSubpageActived();
+    const current = this.readPage.activedSubpage();
     if (!current) {
       if (['PageUp', 'ArrowLeft'].includes(event.code)) {
         this.prevPage();
@@ -528,35 +528,46 @@ export default class FlipTextPage extends TextPage {
     this.lastHighlightStart = null;
     this.lastHighlightLength = null;
   }
-  highlightChars(start, length) {
+  highlightChars(start, length, depth = 0) {
     if (this.lastHighlightStart === start) {
       if (this.lastHighlightLength === length) {
         return null;
       }
     }
     this.clearHighlight();
+
+    if (!this.pages.current) {
+      this.resetPage(false);
+      return this.highlightChars(start, length, depth + 1);
+    }
+
+    const prevNext = this.pages.prev ? this.pages.prev.nextCursor : void 0;
+
+    const currentPage = this.pages.current.cursor;
+    const currentNext = this.pages.current.nextCursor;
+
+    const nextPage = this.pages.next ? this.pages.next.cursor : void 0;
+    const nextNext = this.pages.next ? this.pages.next.nextCursor : void 0;
+
+    if (start + length < Math.min(currentPage, prevNext || 0)) {
+      // Maybe something went wrong
+      this.resetPage();
+      return this.highlightChars(start, length, depth + 1);
+    }
+
+    if (start >= nextPage) {
+      if (start < nextNext) {
+        this.nextPage(false);
+      } else {
+        this.resetPage(false);
+      }
+      return this.highlightChars(start, length, depth + 1);
+    }
+
     this.lastHighlightStart = start;
     this.lastHighlightLength = length;
 
-    if (!this.pages.current) return null;
-
-    const currentPage = this.pages.current.cursor;
-    if (start < currentPage) {
-      this.resetPage();
-      return null;
-    }
-
-    if (this.pages.next) {
-      const nextPage = this.pages.next.cursor;
-      const nextNextPage = this.pages.next.nextCursor;
-      if (nextPage && start >= nextPage && start <= nextNextPage) {
-        this.nextPage(false);
-        return null;
-      }
-    }
-
-    const pageEnd = this.pages.current.nextCursor;
-    if (start > pageEnd) {
+    if (start > currentNext) {
       return null;
     }
 
