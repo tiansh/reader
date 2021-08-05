@@ -19,6 +19,7 @@ export default {
   listImportTip: '正在读取文本……',
   listImportFail: '读取文本时发生错误\n文本可能使用了不支持的字符编码',
   listNotYetRead: '新',
+  listSearchPlaceholder: '搜索',
   listEmptySearchTip: '找不到搜索的文件',
   listEmptyTip: '点击加号图标导入文件',
 
@@ -81,8 +82,8 @@ export default {
   },
   configSpeechRate: '语速',
   configSpeechRateNum: rate => {
-    if (rate === 1) return '1x (默认)';
-    return rate + 'x';
+    if (rate === 1) return '1× (默认)';
+    return rate + '×';
   },
   configHelpGroupTitle: '帮助',
   configHelpCredits: 'Open Source Credits',

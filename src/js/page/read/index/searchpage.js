@@ -33,6 +33,9 @@ export default class IndexSearchPage extends IndexSubPage {
     this.searchForm = this.container.querySelector('.search-box form');
     this.searchInput = this.searchForm.querySelector('input');
     this.searchPlaceholder = this.container.querySelector('.search-box-placehodler');
+
+    this.searchInput.placeholder = i18n.getMessage('readSearchPlaceholder');
+
     this.searchForm.addEventListener('submit', event => {
       const text = this.searchInput.value;
       if (text) this.searchText(text);
@@ -47,7 +50,9 @@ export default class IndexSearchPage extends IndexSubPage {
   }
   show() {
     super.show();
-    if (this.itemList.isListEmpty()) {
+    const cursorOnTab = this.indexPage.tabGroup === document.activeElement;
+    const emptySearch = this.itemList.isListEmpty();
+    if (emptySearch && !cursorOnTab) {
       setTimeout(() => { // wait for css transition end
         if (this.isShow) this.searchInput.focus();
       }, 210);

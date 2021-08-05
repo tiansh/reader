@@ -43,6 +43,7 @@ export default class ListPage extends Page {
     this.sortMenu = document.querySelector('#list_sort_menu');
     this.importTip = document.querySelector('#import_tip');
 
+    this.searchInput.placeholder = i18n.getMessage('listSearchPlaceholder');
     this.searchClearButton.classList.add('list-filter-clear');
     this.searchContainer.appendChild(this.searchClearButton);
     this.initialListener();

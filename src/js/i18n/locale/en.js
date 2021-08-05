@@ -19,6 +19,7 @@ export default {
   listImportTip: 'Reading text file...',
   listImportFail: 'Something wrong when reading text file. Maybe the encoding is not supported.',
   listNotYetRead: 'NEW',
+  listSearchPlaceholder: 'Search',
   listEmptySearchTip: 'Cannot find files match searching',
   listEmptyTip: 'Tap the add mark import files',
 
@@ -28,7 +29,7 @@ export default {
   readContentsTemplateClear: 'Clear Recent',
   readContentsEmpty: 'No table of contents yet.\nYou may click refresh button to build one.',
   readBookmarkEmpty: 'No bookmarks yet.\nYou may click add bookmark button to add one.',
-  readSearchPlaceholder: 'Find what',
+  readSearchPlaceholder: 'Search',
   readSearchInitial: 'Input some words so you can find them in text...',
   readSearchEmpty: 'Cannot find "{0}"',
   readSearchTooMany: '{0} results found; Find More',
@@ -81,8 +82,8 @@ export default {
   },
   configSpeechRate: 'Speech Rate',
   configSpeechRateNum: rate => {
-    if (rate === 1) return '1x (normal)';
-    return rate + 'x';
+    if (rate === 1) return '1× (normal)';
+    return rate + '×';
   },
   configHelpGroupTitle: 'Help',
   configHelpCredits: 'Open Source Credits',
