@@ -106,7 +106,7 @@ export default class ReadPage extends Page {
   }
   keyboardEvents(event) {
     if (event.code === 'Escape') {
-      const current = this.isSubpageActived();
+      const current = this.activedSubpage();
       if (current) current.hide();
       else if (this.controlPage.hasFocus) this.controlPage.hide();
       else this.controlPage.focus();
@@ -184,8 +184,11 @@ export default class ReadPage extends Page {
   showJumpPage() {
     return this.jumpPage.show();
   }
-  isSubpageActived() {
-    return this.isIndexActive() || this.isControlActive() || this.isJumpActive();
+  activedSubpage() {
+    if (this.isIndexActive()) return this.indexPage;
+    if (this.isControlActive()) return this.controlPage;
+    if (this.isJumpActive()) return this.jumpPage;
+    return null;
   }
   toggleSpeech() {
     return this.speech.toggle();

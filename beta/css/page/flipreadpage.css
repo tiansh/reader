@@ -29,6 +29,16 @@
   transition: left ease-out 0.2s;
 }
 
+.read-text-page::after {
+  content: " ";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+}
+
 .read-text-page-prev {
   left: calc(calc(-1 * var(--window-width)) + var(--slide-x));
 }
@@ -39,6 +49,11 @@
 
 .read-text-pages-slide .read-text-page {
   transition: none;
+}
+
+.read-text-page-processing {
+  visibility: hidden;
+  z-index: -1;
 }
 
 .read-text-page-processing .read-body {
@@ -59,6 +74,7 @@
   white-space: pre-wrap;
   text-align: justify;
   text-justify: auto;
+  z-index: 2;
 }
 
 .read-body-left {
@@ -87,6 +103,7 @@
   color: #808080;
   font-size: 12px;
   line-height: 12px;
+  z-index: 2;
 }
 
 .read-title {
@@ -109,6 +126,7 @@
   width: 0;
   height: 0;
   overflow: visible;
+  z-index: 0;
 }
 
 .read-speech .read-highlight {
