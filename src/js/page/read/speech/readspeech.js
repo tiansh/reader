@@ -29,12 +29,16 @@ export default class ReadSpeech {
 
     this.speaking = false;
     this.spoken = null;
+    this.speakingSsu = null;
 
     this.listenEvents();
 
+    this.onStart = this.onStart.bind(this);
     this.onBoundary = this.onBoundary.bind(this);
     this.onEnd = this.onEnd.bind(this);
     this.onError = this.onError.bind(this);
+    this.onMediaKey = this.onMediaKey.bind(this);
+
     /** @type {WeakMap<SpeechSynthesisUtterance, { start: number, end: number }>} */
     this.ssuInfo = new WeakMap();
   }
@@ -63,6 +67,11 @@ export default class ReadSpeech {
     });
   }
   /** @param {SpeechSynthesisEvent} event */
+  onStart(event) {
+    /** @type {SpeechSynthesisUtterance} */
+    this.speakingSsu = event.target;
+  }
+  /** @param {SpeechSynthesisEvent} event */
   onBoundary(event) {
     if (!this.speaking) return;
     const boundaryCursor = this.boundaryCursor = {};
@@ -86,6 +95,7 @@ export default class ReadSpeech {
   /** @param {SpeechSynthesisEvent} event */
   onEnd(event) {
     if (!this.speaking) return;
+    this.speakingSsu = null;
     const ssu = event.target;
     const ssuInfo = this.getSsuInfo(ssu);
     if (!ssuInfo) return;
@@ -103,8 +113,10 @@ export default class ReadSpeech {
     }
     ssu.removeEventListener('boundary', this.onBoundary);
     ssu.removeEventListener('end', this.onEnd);
+    ssu.removeEventListener('error', this.onError);
   }
   onError(event) {
+    this.stop();
   }
   getSsuInfo(ssu) {
     const info = this.ssuInfo.get(ssu);
@@ -120,6 +132,7 @@ export default class ReadSpeech {
     if (!text) return;
     const ssu = speech.prepare(text);
     this.ssuInfo.set(ssu, { start: current, end });
+    ssu.addEventListener('start', this.onStart);
     ssu.addEventListener('boundary', this.onBoundary);
     ssu.addEventListener('end', this.onEnd);
     ssu.addEventListener('error', this.onError);
@@ -157,6 +170,12 @@ export default class ReadSpeech {
     this.spoken = this.next;
     this.pendingSsu = new Set();
     this.speaking = true;
+    if ('mediaSession' in navigator) {
+      this.fakeAudio.currentTime = 0;
+      document.removeEventListener('keydown', this.onMediaKey);
+      await this.fakeAudio.play();
+      navigator.mediaSession.playbackState = 'playing';
+    }
     this.readMore();
   }
   async stop() {
@@ -168,6 +187,10 @@ export default class ReadSpeech {
     while (speechSynthesis.speaking || speechSynthesis.pending) {
       speechSynthesis.cancel();
       await new Promise(resolve => setTimeout(resolve, 0));
+    }
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'paused';
+      this.fakeAudio.pause();
     }
   }
   async reset() {
@@ -197,6 +220,51 @@ export default class ReadSpeech {
       this.reset();
     } else {
       this.spoken = null;
+    }
+  }
+  /* global MediaMetadata: false */
+  metaLoad(meta) {
+    this.stop();
+    if (!('mediaSession' in navigator)) return;
+    this.fakeAudio = new Audio([
+      'data:audio/mp3;base64,',
+      'SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3LjgzLjEwMAAAAAAAAAAAAAAA/+M4AAAAA',
+      'AAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAANEAADr+AAEBwkLDhATFRgaHCAjJScqLC8xND',
+      'Y5PD9BREZIS01QUlVYW11gYmRnaWxucXR3eXx+gYOFiIqNkJOVmJqdn6Kkpqmtr7G0trm',
+      '7vsDCxcnLzdDS1dfa3N/h5efq7O7x8/b4+/0AAAAATGF2YzU3LjEwAAAAAAAAAAAAAAAA',
+      'JAPAAAAAAAAA6/hWiK+yAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      'AAA',
+      ('/+MYZAAAAAGkAAAAAAAAA0gAAAAATEFNRTMuMTAw' + 'V'.repeat(56)).repeat(336),
+    ].join(''));
+    this.fakeAudio.loop = true;
+    document.body.appendChild(this.fakeAudio);
+    navigator.mediaSession.metadata = new MediaMetadata({ title: meta.title });
+    navigator.mediaSession.setActionHandler('play', () => { this.start(); });
+    navigator.mediaSession.setActionHandler('pause', () => { this.stop(); });
+    navigator.mediaSession.setActionHandler('stop', () => { this.stop(); });
+    navigator.mediaSession.setPositionState({ duration: 0, playbackRate: 1, position: 0 });
+    navigator.mediaSession.playbackState = 'paused';
+    document.addEventListener('keydown', this.onMediaKey);
+  }
+  metaUnload() {
+    this.stop();
+    if (!('mediaSession' in navigator)) return;
+    document.removeEventListener('keydown', this.onMediaKey);
+    document.body.removeChild(this.fakeAudio);
+    this.fakeAudio = null;
+    navigator.mediaSession.metadata = null;
+    navigator.mediaSession.setActionHandler('play', null);
+    navigator.mediaSession.setActionHandler('pause', null);
+    navigator.mediaSession.setPositionState();
+  }
+  /** @param {KeyboardEvent} event */
+  onMediaKey(event) {
+    const key = event.key;
+    if (key === 'MediaPlayPause') {
+      if (this.speaking) this.stop();
+      else this.start();
+    } else if (key === 'MediaStop') {
+      this.stop();
     }
   }
 }

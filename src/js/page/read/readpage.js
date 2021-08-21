@@ -76,6 +76,7 @@ export default class ReadPage extends Page {
       this.container.classList.add('read-page-flip');
     }
     await this.textPage.onActivate({ id });
+    this.speech.metaLoad(this.meta);
 
     onResize.addListener(this.onResize);
     document.addEventListener('keydown', this.keyboardEvents);
@@ -97,6 +98,7 @@ export default class ReadPage extends Page {
     document.removeEventListener('keydown', this.keyboardEvents);
     this.subPages.forEach(page => { page.onInactivate(); });
     this.speech.stop();
+    this.speech.metaUnload();
     this.textPage.onInactivate();
     this.textPage = null;
     document.title = i18n.getMessage('title');
