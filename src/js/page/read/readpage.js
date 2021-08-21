@@ -17,6 +17,7 @@ import Page from '../page.js';
 import file from '../../data/file.js';
 import config from '../../data/config.js';
 import onResize from '../../ui/util/onresize.js';
+import i18n from '../../i18n/i18n.js';
 
 export default class ReadPage extends Page {
   constructor() {
@@ -78,6 +79,7 @@ export default class ReadPage extends Page {
 
     onResize.addListener(this.onResize);
     document.addEventListener('keydown', this.keyboardEvents);
+    document.title = i18n.getMessage('titleWithName', this.meta.title);
 
     this.subPages.forEach(page => { page.onActivate(); });
     this.updateSideIndex();
@@ -97,6 +99,7 @@ export default class ReadPage extends Page {
     this.speech.stop();
     this.textPage.onInactivate();
     this.textPage = null;
+    document.title = i18n.getMessage('title');
   }
   gotoList() {
     this.router.go('list');
