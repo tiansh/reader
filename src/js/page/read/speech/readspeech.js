@@ -172,7 +172,6 @@ export default class ReadSpeech {
     this.speaking = true;
     if ('mediaSession' in navigator) {
       this.fakeAudio.currentTime = 0;
-      document.removeEventListener('keydown', this.onMediaKey);
       await this.fakeAudio.play();
       navigator.mediaSession.playbackState = 'playing';
     }
@@ -228,20 +227,30 @@ export default class ReadSpeech {
     if (!('mediaSession' in navigator)) return;
     this.fakeAudio = new Audio([
       'data:audio/mp3;base64,',
-      'SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3LjgzLjEwMAAAAAAAAAAAAAAA/+M4AAAAA',
-      'AAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAANEAADr+AAEBwkLDhATFRgaHCAjJScqLC8xND',
-      'Y5PD9BREZIS01QUlVYW11gYmRnaWxucXR3eXx+gYOFiIqNkJOVmJqdn6Kkpqmtr7G0trm',
-      '7vsDCxcnLzdDS1dfa3N/h5efq7O7x8/b4+/0AAAAATGF2YzU3LjEwAAAAAAAAAAAAAAAA',
-      'JAPAAAAAAAAA6/hWiK+yAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-      'AAA',
-      ('/+MYZAAAAAGkAAAAAAAAA0gAAAAATEFNRTMuMTAw' + 'V'.repeat(56)).repeat(336),
+      'SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3LjgzLjEwMAAAAAAAAAAAAAAA/+M4AAAAAA',
+      'AAAAAAAAAAAAAAAAAASW5mbwAAAA8AAANEAADr+AAEBwkLDhATFRgaHCAjJScqLC8xNDY5',
+      'PD9BREZIS01QUlVYW11gYmRnaWxucXR3eXx+gYOFiIqNkJOVmJqdn6Kkpqmtr7G0trm7vs',
+      'DCxcnLzdDS1dfa3N/h5efq7O7x8/b4+/0AAAAATGF2YzU3LjEwAAAAAAAAAAAAAAAAJAPA',
+      'AAAAAAAA6/hWiK+yAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      `/+MYZAAAAAGkAAAAAAAAA0gAAAAATEFNRTMuMTAw${'V'.repeat(56)}`.repeat(336),
     ].join(''));
     this.fakeAudio.loop = true;
     document.body.appendChild(this.fakeAudio);
     navigator.mediaSession.metadata = new MediaMetadata({ title: meta.title });
-    navigator.mediaSession.setActionHandler('play', () => { this.start(); });
-    navigator.mediaSession.setActionHandler('pause', () => { this.stop(); });
-    navigator.mediaSession.setActionHandler('stop', () => { this.stop(); });
+    const action = start => () => {
+      if (this.mediaKey) return;
+      this.mediaKey = true;
+      if (start) this.start();
+      else this.stop();
+      // This is a dirty hack to avoid both this handler and
+      // keyboard event handler triggered
+      // I didn't find any better way to prevent duplicate
+      // handler triggered
+      setTimeout(() => { this.mediaKey = false; }, 500);
+    };
+    navigator.mediaSession.setActionHandler('play', action(true));
+    navigator.mediaSession.setActionHandler('pause', action(false));
+    navigator.mediaSession.setActionHandler('stop', action(false));
     navigator.mediaSession.setPositionState({ duration: 0, playbackRate: 1, position: 0 });
     navigator.mediaSession.playbackState = 'paused';
     document.addEventListener('keydown', this.onMediaKey);
@@ -259,13 +268,19 @@ export default class ReadSpeech {
   }
   /** @param {KeyboardEvent} event */
   onMediaKey(event) {
+    if (this.mediaKey) return;
     const key = event.key;
+    let action = null;
     if (key === 'MediaPlayPause') {
-      if (this.speaking) this.stop();
-      else this.start();
+      action = !this.speaking;
     } else if (key === 'MediaStop') {
-      this.stop();
+      action = false;
     }
+    if (action == null) return;
+    if (action) this.start();
+    else this.stop();
+    this.mediaKey = true;
+    setTimeout(() => { this.mediaKey = false; }, 500);
   }
 }
 
