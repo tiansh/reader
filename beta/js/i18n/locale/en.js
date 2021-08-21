@@ -10,6 +10,9 @@
 export default {
   locale: 'en',
 
+  title: 'tReader',
+  titleWithName: '{0} - tReader',
+
   listFilterClear: 'Clear Search',
   listSortTitle: 'Sort by',
   listSortByDateRead: 'Date Read',

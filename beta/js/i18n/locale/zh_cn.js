@@ -10,6 +10,9 @@
 export default {
   locale: 'zh-CN',
 
+  title: 'tReader',
+  titleWithName: '{0} - tReader',
+
   listFilterClear: '取消过滤',
   listSortTitle: '排序',
   listSortByDateRead: '按最后阅读时间',

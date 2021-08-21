@@ -18,6 +18,7 @@ input[type="button"], button[type="button"] {
   font-family: inherit;
   outline: none;
   border-style: none;
+  white-space: nowrap;
 }
 
 button .icon {

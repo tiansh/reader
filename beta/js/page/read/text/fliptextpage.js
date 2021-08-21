@@ -216,6 +216,7 @@ export default class FlipTextPage extends TextPage {
     this.updatePages(isUserTrigger);
   }
   updatePages(isUserTrigger) {
+    this.updatePageBusy = true;
     const content = this.readPage.getContent();
     const cursor = this.ignoreSpaces(Math.max(this.readPage.getCursor() || 0, 0));
     const pages = this.pages;
@@ -280,6 +281,7 @@ export default class FlipTextPage extends TextPage {
     } else {
       this.readPage.updateCursor(this.pages.current.cursor);
     }
+    this.updatePageBusy = false;
   }
   /** @param {PageRender} page */
   disposePage(page) {
@@ -529,6 +531,9 @@ export default class FlipTextPage extends TextPage {
     this.lastHighlightLength = null;
   }
   highlightChars(start, length, depth = 0) {
+    if (this.updatePageBusy) {
+      return null;
+    }
     if (this.lastHighlightStart === start) {
       if (this.lastHighlightLength === length) {
         return null;
