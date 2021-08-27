@@ -91,6 +91,9 @@ export default {
   configHelpGroupTitle: 'Help',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: 'About',
+  configExpertGroupTitle: 'Expert',
+  configExpert: 'Expert Config',
+  configExpertDescription: "Please leave blank if you don't know what you are doing. Options misconfigured may lead the reader to stop working.",
 
   buttonRemove: 'Remove',
   buttonBack: 'Back',

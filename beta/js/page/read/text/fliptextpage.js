@@ -7,6 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
+import config from '../../../data/config.js';
 import TextPage from './textpage.js';
 import ReadPage from '../readpage.js';
 import i18n from '../../../i18n/i18n.js';
@@ -35,6 +36,13 @@ export default class FlipTextPage extends TextPage {
   }
   async onActivate({ id }) {
     await super.onActivate({ id });
+
+    // EXPERT_CONFIG When to use two column page
+    this.screenWidthTwoColumn = await config.expert('read_flip.screen_width_two_column', 'number', 960);
+    // EXPERT_CONFIG When to use two column page when side index active
+    this.screenWidthTwoColumnIndex = await config.expert('read_flip.screen_width_two_column_index', 'number', 1260);
+    this.maxContentLength = await config.expert('text.content_max_length', 'number', 100);
+
     /** @type {PageRenderCollection} */
     this.pages = {};
     window.requestAnimationFrame(() => {
@@ -302,8 +310,8 @@ export default class FlipTextPage extends TextPage {
     this.pagesContainer.appendChild(page.container);
   }
   isTwoColumn() {
-    if (window.innerWidth < 960) return false;
-    if (window.innerWidth < 1260 && this.readPage.isSideIndexActive()) return false;
+    if (window.innerWidth < this.screenWidthTwoColumn) return false;
+    if (window.innerWidth < this.screenWidthTwoColumnIndex && this.readPage.isSideIndexActive()) return false;
     if (window.innerWidth < window.innerHeight * 1.2) return false;
     return true;
   }
@@ -321,6 +329,7 @@ export default class FlipTextPage extends TextPage {
    */
   layoutPageColumn(cursor, body) {
     const content = this.readPage.content;
+    const index = this.readPage.getIndex();
     body.setAttribute('aria-setsize', content.length);
     body.setAttribute('aria-posinset', cursor);
     // 2. fill texts until it overflow the content
@@ -331,7 +340,9 @@ export default class FlipTextPage extends TextPage {
     let paragraph = null;
     let isOverflow = false;
     let after = this.ignoreSpaces(cursor);
-    while (true) {
+    let previous = content.slice(after - this.maxContentLength, after);
+    previous = previous.slice(previous.lastIndexOf('\n') + 1);
+    while (body.clientHeight < window.innerHeight * 4) {
       let pos = after;
       after += step;
       const trunk = content.slice(pos, after);
@@ -341,18 +352,25 @@ export default class FlipTextPage extends TextPage {
           paragraph = body.appendChild(document.createElement('p'));
           paragraphs.push(paragraph);
           paragraph.dataset.start = pos;
+          if (index && index.content && Array.isArray(index.content.items)) {
+            if (index.content.items.slice(1).some(item => item.cursor === pos - previous.length)) {
+              paragraph.setAttribute('role', 'heading');
+              paragraph.setAttribute('aria-level', '3');
+            }
+          }
         }
-        if (line === '\n') paragraph = null;
-        else paragraph.textContent += line;
+        if (line === '\n') {
+          paragraph = null;
+          previous = '';
+        } else {
+          paragraph.textContent += line;
+          previous += line;
+        }
         pos += line.length;
       });
       if (isOverflow) break;
       if (body.clientHeight !== body.scrollHeight) {
         isOverflow = true;
-      }
-      if (body.clientHeight > window.innerHeight * 4) {
-        // Maybe CSS failed to load. We should stop crazy things to prevent frozen browsers.
-        break;
       }
     }
     let nextCursor;
@@ -541,6 +559,8 @@ export default class FlipTextPage extends TextPage {
     }
     this.clearHighlight();
 
+    if (depth > 3) return null;
+
     if (!this.pages.current) {
       this.resetPage(false);
       return this.highlightChars(start, length, depth + 1);
@@ -634,7 +654,8 @@ export default class FlipTextPage extends TextPage {
       this.resetPage();
     }
   }
-  resizeEvent() {
+  onResize() {
+    super.onResize();
     this.resetPage();
   }
 }

@@ -13,6 +13,9 @@ const config = {};
 
 export default config;
 
+const EXPERT_CONFIG_NAME = 'expert';
+config.EXPERT_CONFIG_NAME = EXPERT_CONFIG_NAME;
+
 const listenerList = [];
 
 config.get = async name => {
@@ -28,6 +31,53 @@ config.set = async (name, value) => {
     });
   });
   return value;
+};
+
+/**
+ * @param {string} key
+ * @param {'number'|'string'|'boolean'|'*'} type
+ * @param {T} defaultValue
+ * @param {{ normalize: () => any, validator: () => any }} details
+ * @returns {T}
+ * @template T
+ */
+config.expert = async (key, type, defaultValue, { normalize, validator } = {}) => {
+  /** @type {string} */
+  const expert = (await config.get(config.EXPERT_CONFIG_NAME)) || '';
+  let prefix = '';
+  const text = expert.split('\n').filter(text => {
+    if (/^\s*[;#]/.test(text)) return false;
+    if (/^\s*\[.*\]\s*$/.test(text)) {
+      prefix = text.trim().slice(1, -1);
+    } else if (text.includes('=')) {
+      const name = text.split('=', 1)[0].trim();
+      return (prefix ? prefix + '.' + name : name) === key;
+    }
+  }).pop();
+  let value = text == null ? defaultValue : text.slice(text.indexOf('=') + 1).trim();
+  try {
+    value = JSON.parse(value);
+  } catch (e) {
+    // Use its string value as fallback
+  }
+  let result = defaultValue;
+  try {
+    let valid = true;
+    if (type === 'number') {
+      valid = typeof value === 'number' && (validator ? validator(value) : !Number.isNaN(value));
+    } else if (type === 'string') {
+      valid = typeof value === 'string' && (!validator || validator(value));
+    } else if (type === 'boolean') {
+      valid = typeof value === 'boolean' && (!validator || validator(value));
+    } else {
+      valid = !validator || validator(value);
+    }
+    if (!valid) return defaultValue;
+    result = normalize ? normalize(value, defaultValue) : value;
+  } catch (e) {
+    // use default
+  }
+  return result;
 };
 
 const findListener = (name, listener) => {

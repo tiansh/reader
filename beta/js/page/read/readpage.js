@@ -22,6 +22,7 @@ import i18n from '../../i18n/i18n.js';
 export default class ReadPage extends Page {
   constructor() {
     super(document.querySelector('#read_page'));
+
     /** @type {boolean} */
     this.useSideIndex = null;
     this.onResize = this.onResize.bind(this);
@@ -47,6 +48,7 @@ export default class ReadPage extends Page {
     this.jumpPage = new JumpPage(this.jumpPageElement, this);
 
     this.speech = new ReadSpeech(this);
+    await this.speech.init();
 
     this.subPages = [this.controlPage, this.indexPage, this.jumpPage];
     this.subPages.forEach(page => { page.onFirstActivate(); });
@@ -59,6 +61,9 @@ export default class ReadPage extends Page {
   }
   async onActivate({ id }) {
     this.langTag = await config.get('cjk_lang_tag');
+
+    // EXPERT_CONFIG when index page show as side bar
+    this.screenWidthSideIndex = await config.expert('read.screen_width_side_index', 'number', 960);
 
     this.meta = await file.getMeta(id);
     this.index = await file.getIndex(id);
@@ -139,7 +144,7 @@ export default class ReadPage extends Page {
     }
   }
   updateSideIndex() {
-    const sideIndex = window.innerWidth >= 960;
+    const sideIndex = window.innerWidth >= this.screenWidthSideIndex;
     if (sideIndex === this.useSideIndex) return;
     this.useSideIndex = sideIndex;
     if (sideIndex) {

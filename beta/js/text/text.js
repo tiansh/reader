@@ -13,14 +13,7 @@ const text = {};
 
 export default text;
 
-const encodings = [
-  { encoding: 'utf-8', fatal: true },
-  { encoding: 'gbk', fatal: true },
-  { encoding: 'big5', fatal: true },
-  { encoding: 'utf-16le', fatal: true },
-  { encoding: 'utf-16be', fatal: true },
-  { encoding: 'utf-8', fatal: false },
-];
+const defaultEncodingList = ['utf-8', 'gbk', 'big5', 'utf-16le', 'utf-16be', 'utf-8'];
 
 /**
  * @param {File} file
@@ -29,10 +22,17 @@ const encodings = [
 text.readFile = async function (file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.addEventListener('load', event => {
+    reader.addEventListener('load', async event => {
       const result = reader.result;
-      const text = encodings.reduce((text, { encoding, fatal }) => {
+
+      // EXPERT_CONFIG Text encoding when try to decode, use comma split multiple encodings
+      const encodingListConfig = await config.expert('text.encoding', 'string', '');
+      const encodingList = encodingListConfig.split(',')
+        .map(encoding => encoding.trim()).filter(encoding => encoding);
+
+      const text = [...encodingList, ...defaultEncodingList].reduce((text, encoding, index, fullList) => {
         if (text != null) return text;
+        const fatal = ![encodingList.length - 1, fullList.length - 1].includes(index);
         const decoder = new TextDecoder(encoding, { fatal });
         try {
           return decoder.decode(result);
@@ -73,10 +73,9 @@ text.useRegExpForContent = function (template) {
 /**
  * @param {string} article
  * @param {string} template
- * @param {number} limit
+ * @param {{ maxLength: number, limit: number }} details
  */
-text.generateContent = function (article, template, limit = 10000) {
-  const maxLength = 100;
+text.generateContent = function (article, template, { maxLength, limit }) {
   let matchReg = text.useRegExpForContent(template);
   if (!matchReg) {
     const escape = template.replace(/./g, c => {
