@@ -11,6 +11,7 @@ import IndexSubPage from './indexsubpage.js';
 import IndexPage from './indexpage.js';
 import ReadPage from '../readpage.js';
 import { optionMap } from '../../../data/options.js';
+import config from '../../../data/config.js';
 import file from '../../../data/file.js';
 import text from '../../../text/text.js';
 import ItemList from '../../../ui/component/itemlist.js';
@@ -170,6 +171,16 @@ export default class IndexContentsPage extends IndexSubPage {
     super.onFirstActivate();
     this.templatePage.onFirstActivate(this, this.container);
   }
+  onActivate() {
+    super.onActivate();
+    this.generateConfig = null;
+    Promise.all([
+      config.expert('text.content_max_length', 'number', 100),
+      config.expert('text.content_size_limit', 'number', 10000),
+    ]).then(([maxLength, limit]) => {
+      this.generateConfig = { maxLength, limit };
+    });
+  }
   hide() {
     super.hide();
     if (this.templatePage) this.templatePage.hide();
@@ -183,8 +194,8 @@ export default class IndexContentsPage extends IndexSubPage {
     }
     const content = this.readPage.index.content;
     content.template = (input == null ? content.template : input) || '';
-    if (content.template) {
-      content.items = text.generateContent(this.readPage.content, content.template) || [];
+    if (content.template && this.generateConfig) {
+      content.items = text.generateContent(this.readPage.content, content.template, this.generateConfig) || [];
       content.items.unshift({ title: this.readPage.meta.title, cursor: 0 });
     } else {
       content.items = [];

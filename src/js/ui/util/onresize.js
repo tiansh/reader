@@ -49,9 +49,8 @@ const updateSize = (function () {
       const html = document.documentElement;
       const [width, height] = [html.clientWidth, html.clientHeight];
       if (width === lastWidth && height === lastHeight) return;
+      [lastWidth, lastHeight] = [width, height];
       adjustSize([width, height]);
-      lastWidth = width;
-      lastHeight = height;
       updateSize();
     });
   };

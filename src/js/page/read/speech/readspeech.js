@@ -8,6 +8,7 @@
  */
 
 
+import config from '../../../data/config.js';
 import speech from '../../../text/speech.js';
 import ReadPage from '../readpage.js';
 
@@ -21,9 +22,6 @@ export default class ReadSpeech {
       return ReadSpeech.instance;
     }
     ReadSpeech.instance = this;
-
-    this.readBuffer = 500;
-    this.maxPendingSsuSize = 10;
 
     this.page = page;
 
@@ -41,6 +39,37 @@ export default class ReadSpeech {
 
     /** @type {WeakMap<SpeechSynthesisUtterance, { start: number, end: number }>} */
     this.ssuInfo = new WeakMap();
+  }
+  async init() {
+    const normalize = (n, defaultValue) => n < 0 ? defaultValue : Math.round(n);
+    // EXPERT_CONFIG Maximum character allowed in a single speech instance
+    this.speechTextMaxLength = await config.expert('speech.max_char_length', 'number', 500, { normalize });
+    // EXPERT_CONFIG Prepare how many ssu when speaking
+    this.maxPendingSsuSize = await config.expert('speech.queue_size', 'number', 3, { normalize });
+    // EXPERT_CONFIG Enable media session so it can be controlled by system provided panel
+    this.mediaSessionEnable = await config.expert('speech.media_session_enable', 'boolean', false);
+    // EXPERT_CONFIG Skip certain any texts matching given regex when speaking
+    this.speechTextSkipRegex = await config.expert('speech.skip_text_regex', 'string', /^\s*$/, {
+      normalize: (/** @type {string} */value, defaultValue) => {
+        if (/^\/.*\/\w+$/.test(value)) {
+          try {
+            const source = value.slice(value.indexOf('/') + 1, value.lastIndexOf('/'));
+            const flags = value.slice(value.lastIndexOf('/') + 1);
+            return new RegExp(source, flags);
+          } catch (e1) {
+            // fall
+          }
+        }
+        try {
+          return new RegExp(value);
+        } catch (e2) {
+          // fall
+        }
+        return defaultValue;
+      },
+    });
+    // EXPERT_CONFIG Loop when speech reach end of text
+    this.enableLoop = await config.expert('speech.loop_enable', 'boolean', false);
   }
   listenEvents() {
     this.listenMediaDeviceChange();
@@ -87,33 +116,29 @@ export default class ReadSpeech {
       this.reset();
     }
     this.spoken = start;
-    this.readMore();
     if (this.boundaryCursor === boundaryCursor) {
       this.boundaryCursor = null;
     }
+    this.readMore();
   }
   /** @param {SpeechSynthesisEvent} event */
   onEnd(event) {
     if (!this.speaking) return;
     this.speakingSsu = null;
     const ssu = event.target;
-    const ssuInfo = this.getSsuInfo(ssu);
-    if (!ssuInfo) return;
-    if (ssuInfo.end === this.page.content.length) {
-      this.stop();
-    } else if (!this.page.textPage) {
-      this.stop();
-    } else {
-      this.page.textPage.clearHighlight();
-      if (this.pendingSsu && this.pendingSsu.has(ssu)) {
-        this.pendingSsu.delete(ssu);
-        this.spoken = ssuInfo.end;
-        this.readMore();
-      }
-    }
+    ssu.removeEventListener('start', this.onStart);
     ssu.removeEventListener('boundary', this.onBoundary);
     ssu.removeEventListener('end', this.onEnd);
     ssu.removeEventListener('error', this.onError);
+    const ssuInfo = this.getSsuInfo(ssu);
+    if (!ssuInfo) return;
+    if (!this.page.textPage) {
+      this.stop();
+      return;
+    }
+    this.page.textPage.clearHighlight();
+    this.sopken = ssuInfo.end;
+    this.readMore();
   }
   onError(event) {
     this.stop();
@@ -123,13 +148,25 @@ export default class ReadSpeech {
     if (!info) this.reset();
     return info;
   }
+  readEnd() {
+    if (this.enableLoop) {
+      this.reset();
+      this.page.setCursor(0);
+    } else {
+      this.stop();
+    }
+  }
   readNext() {
-    const current = this.next;
-    const line = this.page.content.indexOf('\n', current) + 1;
-    const end = Math.min(line || this.page.content.length, current + this.readBuffer);
-    this.next = end;
-    const text = this.page.content.slice(current, end).trimRight();
-    if (!text) return;
+    const content = this.page.content;
+    let current = null, text = null, end = null;
+    do {
+      if (this.next === content.length) return;
+      current = this.next;
+      const line = content.indexOf('\n', current) + 1;
+      end = Math.min(line || content.length, current + this.speechTextMaxLength);
+      this.next = end;
+      text = content.slice(current, end).trimRight();
+    } while (!text || this.speechTextSkipRegex.test(text));
     const ssu = speech.prepare(text);
     this.ssuInfo.set(ssu, { start: current, end });
     ssu.addEventListener('start', this.onStart);
@@ -145,16 +182,18 @@ export default class ReadSpeech {
     if (this.readMoreBusy) return;
     this.readMoreBusy = true;
     const length = this.page.content.length;
-    const size = this.readBuffer;
     while (
       this.speaking &&
-      this.next < Math.min(length, this.spoken + size) &&
-      this.pendingSsu.size <= this.maxPendingSsuSize
+      this.pendingSsu.size <= this.maxPendingSsuSize &&
+      this.next < length
     ) {
       this.readNext();
       await new Promise(resolve => { setTimeout(resolve, 0); });
     }
     this.readMoreBusy = false;
+    if (!this.pendingSsu.size && !this.speakingSsu) {
+      this.readEnd();
+    }
   }
   async start() {
     if (this.lastReset) return;
@@ -170,7 +209,7 @@ export default class ReadSpeech {
     this.spoken = this.next;
     this.pendingSsu = new Set();
     this.speaking = true;
-    if ('mediaSession' in navigator) {
+    if ('mediaSession' in navigator && this.mediaSessionEnable) {
       this.fakeAudio.currentTime = 0;
       await this.fakeAudio.play();
       navigator.mediaSession.playbackState = 'playing';
@@ -187,7 +226,7 @@ export default class ReadSpeech {
       speechSynthesis.cancel();
       await new Promise(resolve => setTimeout(resolve, 0));
     }
-    if ('mediaSession' in navigator) {
+    if ('mediaSession' in navigator && this.mediaSessionEnable) {
       navigator.mediaSession.playbackState = 'paused';
       this.fakeAudio.pause();
     }
@@ -224,6 +263,7 @@ export default class ReadSpeech {
   /* global MediaMetadata: false */
   metaLoad(meta) {
     this.stop();
+    if (!this.mediaSessionEnable) return;
     if (!('mediaSession' in navigator)) return;
     this.fakeAudio = new Audio([
       'data:audio/mp3;base64,',
@@ -235,6 +275,7 @@ export default class ReadSpeech {
       `/+MYZAAAAAGkAAAAAAAAA0gAAAAATEFNRTMuMTAw${'V'.repeat(56)}`.repeat(336),
     ].join(''));
     this.fakeAudio.loop = true;
+    this.fakeAudio.style.display = 'none';
     document.body.appendChild(this.fakeAudio);
     navigator.mediaSession.metadata = new MediaMetadata({ title: meta.title });
     const action = start => () => {
@@ -257,6 +298,7 @@ export default class ReadSpeech {
   }
   metaUnload() {
     this.stop();
+    if (!this.mediaSessionEnable) return;
     if (!('mediaSession' in navigator)) return;
     document.removeEventListener('keydown', this.onMediaKey);
     document.body.removeChild(this.fakeAudio);
@@ -268,6 +310,7 @@ export default class ReadSpeech {
   }
   /** @param {KeyboardEvent} event */
   onMediaKey(event) {
+    if (!this.mediaSessionEnable) return;
     if (this.mediaKey) return;
     const key = event.key;
     let action = null;

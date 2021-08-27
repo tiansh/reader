@@ -27,17 +27,20 @@ const slideClose = function (container, callback) {
     minDistanceY: minDistance,
   });
   let isLeftTouch = false, lastMove = null;
-  touchListener.onStart(([x, y]) => {
+  touchListener.onStart(([x, y], { touch }) => {
+    if (!touch) return;
     if (x > activeWidth) return;
     isLeftTouch = true;
     lastMove = null;
   });
-  touchListener.onEnd(() => {
+  touchListener.onEnd(({ touch }) => {
+    if (!touch) return;
     isLeftTouch = false;
     container.classList.remove('config-page-close-slide');
     if (lastMove > minDistance) callback();
   });
-  touchListener.onMoveX(move => {
+  touchListener.onMoveX((move, { touch }) => {
+    if (!touch) return;
     if (!isLeftTouch) return;
     lastMove = move;
     const slide = move > minDistance ? move : 0;
@@ -456,6 +459,31 @@ class AboutConfigOptionPage extends ConfigOptionPage {
   }
 }
 
+class ExpertConfigOptionPage extends ConfigOptionPage {
+  constructor(container, mainPage) {
+    super(container, mainPage);
+    this.onInput = this.onInput.bind(this);
+  }
+  onFirstActivate() {
+    super.onFirstActivate();
+    this.input = this.container.querySelector('.config-option-expert-input');
+    this.description = this.container.querySelector('.config-option-expert-description');
+    this.input.addEventListener('input', this.onInput);
+  }
+  async renderOptions() {
+    super.renderOptions();
+    const configOption = this.configOption;
+    this.description.textContent = configOption.description;
+    this.input.value = await this.getValue();
+  }
+  async renderValue(value) {
+  }
+  onInput() {
+    if (!this.configOption) return;
+    this.setValue(this.input.value);
+  }
+}
+
 export default class ConfigPage extends Page {
   constructor() {
     const configPage = document.getElementById('config_page');
@@ -487,6 +515,9 @@ export default class ConfigPage extends Page {
     this.aboutConfigPageElement = document.getElementById('config_page_about');
     this.aboutConfigPage = new AboutConfigOptionPage(this.aboutConfigPageElement, this);
 
+    this.expertConfigPageElement = document.getElementById('config_page_expert');
+    this.expertConfigPage = new ExpertConfigOptionPage(this.expertConfigPageElement, this);
+
     this.subConfigPages = [
       this.selectConfigPage,
       this.colorConfigPage,
@@ -495,6 +526,7 @@ export default class ConfigPage extends Page {
       this.textConfigPage,
       this.creditsConfigPage,
       this.aboutConfigPage,
+      this.expertConfigPage,
     ];
     /** @type {ConfigOptionPage} */
     this.activeSubConfigPage = null;
@@ -536,6 +568,7 @@ export default class ConfigPage extends Page {
       if (item.type === 'text') subPage = this.textConfigPage;
       if (item.type === 'credits') subPage = this.creditsConfigPage;
       if (item.type === 'about') subPage = this.aboutConfigPage;
+      if (item.type === 'expert') subPage = this.expertConfigPage;
       if (this.activeSubConfigPage) {
         this.activeSubConfigPage.cleanUp();
       }

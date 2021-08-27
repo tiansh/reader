@@ -240,6 +240,26 @@ class ValueConfigOption extends ConfigOption {
   }
 }
 
+class ExpertConfigOption extends ConfigOption {
+  /** @param {{ name: string, title: string, default: string, description: string }} config */
+  constructor(config) {
+    super(config);
+    this.default = config.default;
+    this.label = config.label;
+    this.description = config.description;
+  }
+  get type() { return 'expert'; }
+  isValidValue(value) { return typeof value === 'string'; }
+  render(container) {
+    super.render(container);
+    const itemElement = container.firstChild;
+    const detailIcon = itemElement.appendChild(template.icon('detail'));
+    detailIcon.classList.add('config-item-detail');
+  }
+  renderValue(value) {
+  }
+}
+
 /**
  * @typedef {Object} ConfigGroup
  * @property {string} title
@@ -369,6 +389,14 @@ const options = [{
     title: i18n.getMessage('configHelpCredits'),
   }), new AboutConfigOption({
     title: i18n.getMessage('configHelpAbout'),
+  })],
+}, {
+  title: i18n.getMessage('configExpertGroupTitle'),
+  items: [new ExpertConfigOption({
+    name: config.EXPERT_CONFIG_NAME,
+    default: '',
+    title: i18n.getMessage('configExpert'),
+    description: i18n.getMessage('configExpertDescription'),
   })],
 }, {
   list: false,

@@ -91,6 +91,9 @@ export default {
   configHelpGroupTitle: '帮助',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: '关于',
+  configExpertGroupTitle: '高级',
+  configExpert: '高级设置',
+  configExpertDescription: '如果您不清楚应当如何填写请将此处留空，错误配置可能导致阅读器无法使用',
 
   buttonRemove: '删除',
   buttonBack: '返回',
