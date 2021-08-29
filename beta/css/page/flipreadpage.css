@@ -127,7 +127,7 @@
   height: 0;
   overflow: visible;
   z-index: 0;
-  contain: strict;
+  contain: layout style;
 }
 
 .read-speech .read-highlight {
