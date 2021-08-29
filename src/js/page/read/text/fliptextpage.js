@@ -38,9 +38,9 @@ export default class FlipTextPage extends TextPage {
     await super.onActivate({ id });
 
     // EXPERT_CONFIG When to use two column page
-    this.screenWidthTwoColumn = await config.expert('read_flip.screen_width_two_column', 'number', 960);
+    this.screenWidthTwoColumn = await config.expert('appearance.screen_width_two_column', 'number', 960);
     // EXPERT_CONFIG When to use two column page when side index active
-    this.screenWidthTwoColumnIndex = await config.expert('read_flip.screen_width_two_column_index', 'number', 1260);
+    this.screenWidthTwoColumnIndex = await config.expert('appearance.screen_width_two_column_index', 'number', 1260);
     this.maxContentLength = await config.expert('text.content_max_length', 'number', 100);
 
     /** @type {PageRenderCollection} */
@@ -354,6 +354,7 @@ export default class FlipTextPage extends TextPage {
           paragraph.dataset.start = pos;
           if (index && index.content && Array.isArray(index.content.items)) {
             if (index.content.items.slice(1).some(item => item.cursor === pos - previous.length)) {
+              paragraph.classList.add('title-paragraph');
               paragraph.setAttribute('role', 'heading');
               paragraph.setAttribute('aria-level', '3');
             }
@@ -445,6 +446,7 @@ export default class FlipTextPage extends TextPage {
    * @returns {PageRender}
    */
   layoutPageStartsWith(cursor) {
+    const start = this.ignoreSpaces(cursor);
     const content = this.readPage.getContent();
     const index = this.readPage.getIndex();
     if (this.ignoreSpaces(cursor) >= content.length) {
@@ -457,11 +459,11 @@ export default class FlipTextPage extends TextPage {
     title.textContent = this.readPage.meta.title;
     if (index && index.content && index.content.items) {
       const items = index.content.items;
-      const next = items.findIndex(i => i.cursor > cursor);
+      const next = items.findIndex(i => i.cursor > start);
       if (next === -1 && items.length) title.textContent = items[items.length - 1].title;
       else if (next > 0) title.textContent = items[next - 1].title;
     }
-    progress.textContent = (cursor / content.length * 100).toFixed(2) + '%';
+    progress.textContent = (start / content.length * 100).toFixed(2) + '%';
     container.lang = this.readPage.getLang();
     // 1. insert container into dom, so styles would applied to it
     this.pagesContainer.appendChild(container);
@@ -473,12 +475,12 @@ export default class FlipTextPage extends TextPage {
 
     if (this.isTwoColumn()) {
       body.remove();
-      const rightCursor = this.layoutPageColumn(cursor, left);
+      const rightCursor = this.layoutPageColumn(start, left);
       nextCursor = this.layoutPageColumn(rightCursor, right);
     } else {
       left.remove();
       right.remove();
-      nextCursor = this.layoutPageColumn(cursor, body);
+      nextCursor = this.layoutPageColumn(start, body);
     }
 
     // 5. Everything done
@@ -562,7 +564,7 @@ export default class FlipTextPage extends TextPage {
     if (depth > 3) return null;
 
     if (!this.pages.current) {
-      this.resetPage(false);
+      this.readPage.updateCursor(start);
       return this.highlightChars(start, length, depth + 1);
     }
 
@@ -576,7 +578,7 @@ export default class FlipTextPage extends TextPage {
 
     if (start + length < Math.min(currentPage, prevNext || 0)) {
       // Maybe something went wrong
-      this.resetPage();
+      this.readPage.updateCursor(start);
       return this.highlightChars(start, length, depth + 1);
     }
 
@@ -584,7 +586,7 @@ export default class FlipTextPage extends TextPage {
       if (start < nextNext) {
         this.nextPage(false);
       } else {
-        this.resetPage(false);
+        this.readPage.updateCursor(start);
       }
       return this.highlightChars(start, length, depth + 1);
     }

@@ -112,17 +112,15 @@ Android 的话作者没试过，有问题欢迎 PR。计算机上、以及 iOS S
 ## 高级设置
 
 ```ini
-[read]
+[appearance]
 ; 当屏幕宽度达到如下值时，目录信息使用侧栏显示
 screen_width_side_index=960
-; 在阅读页面添加自定义 CSS
-custom_css=
-
-[read_flip]
 ; 当屏幕宽度达到如下值时，使用两栏模式显示
 screen_width_two_column=960
 ; 当屏幕宽度达到如下值时，即便显示了侧边栏目录，仍然使用两栏模式显示
 screen_width_two_column_index=1260
+; 在阅读页面添加自定义 CSS
+custom_css=
 
 [text]
 ; 逐个尝试以下字符编码读取 txt 文件
@@ -137,9 +135,9 @@ content_size_limit=10000
 
 [speech]
 ; 语音朗读时，单条语音最多的字数
-max_char_length=500
+max_char_length=1000
 ; 语音朗读时，预先调度的语音条数
-queue_size=3
+queue_size=10
 ; 显示媒体会话界面
 media_session_enable=false
 ; 语音朗读忽略满足如下正则（ECMAScript）的文本行
