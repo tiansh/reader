@@ -27,7 +27,7 @@ export default class TextPage {
     this.isCurrent = true;
 
     // EXPERT_CONFIG Add some custom CSS (danger)
-    this.userCustomCss = await config.expert('read.custom_css', 'string', '');
+    this.userCustomCss = await config.expert('appearance.custom_css', 'string', '');
     await this.updateStyleConfig();
 
     this.container = this.createContainer();

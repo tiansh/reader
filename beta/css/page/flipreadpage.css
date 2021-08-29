@@ -127,10 +127,12 @@
   height: 0;
   overflow: visible;
   z-index: 0;
+  contain: strict;
 }
 
 .read-speech .read-highlight {
   display: block;
+  will-change: contents;
 }
 
 .read-highlight span {

@@ -43,11 +43,12 @@ export default class ReadSpeech {
   async init() {
     const normalize = (n, defaultValue) => n < 0 ? defaultValue : Math.round(n);
     // EXPERT_CONFIG Maximum character allowed in a single speech instance
-    this.speechTextMaxLength = await config.expert('speech.max_char_length', 'number', 500, { normalize });
+    this.speechTextMaxLength = await config.expert('speech.max_char_length', 'number', 1000, { normalize });
     // EXPERT_CONFIG Prepare how many ssu when speaking
-    this.maxPendingSsuSize = await config.expert('speech.queue_size', 'number', 3, { normalize });
+    this.maxPendingSsuSize = await config.expert('speech.queue_size', 'number', 10, { normalize });
     // EXPERT_CONFIG Enable media session so it can be controlled by system provided panel
-    this.mediaSessionEnable = await config.expert('speech.media_session_enable', 'boolean', false);
+    this.mediaSessionEnable = ('mediaSession' in navigator) &&
+      (await config.expert('speech.media_session_enable', 'boolean', false));
     // EXPERT_CONFIG Skip certain any texts matching given regex when speaking
     this.speechTextSkipRegex = await config.expert('speech.skip_text_regex', 'string', /^\s*$/, {
       normalize: (/** @type {string} */value, defaultValue) => {
@@ -97,19 +98,25 @@ export default class ReadSpeech {
   }
   /** @param {SpeechSynthesisEvent} event */
   onStart(event) {
+    if (!this.speaking) return;
     /** @type {SpeechSynthesisUtterance} */
-    this.speakingSsu = event.target;
+    const ssu = event.target;
+    const ssuInfo = this.getSsuInfo(ssu);
+    if (!ssuInfo) return;
+    this.speakingSsu = ssu;
+    this.pendingSsu.delete(ssu);
   }
   /** @param {SpeechSynthesisEvent} event */
   onBoundary(event) {
     if (!this.speaking) return;
     const boundaryCursor = this.boundaryCursor = {};
     const ssu = event.target;
-    this.pendingSsu.delete(ssu);
     const ssuInfo = this.getSsuInfo(ssu);
     if (!ssuInfo) return;
-    const start = ssuInfo.start + (event.charIndex || 0);
-    const len = Math.max(0, Math.min(event.charLength || Infinity, ssuInfo.end - start));
+    const charIndex = event.charIndex == null ? 0 : event.charIndex;
+    const charLength = event.charLength == null ? Infinity : event.charLength;
+    const start = ssuInfo.start + charIndex;
+    const len = Math.max(0, Math.min(charLength, ssuInfo.end - start));
     if (Number.isInteger(start) && Number.isInteger(len) && start >= 0 && len >= 0) {
       this.page.textPage.highlightChars(start, len);
     } else {
@@ -141,6 +148,7 @@ export default class ReadSpeech {
     this.readMore();
   }
   onError(event) {
+    if (!this.speaking) return;
     this.stop();
   }
   getSsuInfo(ssu) {
@@ -184,13 +192,14 @@ export default class ReadSpeech {
     const length = this.page.content.length;
     while (
       this.speaking &&
-      this.pendingSsu.size <= this.maxPendingSsuSize &&
+      this.pendingSsu.size < this.maxPendingSsuSize &&
       this.next < length
     ) {
       this.readNext();
       await new Promise(resolve => { setTimeout(resolve, 0); });
     }
     this.readMoreBusy = false;
+    if (!this.speaking) return;
     if (!this.pendingSsu.size && !this.speakingSsu) {
       this.readEnd();
     }
@@ -209,10 +218,10 @@ export default class ReadSpeech {
     this.spoken = this.next;
     this.pendingSsu = new Set();
     this.speaking = true;
-    if ('mediaSession' in navigator && this.mediaSessionEnable) {
+    if (this.mediaSessionEnable) {
       this.fakeAudio.currentTime = 0;
       await this.fakeAudio.play();
-      navigator.mediaSession.playbackState = 'playing';
+      this.updateMediaSession();
     }
     this.readMore();
   }
@@ -220,15 +229,19 @@ export default class ReadSpeech {
     if (!this.speaking) return;
     this.page.element.classList.remove('read-speech');
     this.page.textPage.clearHighlight();
-    this.speaking = false;
-    this.pendingSsu = null;
     while (speechSynthesis.speaking || speechSynthesis.pending) {
       speechSynthesis.cancel();
+      this.speaking = false;
+      this.pendingSsu = null;
+      this.speakingSsu = null;
       await new Promise(resolve => setTimeout(resolve, 0));
     }
-    if ('mediaSession' in navigator && this.mediaSessionEnable) {
-      navigator.mediaSession.playbackState = 'paused';
+    while (this.readMoreBusy) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+    if (this.mediaSessionEnable) {
       this.fakeAudio.pause();
+      this.updateMediaSession();
     }
   }
   async reset() {
@@ -263,8 +276,8 @@ export default class ReadSpeech {
   /* global MediaMetadata: false */
   metaLoad(meta) {
     this.stop();
+    this.metadata = meta;
     if (!this.mediaSessionEnable) return;
-    if (!('mediaSession' in navigator)) return;
     this.fakeAudio = new Audio([
       'data:audio/mp3;base64,',
       'SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3LjgzLjEwMAAAAAAAAAAAAAAA/+M4AAAAAA',
@@ -275,9 +288,8 @@ export default class ReadSpeech {
       `/+MYZAAAAAGkAAAAAAAAA0gAAAAATEFNRTMuMTAw${'V'.repeat(56)}`.repeat(336),
     ].join(''));
     this.fakeAudio.loop = true;
-    this.fakeAudio.style.display = 'none';
     document.body.appendChild(this.fakeAudio);
-    navigator.mediaSession.metadata = new MediaMetadata({ title: meta.title });
+    this.updateMediaSession();
     const action = start => () => {
       if (this.mediaKey) return;
       this.mediaKey = true;
@@ -292,21 +304,19 @@ export default class ReadSpeech {
     navigator.mediaSession.setActionHandler('play', action(true));
     navigator.mediaSession.setActionHandler('pause', action(false));
     navigator.mediaSession.setActionHandler('stop', action(false));
-    navigator.mediaSession.setPositionState({ duration: 0, playbackRate: 1, position: 0 });
-    navigator.mediaSession.playbackState = 'paused';
     document.addEventListener('keydown', this.onMediaKey);
   }
   metaUnload() {
     this.stop();
+    this.metadata = null;
     if (!this.mediaSessionEnable) return;
-    if (!('mediaSession' in navigator)) return;
     document.removeEventListener('keydown', this.onMediaKey);
     document.body.removeChild(this.fakeAudio);
     this.fakeAudio = null;
-    navigator.mediaSession.metadata = null;
     navigator.mediaSession.setActionHandler('play', null);
     navigator.mediaSession.setActionHandler('pause', null);
-    navigator.mediaSession.setPositionState();
+    navigator.mediaSession.setActionHandler('stop', null);
+    this.updateMediaSession();
   }
   /** @param {KeyboardEvent} event */
   onMediaKey(event) {
@@ -324,6 +334,19 @@ export default class ReadSpeech {
     else this.stop();
     this.mediaKey = true;
     setTimeout(() => { this.mediaKey = false; }, 500);
+  }
+  updateMediaSession() {
+    if (!this.mediaSessionEnable) return;
+    const meta = this.metadata;
+    if (meta) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: meta.title });
+      navigator.mediaSession.playbackState = this.speaking ? 'playing' : 'paused';
+      navigator.mediaSession.setPositionState({ duration: 0, playbackRate: 1, position: 0 });
+    } else {
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = 'paused';
+      navigator.mediaSession.setPositionState();
+    }
   }
 }
 

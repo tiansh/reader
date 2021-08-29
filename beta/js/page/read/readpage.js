@@ -63,7 +63,7 @@ export default class ReadPage extends Page {
     this.langTag = await config.get('cjk_lang_tag');
 
     // EXPERT_CONFIG when index page show as side bar
-    this.screenWidthSideIndex = await config.expert('read.screen_width_side_index', 'number', 960);
+    this.screenWidthSideIndex = await config.expert('appearance.screen_width_side_index', 'number', 960);
 
     this.meta = await file.getMeta(id);
     this.index = await file.getIndex(id);
