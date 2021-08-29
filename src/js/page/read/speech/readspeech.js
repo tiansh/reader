@@ -206,7 +206,7 @@ export default class ReadSpeech {
   }
   async start() {
     if (this.lastReset) return;
-    if (this.speaking) return;
+    if (this.speaking || this.stopping) return;
     if (speechSynthesis.speaking || speechSynthesis.pending) return;
     this.readMoreBusy = false;
     const page = this.page;
@@ -226,19 +226,21 @@ export default class ReadSpeech {
     this.readMore();
   }
   async stop() {
-    if (!this.speaking) return;
+    if (!this.speaking || this.stopping) return;
     this.page.element.classList.remove('read-speech');
     this.page.textPage.clearHighlight();
+    this.speaking = false;
+    this.stopping = true;
     while (speechSynthesis.speaking || speechSynthesis.pending) {
       speechSynthesis.cancel();
-      this.speaking = false;
-      this.pendingSsu = null;
-      this.speakingSsu = null;
       await new Promise(resolve => setTimeout(resolve, 0));
     }
+    this.pendingSsu = null;
+    this.speakingSsu = null;
     while (this.readMoreBusy) {
       await new Promise(resolve => setTimeout(resolve, 0));
     }
+    this.stopping = false;
     if (this.mediaSessionEnable) {
       if (this.fakeAudio) this.fakeAudio.pause();
       this.updateMediaSession();
@@ -261,7 +263,7 @@ export default class ReadSpeech {
     await this.start();
   }
   async toggle() {
-    if (this.lastReset) return;
+    if (this.lastReset || this.stopping) return;
     if (this.speaking) await this.stop();
     else await this.start();
   }
@@ -328,7 +330,7 @@ export default class ReadSpeech {
     const key = event.key;
     let action = null;
     if (key === 'MediaPlayPause') {
-      action = !this.speaking;
+      action = !this.speaking && !this.stopping;
     } else if (key === 'MediaStop') {
       action = false;
     }
