@@ -59,6 +59,12 @@ const dbPromise = (function () {
   });
 }());
 
+dbPromise.then(db => {
+  window.addEventListener('beforeunload', () => {
+    db.close();
+  });
+});
+
 const files = {};
 
 storage.files = files;

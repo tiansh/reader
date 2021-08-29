@@ -7,6 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
+import onResize from '../../../ui/util/onresize.js';
 import config from '../../../data/config.js';
 import TextPage from './textpage.js';
 import ReadPage from '../readpage.js';
@@ -38,9 +39,9 @@ export default class FlipTextPage extends TextPage {
     await super.onActivate({ id });
 
     // EXPERT_CONFIG When to use two column page
-    this.screenWidthTwoColumn = await config.expert('appearance.screen_width_two_column', 'number', 960);
+    this.screenWidthTwoColumn = await config.expert('read_flip.screen_width_two_column', 'number', 960);
     // EXPERT_CONFIG When to use two column page when side index active
-    this.screenWidthTwoColumnIndex = await config.expert('appearance.screen_width_two_column_index', 'number', 1260);
+    this.screenWidthTwoColumnIndex = await config.expert('read_flip.screen_width_two_column_index', 'number', 1260);
     this.maxContentLength = await config.expert('text.content_max_length', 'number', 100);
 
     /** @type {PageRenderCollection} */
@@ -184,7 +185,7 @@ export default class FlipTextPage extends TextPage {
       } else if (offset > 0 && !this.pages.prev) {
         move = Math.min(100, offset / 2);
       }
-      const width = window.innerWidth;
+      const [width, height] = onResize.currentSize();
       move = Math.max(-width, Math.min(width, move));
       this.pagesContainer.style.setProperty('--slide-x', move + 'px');
       this.pagesContainer.classList.add('read-text-pages-slide');
@@ -310,14 +311,16 @@ export default class FlipTextPage extends TextPage {
     this.pagesContainer.appendChild(page.container);
   }
   isTwoColumn() {
-    if (window.innerWidth < this.screenWidthTwoColumn) return false;
-    if (window.innerWidth < this.screenWidthTwoColumnIndex && this.readPage.isSideIndexActive()) return false;
-    if (window.innerWidth < window.innerHeight * 1.2) return false;
+    const [width, height] = onResize.currentSize();
+    if (width < this.screenWidthTwoColumn) return false;
+    if (width < this.screenWidthTwoColumnIndex && this.readPage.isSideIndexActive()) return false;
+    if (width < height * 1.2) return false;
     return true;
   }
   step() {
     if (this.stepCache) return this.stepCache;
-    const area = window.innerWidth * window.innerHeight;
+    const [width, height] = onResize.currentSize();
+    const area = width * height;
     const textArea = (this.configs && this.configs.font_size || 18) ** 2;
     this.stepCache = Math.floor(area / textArea);
     return this.stepCache;
@@ -328,6 +331,7 @@ export default class FlipTextPage extends TextPage {
    * @returns {number}
    */
   layoutPageColumn(cursor, body) {
+    const [pageWidth, pageHeight] = onResize.currentSize();
     const content = this.readPage.content;
     const index = this.readPage.getIndex();
     body.setAttribute('aria-setsize', content.length);
@@ -342,7 +346,7 @@ export default class FlipTextPage extends TextPage {
     let after = this.ignoreSpaces(cursor);
     let previous = content.slice(after - this.maxContentLength, after);
     previous = previous.slice(previous.lastIndexOf('\n') + 1);
-    while (body.clientHeight < window.innerHeight * 4) {
+    while (body.clientHeight < pageHeight * 4) {
       let pos = after;
       after += step;
       const trunk = content.slice(pos, after);
@@ -354,7 +358,6 @@ export default class FlipTextPage extends TextPage {
           paragraph.dataset.start = pos;
           if (index && index.content && Array.isArray(index.content.items)) {
             if (index.content.items.slice(1).some(item => item.cursor === pos - previous.length)) {
-              paragraph.classList.add('title-paragraph');
               paragraph.setAttribute('role', 'heading');
               paragraph.setAttribute('aria-level', '3');
             }
@@ -446,7 +449,6 @@ export default class FlipTextPage extends TextPage {
    * @returns {PageRender}
    */
   layoutPageStartsWith(cursor) {
-    const start = this.ignoreSpaces(cursor);
     const content = this.readPage.getContent();
     const index = this.readPage.getIndex();
     if (this.ignoreSpaces(cursor) >= content.length) {
@@ -459,11 +461,11 @@ export default class FlipTextPage extends TextPage {
     title.textContent = this.readPage.meta.title;
     if (index && index.content && index.content.items) {
       const items = index.content.items;
-      const next = items.findIndex(i => i.cursor > start);
+      const next = items.findIndex(i => i.cursor > cursor);
       if (next === -1 && items.length) title.textContent = items[items.length - 1].title;
       else if (next > 0) title.textContent = items[next - 1].title;
     }
-    progress.textContent = (start / content.length * 100).toFixed(2) + '%';
+    progress.textContent = (cursor / content.length * 100).toFixed(2) + '%';
     container.lang = this.readPage.getLang();
     // 1. insert container into dom, so styles would applied to it
     this.pagesContainer.appendChild(container);
@@ -475,12 +477,12 @@ export default class FlipTextPage extends TextPage {
 
     if (this.isTwoColumn()) {
       body.remove();
-      const rightCursor = this.layoutPageColumn(start, left);
+      const rightCursor = this.layoutPageColumn(cursor, left);
       nextCursor = this.layoutPageColumn(rightCursor, right);
     } else {
       left.remove();
       right.remove();
-      nextCursor = this.layoutPageColumn(start, body);
+      nextCursor = this.layoutPageColumn(cursor, body);
     }
 
     // 5. Everything done
@@ -564,7 +566,7 @@ export default class FlipTextPage extends TextPage {
     if (depth > 3) return null;
 
     if (!this.pages.current) {
-      this.readPage.updateCursor(start);
+      this.resetPage(false);
       return this.highlightChars(start, length, depth + 1);
     }
 
@@ -578,7 +580,7 @@ export default class FlipTextPage extends TextPage {
 
     if (start + length < Math.min(currentPage, prevNext || 0)) {
       // Maybe something went wrong
-      this.readPage.updateCursor(start);
+      this.resetPage();
       return this.highlightChars(start, length, depth + 1);
     }
 
@@ -586,7 +588,7 @@ export default class FlipTextPage extends TextPage {
       if (start < nextNext) {
         this.nextPage(false);
       } else {
-        this.readPage.updateCursor(start);
+        this.resetPage(false);
       }
       return this.highlightChars(start, length, depth + 1);
     }
@@ -623,8 +625,9 @@ export default class FlipTextPage extends TextPage {
     const lineHeight = Number.parseFloat(configs.font_size) *
       Number.parseFloat(configs.line_height);
     const highlightSpanList = rects.map(rect => {
-      if (rect.top > window.innerHeight) return null;
-      if (rect.left > window.innerWidth) return null;
+      const [pageWidth, pageHeight] = onResize.currentSize();
+      if (rect.top > pageHeight) return null;
+      if (rect.left > pageWidth) return null;
       const span = document.createElement('span');
       span.style.left = (rect.left - containerRect.left) + 'px';
       span.style.width = rect.width + 'px';
