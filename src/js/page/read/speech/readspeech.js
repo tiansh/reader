@@ -240,7 +240,7 @@ export default class ReadSpeech {
       await new Promise(resolve => setTimeout(resolve, 0));
     }
     if (this.mediaSessionEnable) {
-      this.fakeAudio.pause();
+      if (this.fakeAudio) this.fakeAudio.pause();
       this.updateMediaSession();
     }
   }
@@ -311,8 +311,11 @@ export default class ReadSpeech {
     this.metadata = null;
     if (!this.mediaSessionEnable) return;
     document.removeEventListener('keydown', this.onMediaKey);
-    document.body.removeChild(this.fakeAudio);
-    this.fakeAudio = null;
+    if (this.fakeAudio) {
+      this.fakeAudio.pause();
+      document.body.removeChild(this.fakeAudio);
+      this.fakeAudio = null;
+    }
     navigator.mediaSession.setActionHandler('play', null);
     navigator.mediaSession.setActionHandler('pause', null);
     navigator.mediaSession.setActionHandler('stop', null);
