@@ -144,7 +144,8 @@ export default class ReadPage extends Page {
     }
   }
   updateSideIndex() {
-    const sideIndex = window.innerWidth >= this.screenWidthSideIndex;
+    const [pageWidth, pageHeight] = onResize.currentSize();
+    const sideIndex = pageWidth >= this.screenWidthSideIndex;
     if (sideIndex === this.useSideIndex) return;
     this.useSideIndex = sideIndex;
     if (sideIndex) {
