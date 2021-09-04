@@ -13,6 +13,7 @@
   right: 0;
   bottom: 0;
   --slide-x: 0px;
+  contain: layout;
 }
 
 .read-text-page {
@@ -132,7 +133,6 @@
 
 .read-speech .read-highlight {
   display: block;
-  will-change: contents;
 }
 
 .read-highlight span {
