@@ -47,7 +47,7 @@ export default class FlipTextPage extends TextPage {
     /** @type {PageRenderCollection} */
     this.pages = {};
     window.requestAnimationFrame(() => {
-      this.updatePages();
+      this.updatePages({ resetSpeech: true });
     });
   }
   async onInactivate() {
@@ -101,8 +101,8 @@ export default class FlipTextPage extends TextPage {
     }, cancelY));
     listener.onCancelY(cancelY);
 
-    listener.onTouchLeft(wos(() => { this.prevPage(); }));
-    listener.onTouchRight(wos(() => { this.nextPage(); }));
+    listener.onTouchLeft(wos(() => { this.prevPage({ resetSpeech: true }); }));
+    listener.onTouchRight(wos(() => { this.nextPage({ resetSpeech: true }); }));
     listener.onTouchMiddle(wos(() => { this.readPage.showControlPage(); }));
 
     this.pagesContainer.addEventListener('contextmenu', event => {
@@ -114,11 +114,11 @@ export default class FlipTextPage extends TextPage {
     /** @type {HTMLButtonElement} */
     this.prevButton = container.get('prev');
     this.prevButton.title = i18n.getMessage('readPagePrevious');
-    this.prevButton.addEventListener('click', () => { this.prevPage(); });
+    this.prevButton.addEventListener('click', () => { this.prevPage({ resetSpeech: true }); });
     /** @type {HTMLButtonElement} */
     this.nextButton = container.get('next');
     this.nextButton.title = i18n.getMessage('readPageNext');
-    this.nextButton.addEventListener('click', () => { this.nextPage(); });
+    this.nextButton.addEventListener('click', () => { this.nextPage({ resetSpeech: true }); });
 
     return container.get('root');
   }
@@ -147,9 +147,9 @@ export default class FlipTextPage extends TextPage {
     const current = this.readPage.activedSubpage();
     if (!current) {
       if (['PageUp', 'ArrowLeft'].includes(event.code)) {
-        this.prevPage();
+        this.prevPage({ resetSpeech: true });
       } else if (['PageDown', 'ArrowRight'].includes(event.code)) {
-        this.nextPage();
+        this.nextPage({ resetSpeech: true });
       } else if (['ArrowUp'].includes(event.code)) {
         this.readPage.showControlPage(true);
       } else if (['ArrowDown'].includes(event.code)) {
@@ -168,8 +168,8 @@ export default class FlipTextPage extends TextPage {
     if (this.wheelBusy) return;
     const deltaY = event.deltaY;
     if (!deltaY) return;
-    if (deltaY > 0) this.nextPage();
-    else if (deltaY < 0) this.prevPage();
+    if (deltaY > 0) this.nextPage({ resetSpeech: true });
+    else if (deltaY < 0) this.prevPage({ resetSpeech: true });
     setTimeout(() => { this.wheelBusy = false; }, 250);
     this.wheelBusy = true;
   }
@@ -194,37 +194,37 @@ export default class FlipTextPage extends TextPage {
       this.pagesContainer.classList.remove('read-text-pages-slide');
     }
     window.requestAnimationFrame(() => {
-      if (action === 'left') this.nextPage();
-      if (action === 'right') this.prevPage();
+      if (action === 'left') this.nextPage({ resetSpeech: true });
+      if (action === 'right') this.prevPage({ resetSpeech: true });
     });
   }
   slideCancel() {
     this.slidePage('cancel');
     this.readPage.slideIndexPage('cancel');
   }
-  nextPage(isUserTrigger = true) {
+  nextPage(config) {
     if (!this.pages.next) return;
     this.disposePage(this.pages.prev);
     this.pages.prev = this.pages.current;
     this.pages.current = this.pages.next;
     this.pages.next = null;
-    this.updatePages(isUserTrigger);
+    this.updatePages(config);
   }
-  prevPage(isUserTrigger = true) {
+  prevPage(config) {
     if (!this.pages.prev) return;
     this.disposePage(this.pages.next);
     this.pages.next = this.pages.current;
     this.pages.current = this.pages.prev;
     this.pages.prev = null;
-    this.updatePages(isUserTrigger);
+    this.updatePages(config);
   }
-  resetPage(isUserTrigger = false) {
+  resetPage(config) {
     this.slideCancel();
     this.stepCache = null;
     this.disposePages();
-    this.updatePages(isUserTrigger);
+    this.updatePages(config);
   }
-  updatePages(isUserTrigger) {
+  updatePages(config) {
     this.updatePageBusy = true;
     const content = this.readPage.getContent();
     const cursor = this.ignoreSpaces(Math.max(this.readPage.getCursor() || 0, 0));
@@ -285,11 +285,7 @@ export default class FlipTextPage extends TextPage {
       container.setAttribute('aria-hidden', name === 'current' ? 'false' : 'true');
       this.addRenderedPage(page);
     });
-    if (isUserTrigger) {
-      this.readPage.setCursor(this.pages.current.cursor);
-    } else {
-      this.readPage.updateCursor(this.pages.current.cursor);
-    }
+    this.readPage.setCursor(this.pages.current.cursor, config);
     this.updatePageBusy = false;
   }
   /** @param {PageRender} page */
@@ -354,12 +350,17 @@ export default class FlipTextPage extends TextPage {
       trunk.split(/(\n)/).forEach(line => {
         if (!paragraph) {
           paragraph = body.appendChild(document.createElement('p'));
+          paragraph.classList.add('text');
           paragraphs.push(paragraph);
           paragraph.dataset.start = pos;
+          if (content[pos - 1] !== '\n') {
+            paragraph.classList.add('text-truncated-start');
+          }
           if (index && index.content && Array.isArray(index.content.items)) {
             if (index.content.items.slice(1).some(item => item.cursor === pos - previous.length)) {
               paragraph.setAttribute('role', 'heading');
               paragraph.setAttribute('aria-level', '3');
+              paragraph.classList.add('text-heading');
             }
           }
         }
@@ -434,10 +435,14 @@ export default class FlipTextPage extends TextPage {
         const before = text.slice(0, pos);
         const after = text.slice(pos);
         paragraph.textContent = before;
+        // the overflowed text is still necessary here
+        // as it may change the behavior of some render properties
+        // `text-align: justify` for example
         const afterSpan = document.createElement('span');
         afterSpan.setAttribute('aria-hidden', 'true');
         afterSpan.textContent = after;
         paragraph.appendChild(afterSpan);
+        paragraph.classList.add('text-truncated-end');
       }
     });
 
@@ -451,7 +456,8 @@ export default class FlipTextPage extends TextPage {
   layoutPageStartsWith(cursor) {
     const content = this.readPage.getContent();
     const index = this.readPage.getIndex();
-    if (this.ignoreSpaces(cursor) >= content.length) {
+    const start = this.ignoreSpaces(cursor);
+    if (start >= content.length) {
       return null;
     }
     const ref = template.create('read_text_flip_page');
@@ -459,13 +465,15 @@ export default class FlipTextPage extends TextPage {
     const title = ref.get('title');
     const progress = ref.get('progress');
     title.textContent = this.readPage.meta.title;
+    container.dataset.title = this.readPage.meta.title;
     if (index && index.content && index.content.items) {
       const items = index.content.items;
-      const next = items.findIndex(i => i.cursor > cursor);
-      if (next === -1 && items.length) title.textContent = items[items.length - 1].title;
-      else if (next > 0) title.textContent = items[next - 1].title;
+      const next = items.findIndex(i => i.cursor > start);
+      const index = next === -1 ? (items.length || 0) - 1 : next - 1;
+      if (index !== -1) title.textContent = items[index].title;
+      container.dataset.section = index;
     }
-    progress.textContent = (cursor / content.length * 100).toFixed(2) + '%';
+    progress.textContent = (start / content.length * 100).toFixed(2) + '%';
     container.lang = this.readPage.getLang();
     // 1. insert container into dom, so styles would applied to it
     this.pagesContainer.appendChild(container);
@@ -477,11 +485,13 @@ export default class FlipTextPage extends TextPage {
 
     if (this.isTwoColumn()) {
       body.remove();
+      container.classList.add('read-text-two-column');
       const rightCursor = this.layoutPageColumn(cursor, left);
       nextCursor = this.layoutPageColumn(rightCursor, right);
     } else {
       left.remove();
       right.remove();
+      container.classList.add('read-text-one-column');
       nextCursor = this.layoutPageColumn(cursor, body);
     }
 
@@ -526,21 +536,12 @@ export default class FlipTextPage extends TextPage {
       return low;
     };
 
-    let prevCursor = null;
     const body = ref.get('body');
     const left = ref.get('left');
-    const right = ref.get('right');
 
-    if (this.isTwoColumn()) {
-      body.remove();
-      let leftCursor = tryFill(nextCursor, right);
-      prevCursor = tryFill(leftCursor, left);
-    } else {
-      left.remove();
-      right.remove();
-      prevCursor = tryFill(nextCursor, body);
-    }
-
+    const [target, times] = this.isTwoColumn() ? [left, 2] : [body, 1];
+    const prevprev = [...Array(times + 1)].reduce(cursor => tryFill(cursor, target), nextCursor);
+    const prevCursor = this.layoutPageColumn(prevprev, target);
     this.pagesContainer.removeChild(container);
 
     return this.layoutPageStartsWith(prevCursor);
@@ -562,33 +563,30 @@ export default class FlipTextPage extends TextPage {
       }
     }
     this.clearHighlight();
-
     if (depth > 3) return null;
 
     if (!this.pages.current) {
-      this.resetPage(false);
+      this.readPage.setCursor(start, { resetSpeech: false });
       return this.highlightChars(start, length, depth + 1);
     }
 
     const prevNext = this.pages.prev ? this.pages.prev.nextCursor : void 0;
-
     const currentPage = this.pages.current.cursor;
     const currentNext = this.pages.current.nextCursor;
-
     const nextPage = this.pages.next ? this.pages.next.cursor : void 0;
     const nextNext = this.pages.next ? this.pages.next.nextCursor : void 0;
 
     if (start + length < Math.min(currentPage, prevNext || 0)) {
       // Maybe something went wrong
-      this.resetPage();
+      this.readPage.setCursor(start, { resetSpeech: false });
       return this.highlightChars(start, length, depth + 1);
     }
 
     if (start >= nextPage) {
       if (start < nextNext) {
-        this.nextPage(false);
+        this.nextPage({ resetSpeech: false });
       } else {
-        this.resetPage(false);
+        this.readPage.setCursor(start, { resetSpeech: false });
       }
       return this.highlightChars(start, length, depth + 1);
     }
@@ -596,8 +594,8 @@ export default class FlipTextPage extends TextPage {
     this.lastHighlightStart = start;
     this.lastHighlightLength = length;
 
-    if (start > currentNext) {
-      return null;
+    if (start > currentNext || length === 0) {
+      return [];
     }
 
     /** @type {HTMLElement} */
@@ -621,9 +619,6 @@ export default class FlipTextPage extends TextPage {
     const rects = Array.from(range.getClientRects());
     const highlight = container.querySelector('.read-highlight');
     const containerRect = container.getBoundingClientRect();
-    const configs = this.configs;
-    const lineHeight = Number.parseFloat(configs.font_size) *
-      Number.parseFloat(configs.line_height);
     const highlightSpanList = rects.map(rect => {
       const [pageWidth, pageHeight] = onResize.currentSize();
       if (rect.top > pageHeight) return null;
@@ -632,35 +627,37 @@ export default class FlipTextPage extends TextPage {
       span.style.left = (rect.left - containerRect.left) + 'px';
       span.style.width = rect.width + 'px';
       const top = rect.top - containerRect.top;
-      if (rect.height <= lineHeight) {
-        span.style.top = top + 'px';
-        span.style.height = rect.height + 'px';
-      } else {
-        span.style.top = (top + (rect.height - lineHeight) / 2) + 'px';
-        span.style.height = lineHeight + 'px';
-      }
+      span.style.top = top + 'px';
+      span.style.height = rect.height + 'px';
       highlight.appendChild(span);
       return span;
     });
     return highlightSpanList.filter(x => x != null).length > 0;
   }
   forceUpdate() {
-    this.resetPage();
+    this.resetPage({ resetSpeech: true });
   }
   isInPage(cursor) {
-    if (cursor < this.pages.current.cursor) return false;
-    if (!this.pages.next) return false;
-    if (cursor >= this.pages.next.cursor) return false;
+    const current = this.pages.current;
+    if (!current) return false;
+    const prev = this.pages.prev;
+    const prevNext = prev ? prev.nextCursor : Infinity;
+    const currentCursor = current.cursor;
+    if (cursor < Math.min(prevNext, currentCursor)) return false;
+    const next = this.pages.next;
+    const nextCursor = next ? next.cursor : 0;
+    const currentNext = current.nextCursor;
+    if (cursor >= Math.max(currentNext, nextCursor)) return false;
     return true;
   }
-  cursorChange(cursor) {
+  cursorChange(cursor, config) {
     const current = this.pages.current;
     if (!current || current.cursor !== cursor) {
-      this.resetPage();
+      this.resetPage(config);
     }
   }
   onResize() {
     super.onResize();
-    this.resetPage();
+    this.resetPage({ resetSpeech: false });
   }
 }

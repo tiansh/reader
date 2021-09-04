@@ -52,7 +52,7 @@ export default class JumpPage extends ReadSubPage {
     super.hide();
     this.readPage.controlPage.enable();
   }
-  cursorChange() {
+  cursorChange(cursor, config) {
     this.updateInputValue();
   }
   updateInputValue() {

@@ -64,6 +64,9 @@ export default class IndexSubPage extends ReadSubPage {
     this.backButton.addEventListener('click', event => {
       this.indexPage.hide();
     });
+    this.container.addEventListener('keydown', event => {
+      event.stopPropagation();
+    });
 
     this.listElement = this.container.querySelector('.index-list');
   }
@@ -114,14 +117,14 @@ export default class IndexSubPage extends ReadSubPage {
   getListItems() {
     return [];
   }
-  cursorChange() {
+  cursorChange(cursor, config) {
     if (!this.itemList) return;
     this.updateCurrentHighlight();
   }
   emptyListRender() { }
   listItemRender() { }
   onItemClick(item) {
-    this.readPage.setCursor(item.cursor);
+    this.readPage.setCursor(item.cursor, {});
     if (!this.readPage.useSideIndex) {
       this.indexPage.hide();
     }
