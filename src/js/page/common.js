@@ -59,5 +59,3 @@ const updateTheme = function () {
 theme.addChangeListener(updateTheme);
 updateTheme();
 
-document.title = i18n.getMessage('title');
-

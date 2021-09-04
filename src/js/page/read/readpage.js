@@ -85,7 +85,7 @@ export default class ReadPage extends Page {
 
     onResize.addListener(this.onResize);
     document.addEventListener('keydown', this.keyboardEvents);
-    document.title = i18n.getMessage('titleWithName', this.meta.title);
+    this.router.setTitle(this.meta.title, this.getLang());
 
     this.subPages.forEach(page => { page.onActivate(); });
     this.updateSideIndex();
@@ -106,7 +106,7 @@ export default class ReadPage extends Page {
     this.speech.metaUnload();
     this.textPage.onInactivate();
     this.textPage = null;
-    document.title = i18n.getMessage('title');
+    this.router.setTitle();
   }
   gotoList() {
     this.router.go('list');
@@ -207,17 +207,21 @@ export default class ReadPage extends Page {
   getCursor() {
     return this.meta.cursor;
   }
-  setCursor(cursor) {
-    if (this.meta.cursor === cursor) return;
-    this.updateCursor(cursor);
-    this.speech.cursorChange(cursor);
-  }
-  updateCursor(cursor) {
+  /**
+   * @typedef {Object} CursorChangeConfig
+   * @property {boolean} resetSpeech
+   */
+  /**
+   * @param {number} cursor
+   * @param {CursorChangeConfig} config
+   */
+  setCursor(cursor, config) {
     if (this.meta.cursor === cursor) return;
     this.meta.cursor = cursor;
     file.setMeta(this.meta);
-    this.subPages.forEach(page => page.cursorChange(cursor));
-    this.textPage.cursorChange(cursor);
+    this.subPages.forEach(page => page.cursorChange(cursor, config));
+    this.textPage.cursorChange(cursor, config);
+    this.speech.cursorChange(cursor, config);
   }
   getContent() { return this.content; }
   getMeta() { return this.meta; }

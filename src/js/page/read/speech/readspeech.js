@@ -105,6 +105,9 @@ export default class ReadSpeech {
     if (!ssuInfo) return;
     this.speakingSsu = ssu;
     this.pendingSsu.delete(ssu);
+    const start = ssuInfo.start;
+    this.page.textPage.highlightChars(start, 0);
+    this.readMore();
   }
   /** @param {SpeechSynthesisEvent} event */
   onBoundary(event) {
@@ -267,10 +270,12 @@ export default class ReadSpeech {
     if (this.speaking) await this.stop();
     else await this.start();
   }
-  cursorChange() {
+  cursorChange(cursor, config) {
     if (this.speaking || this.lastReset) {
       if (this.boundaryCursor) return;
-      this.reset();
+      if (config.resetSpeech) {
+        this.reset();
+      }
     } else {
       this.spoken = null;
     }

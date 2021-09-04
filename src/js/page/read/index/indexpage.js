@@ -120,9 +120,9 @@ export default class IndexPage extends ReadSubPage {
     const subPage = this.subPageMap[page];
     return subPage && subPage.isShow;
   }
-  cursorChange() {
+  cursorChange(cursor, config) {
     this.subPages.forEach(page => {
-      page.cursorChange();
+      page.cursorChange(config);
     });
   }
 }

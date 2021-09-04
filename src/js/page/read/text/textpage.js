@@ -80,7 +80,7 @@ export default class TextPage {
   wheelEvents(event) { }
   clearHighlight() { }
   highlightChars(start, length) { return false; }
-  cursorChange(cursor) { }
+  cursorChange(cursor, config) { }
   async updateStyleConfig() {
     this.customFont = document.querySelector('#custom_font');
     this.customStyle = document.querySelector('#custom_style');
@@ -119,9 +119,9 @@ export default class TextPage {
     const content = this.readPage.getContent(), length = content.length;
     let lineBreak = cursor - 1;
     for (; /\s/.test(content[cursor]); cursor++) {
-      if (cursor === length) return length;
       if (content[cursor] === '\n') lineBreak = cursor;
     }
+    if (cursor >= length) return length;
     return lineBreak + 1;
   }
 }

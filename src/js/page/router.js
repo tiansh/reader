@@ -7,6 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
+import i18n from '../i18n/i18n.js';
 import Page from './page.js';
 import config from '../data/config.js';
 
@@ -40,6 +41,7 @@ export default class Router {
     this.hashTo('#!' + url);
   }
   async initial() {
+    this.setTitle();
     const path = await config.get('path') || '#!' + this.fallback;
     this.hashTo(path);
   }
@@ -68,5 +70,14 @@ export default class Router {
     if (page.isPreserve()) {
       await config.set('path', hash);
     }
+  }
+  setTitle(text, lang) {
+    if (!text) {
+      document.title = i18n.getMessage('title');
+    } else {
+      document.title = i18n.getMessage('titleWithName', text);
+    }
+    const title = document.head.querySelector('title');
+    title.lang = lang || i18n.getMessage('locale');
   }
 }
