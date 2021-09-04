@@ -469,9 +469,9 @@ export default class FlipTextPage extends TextPage {
     if (index && index.content && index.content.items) {
       const items = index.content.items;
       const next = items.findIndex(i => i.cursor > start);
-      const index = next === -1 ? (items.length || 0) - 1 : next - 1;
-      if (index !== -1) title.textContent = items[index].title;
-      container.dataset.section = index;
+      const itemIndex = next === -1 ? (items.length || 0) - 1 : next - 1;
+      if (itemIndex !== -1) title.textContent = items[itemIndex].title;
+      container.dataset.section = itemIndex;
     }
     progress.textContent = (start / content.length * 100).toFixed(2) + '%';
     container.lang = this.readPage.getLang();
