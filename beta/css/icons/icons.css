@@ -38,6 +38,12 @@
   font-size: 30px;
 }
 
+.icon-go::before {
+  content: "\e900";
+  transform: scaleX(-1);
+  display: block;
+}
+
 .icon-add::before {
   content: "\e901";
 }

@@ -36,6 +36,11 @@ export default class IndexSearchPage extends IndexSubPage {
 
     this.searchInput.placeholder = i18n.getMessage('readSearchPlaceholder');
 
+    this.searchButton = template.iconButton('go', i18n.getMessage('buttonSearchSubmit'));
+    this.searchForm.appendChild(this.searchButton);
+    this.searchButton.classList.add('submit-button');
+    this.searchButton.type = 'submit';
+
     this.searchForm.addEventListener('submit', event => {
       const text = this.searchInput.value;
       if (text) this.searchText(text);

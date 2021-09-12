@@ -19,6 +19,9 @@ import i18n from '../../../i18n/i18n.js';
 import template from '../../../ui/util/template.js';
 
 class IndexContentsTemplatePage {
+  constructor() {
+    this.keyboardEvents = this.keyboardEvents.bind(this);
+  }
   /**
    * @param {IndexContentsPage} contentsPage
    * @param {HTMLElement} container
@@ -42,6 +45,11 @@ class IndexContentsTemplatePage {
     this.templateInput = this.container.querySelector('input');
     this.templateListElement = this.container.querySelector('.contents-history-list');
     this.templateTitle = this.container.querySelector('.contents-history-title');
+
+    this.templateButton = template.iconButton('go', i18n.getMessage('readContentsTemplateSubmit'));
+    this.templateForm.appendChild(this.templateButton);
+    this.templateButton.classList.add('submit-button');
+    this.templateButton.type = 'submit';
 
     this.templateClear = template.iconButton('remove', i18n.getMessage('readContentsTemplateClear'));
     this.templateTitle.appendChild(this.templateClear);
@@ -126,6 +134,8 @@ class IndexContentsTemplatePage {
       this.templateInput.value = '';
     }
     this.templateInput.lang = this.contentsPage.readPage.langTag;
+
+    this.container.addEventListener('keydown', this.keyboardEvents);
   }
   hide() {
     if (!this.showTemplatePage) return;
@@ -145,6 +155,8 @@ class IndexContentsTemplatePage {
     if (this.container.contains(document.activeElement)) {
       document.activeElement.blur();
     }
+
+    this.container.removeEventListener('keydown', this.keyboardEvents);
   }
   async addHistory(template) {
     const history = await this.historyOption.getConfig();
@@ -152,6 +164,13 @@ class IndexContentsTemplatePage {
     result.unshift(template);
     result.splice(20);
     await this.historyOption.setConfig(result);
+  }
+  /** @param {KeyboardEvent} event */
+  keyboardEvents(event) {
+    if (event.code === 'Escape' && !event.target.closest('input')) {
+      this.hide();
+      event.stopPropagation();
+    }
   }
 }
 
@@ -173,13 +192,10 @@ export default class IndexContentsPage extends IndexSubPage {
   }
   onActivate() {
     super.onActivate();
-    this.generateConfig = null;
-    Promise.all([
-      config.expert('text.content_max_length', 'number', 100),
-      config.expert('text.content_size_limit', 'number', 10000),
-    ]).then(([maxLength, limit]) => {
-      this.generateConfig = { maxLength, limit };
-    });
+  }
+  onInactivate() {
+    super.onInactivate();
+    this.templatePage.hide();
   }
   hide() {
     super.hide();
@@ -189,36 +205,15 @@ export default class IndexContentsPage extends IndexSubPage {
     return template.iconButton('refresh', i18n.getMessage('buttonContentsRefresh'));
   }
   refreshContents(input) {
-    if (!this.readPage.index.content) {
-      this.readPage.index.content = { template: '', items: [] };
-    }
-    const content = this.readPage.index.content;
-    content.template = (input == null ? content.template : input) || '';
-    if (content.template && this.generateConfig) {
-      content.items = text.generateContent(this.readPage.content, content.template, this.generateConfig) || [];
-      content.items.unshift({ title: this.readPage.meta.title, cursor: 0 });
-    } else {
-      content.items = [];
-    }
-    file.setIndex(this.readPage.index);
-    this.setList(content.items.slice(0));
-    this.indexPage.bookmarkPage.updateBookmarkList();
-    this.updateCurrentHighlight();
+    const readIndex = this.readPage.readIndex;
+    const template = (input == null ? readIndex.getContentsTemplate() : input) || '';
+    readIndex.setContents(template);
+    this.updateList();
+    this.indexPage.bookmarkPage.updateList();
     this.readPage.textPage.forceUpdate();
   }
   pageButtonAction() {
     this.templatePage.show();
-  }
-  getContentsByCursor(cursor) {
-    const index = this.readPage.index;
-    const items = index.content && index.content.items || [];
-    let last = items[0];
-    items.every(item => {
-      if (item.cursor > cursor) return false;
-      last = item;
-      return true;
-    });
-    return last || null;
   }
   emptyListRender(container) {
     const span = container.appendChild(document.createElement('span'));
@@ -239,10 +234,7 @@ export default class IndexContentsPage extends IndexSubPage {
   }
   getCurrentHighlightIndex() {
     const cursor = this.readPage.meta.cursor;
-    const items = this.readPage.index.content && this.readPage.index.content.items || [];
-    const item = this.getContentsByCursor(cursor);
-    const index = items.indexOf(item);
-    if (index === -1) return null;
-    return index;
+    const readIndex = this.readPage.readIndex;
+    return readIndex.getIndexOfContentsByCursor(cursor);
   }
 }

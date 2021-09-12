@@ -162,7 +162,7 @@ export default class ReadSpeech {
   readEnd() {
     if (this.enableLoop) {
       this.reset();
-      this.page.setCursor(0);
+      this.page.setCursor(0, { resetSpeech: true });
     } else {
       this.stop();
     }

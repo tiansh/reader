@@ -7,7 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-const version = '20210904.1';
+const version = '20210912';
 
 const resourceList = [
   './css/common/input.css',
@@ -45,6 +45,7 @@ const resourceList = [
   './js/page/config/configpage.js',
   './js/page/list/listpage.js',
   './js/page/read/control/controlpage.js',
+  './js/page/read/index/readindex.js',
   './js/page/read/index/bookmarkpage.js',
   './js/page/read/index/contentspage.js',
   './js/page/read/index/indexpage.js',

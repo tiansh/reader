@@ -8,6 +8,7 @@
  */
 
 import IndexPage from './index/indexpage.js';
+import ReadIndex from './index/readindex.js';
 import JumpPage from './jump/jumppage.js';
 import ReadSpeech from './speech/readspeech.js';
 import ControlPage from './control/controlpage.js';
@@ -59,21 +60,31 @@ export default class ReadPage extends Page {
       event.preventDefault();
     });
   }
+  /**
+   * @param {{ id: number }} config
+   */
   async onActivate({ id }) {
     this.langTag = await config.get('cjk_lang_tag');
 
     // EXPERT_CONFIG when index page show as side bar
     this.screenWidthSideIndex = await config.expert('appearance.screen_width_side_index', 'number', 960);
 
-    this.meta = await file.getMeta(id);
-    this.index = await file.getIndex(id);
-    this.content = await file.content(id);
+    this.articleId = id;
+    const [meta, index, content] = await Promise.all([
+      file.getMeta(id),
+      file.getIndex(id),
+      file.content(id),
+    ]);
+    this.meta = meta;
+    this.content = content;
+    this.index = index;
     if (!this.meta || !this.content) {
       this.gotoList();
       return;
     }
     await file.setMeta(this.meta);
 
+    this.readIndex = new ReadIndex(this);
     this.renderStyle = 'flip';
     if (this.renderStyle === 'flip') {
       /** @type {TextPage} */
@@ -99,6 +110,7 @@ export default class ReadPage extends Page {
     this.index = null;
     this.content = null;
     this.pages = null;
+    this.readIndex = null;
     this.useSideIndex = null;
     document.removeEventListener('keydown', this.keyboardEvents);
     this.subPages.forEach(page => { page.onInactivate(); });
@@ -225,8 +237,9 @@ export default class ReadPage extends Page {
   }
   getContent() { return this.content; }
   getMeta() { return this.meta; }
-  getIndex() { return this.index; }
   getLang() { return this.langTag; }
   isSpeaking() { return this.speech.speaking; }
+  getBookmarks() { return this.index.bookmarks; }
+  getContents() { return this.index.content; }
 }
 

@@ -36,20 +36,8 @@ export default class IndexBookmarkPage extends IndexSubPage {
     this.dateLang = navigator.language;
   }
   addBookmark() {
-    const index = this.readPage.index;
-    if (!index.bookmarks) index.bookmarks = [];
-    const cursor = this.readPage.meta.cursor;
-    const bookmarks = index.bookmarks;
-    const found = bookmarks.find(b => Number(b.cursor) === cursor);
-    if (found) return;
-    const next = bookmarks.findIndex(b => Number(b.cursor) > cursor);
-    const title = this.readPage.content.substr(cursor, 200).trim().split('\n')[0].slice(0, 50);
-    const bookmark = { cursor, createTime: new Date(), title };
-    if (next === -1) bookmarks.push(bookmark);
-    else bookmarks.splice(next, 0, bookmark);
-    file.setIndex(this.readPage.index);
-    this.setList(bookmarks.slice(0));
-    this.updateCurrentHighlight();
+    this.readPage.readIndex.addBookmark(this.readPage.meta.cursor);
+    this.updateList();
   }
   pageButtonAction() {
     this.addBookmark();
@@ -68,34 +56,27 @@ export default class IndexBookmarkPage extends IndexSubPage {
       const time = ref.get('time');
       time.textContent = this.dateFormatter.format(item.createTime);
       time.lang = this.dateLang;
-      const contents = this.indexPage.contentsPage.getContentsByCursor(item.cursor);
+      const contents = this.readPage.readIndex.getContentsByCursor(item.cursor);
       if (contents) {
-        const contents = ref.get('contents');
-        contents.textContent = contents.title;
-        contents.lang = this.readPage.langTag;
+        const contentsElement = ref.get('contents');
+        contentsElement.textContent = contents.title;
+        contentsElement.lang = this.readPage.getLang();
       }
     }
   }
   getListItems() {
-    const index = this.readPage.index;
-    return index.bookmarks || [];
+    return Array.from(this.readPage.readIndex.getBookmarkList());
   }
   getCurrentHighlightIndex() {
+    const readIndex = this.readPage.readIndex;
     const cursor = this.readPage.meta.cursor;
-    const items = this.readPage.index.bookmarks || [];
-    const index = items.findIndex(item => item.cursor === cursor);
-    if (index === -1) return null;
-    return index;
-  }
-  updateBookmarkList() {
-    this.setList(this.getListItems());
+    return readIndex.getIndexOfBookmarksByCursor(cursor);
   }
   onRemoveItem(bookmark) {
-    const bookmarks = this.readPage.index.bookmarks || [];
-    const index = bookmarks.findIndex(i => i.cursor === bookmark.cursor);
+    const readIndex = this.readPage.readIndex;
+    const index = readIndex.getIndexOfBookmarksByCursor(bookmark.cursor);
     if (index === -1) return;
-    bookmarks.splice(index, 1);
-    file.setIndex(this.readPage.index);
+    readIndex.deleteBookmark(bookmark.cursor);
     if (this.itemList) {
       this.itemList.removeItem(index);
       this.updateCurrentHighlight();

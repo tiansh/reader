@@ -46,6 +46,7 @@ export default class FlipTextPage extends TextPage {
 
     /** @type {PageRenderCollection} */
     this.pages = {};
+    this.initPrevCursor();
     window.requestAnimationFrame(() => {
       this.updatePages({ resetSpeech: true });
     });
@@ -53,6 +54,28 @@ export default class FlipTextPage extends TextPage {
   async onInactivate() {
     await super.onInactivate();
     this.pages = null;
+    this.clearPrevCursor();
+  }
+  clearPrevCursor() {
+    this.prevCursorCache = null;
+  }
+  initPrevCursor() {
+    /** @type {[Map<number, number>, Map<number, number>]} */
+    this.prevCursorCache = [new Map(), new Map()];
+  }
+  getPrevCursor(nextCursor) {
+    return this.prevCursorCache.reduce((result, cache) => {
+      if (result != null) return result;
+      if (cache.has(nextCursor)) return cache.get(nextCursor);
+      return null;
+    }, null);
+  }
+  setPrevCursor(cursor, nextCursor) {
+    if (this.prevCursorCache[0].size >= 1000) {
+      this.prevCursorCache.pop();
+      this.prevCursorCache.unshift(new Map());
+    }
+    this.prevCursorCache[0].set(nextCursor, cursor);
   }
   createContainer() {
     const container = template.create('read_text_flip');
@@ -221,17 +244,19 @@ export default class FlipTextPage extends TextPage {
   resetPage(config) {
     this.slideCancel();
     this.stepCache = null;
+    this.initPrevCursor();
     this.disposePages();
     this.updatePages(config);
   }
   updatePages(config) {
     this.updatePageBusy = true;
     const content = this.readPage.getContent();
-    const cursor = this.ignoreSpaces(Math.max(this.readPage.getCursor() || 0, 0));
+    const cursor = Math.max(this.readPage.getCursor() || 0, 0);
+    const start = this.ignoreSpaces(cursor);
     const pages = this.pages;
     // Current Page
     if (!pages.current) {
-      if (cursor < content.length) {
+      if (start < content.length) {
         const current = this.layoutPageStartsWith(cursor);
         // Cursor corrupted
         if (!current) { this.setCursor(0); return; }
@@ -256,18 +281,23 @@ export default class FlipTextPage extends TextPage {
         article.removeAttribute('aria-live');
       });
     }
-    // Next Page
-    if (!pages.next && pages.current.nextCursor < content.length) {
-      const next = this.layoutPageStartsWith(pages.current.nextCursor);
-      pages.next = next;
-    }
-    this.nextButton.disabled = !pages.next;
     // Previous Page
     if (!pages.prev && pages.current.cursor > 0) {
-      const prev = this.layoutPageEndsWith(pages.current.cursor);
-      pages.prev = prev;
+      if (this.getPrevCursor(pages.current.cursor) !== null) {
+        const prevCursor = this.getPrevCursor(pages.current.cursor);
+        pages.prev = this.layoutPageStartsWith(prevCursor);
+      } else {
+        this.initPrevCursor();
+        pages.prev = this.layoutPageEndsWith(pages.current.cursor);
+      }
     }
     this.prevButton.disabled = !pages.prev;
+    // Next Page
+    if (!pages.next && pages.current.nextCursor < content.length) {
+      pages.next = this.layoutPageStartsWith(pages.current.nextCursor);
+      this.setPrevCursor(pages.current.cursor, pages.next.cursor);
+    }
+    this.nextButton.disabled = !pages.next;
     /** @type {('prev'|'current'|'next')[]} */
     const pageNames = ['prev', 'current', 'next'];
     pageNames.forEach(name => {
@@ -322,6 +352,82 @@ export default class FlipTextPage extends TextPage {
     return this.stepCache;
   }
   /**
+   * @typedef {Object} PageRenderContext
+   * @property {HTMLParagraphElement[]} paragraphs
+   * @property {HTMLParagraphElement} paragraph
+   * @property {HTMLElement} before
+   * @property {boolean} isOverflow
+   * @property {number} start
+   * @property {number} end
+   * @property {number} cursor
+   * @property {string} previous
+   * @property {boolean} error
+   * @property {number} nextSection
+   */
+  /**
+   * @param {HTMLElement} body
+   * @param {PageRenderContext} context
+   */
+  renderContent(body, context) {
+    const content = this.readPage.content;
+    const readIndex = this.readPage.readIndex;
+    const step = this.step();
+    if (context.cursor == null) context.cursor = context.start;
+    if (context.previous == null) {
+      const text = content.slice(context.cursor - this.maxContentLength, context.cursor);
+      context.previous = text.slice(text.lastIndexOf('\n') + 1);
+    }
+    let pos = context.cursor;
+    if (context.end == null) {
+      context.cursor = Math.min(context.cursor + step, content.length);
+    } else {
+      context.cursor = Math.min(context.end, content.length);
+    }
+    if (readIndex.getContentsList().length && context.nextSection == null) {
+      const contents = readIndex.getContentsList();
+      const ref = pos - context.previous.length - 1;
+      const nextSection = Math.max(readIndex.getIndexOfContentsByCursor(ref), 1) + 1;
+      if (nextSection >= contents.length) context.nextSection = 0;
+      else context.nextSection = nextSection;
+    }
+    const trunk = content.slice(pos, context.cursor);
+    if (!trunk) {
+      context.error = true;
+      return context;
+    }
+    trunk.split(/(\n)/).forEach(line => {
+      if (!context.paragraph && line) {
+        const paragraph = context.paragraph = document.createElement('p');
+        paragraph.classList.add('text');
+        context.paragraphs.push(paragraph);
+        paragraph.dataset.start = pos;
+        if (content[pos - 1] !== '\n') {
+          paragraph.classList.add('text-truncated-start');
+        }
+        if (context.nextSection) {
+          const contents = readIndex.getContentsList();
+          const contentsItem = contents[context.nextSection];
+          if (contentsItem.cursor === pos - context.previous.length) {
+            paragraph.setAttribute('role', 'heading');
+            paragraph.setAttribute('aria-level', '3');
+            paragraph.classList.add('text-heading');
+            context.nextSection = (context.nextSection + 1) % contents.length;
+          }
+        }
+        body.insertBefore(paragraph, context.before);
+      }
+      if (line === '\n') {
+        context.paragraph = null;
+        context.previous = '';
+      } else if (line) {
+        context.paragraph.textContent += line;
+        context.previous += line;
+      }
+      pos += line.length;
+    });
+    return context;
+  }
+  /**
    * @param {number} cursor
    * @param {HTMLElement} body
    * @returns {number}
@@ -329,62 +435,36 @@ export default class FlipTextPage extends TextPage {
   layoutPageColumn(cursor, body) {
     const [pageWidth, pageHeight] = onResize.currentSize();
     const content = this.readPage.content;
-    const index = this.readPage.getIndex();
+    body.innerHTML = '';
     body.setAttribute('aria-setsize', content.length);
     body.setAttribute('aria-posinset', cursor);
     // 2. fill texts until it overflow the content
-    const step = this.step();
-    /** @type {HTMLParagraphElement[]} */
-    const paragraphs = [];
-    /** @type {HTMLParagraphElement} */
-    let paragraph = null;
-    let isOverflow = false;
-    let after = this.ignoreSpaces(cursor);
-    let previous = content.slice(after - this.maxContentLength, after);
-    previous = previous.slice(previous.lastIndexOf('\n') + 1);
-    while (body.clientHeight < pageHeight * 4) {
-      let pos = after;
-      after += step;
-      const trunk = content.slice(pos, after);
-      if (!trunk) break;
-      trunk.split(/(\n)/).forEach(line => {
-        if (!paragraph) {
-          paragraph = body.appendChild(document.createElement('p'));
-          paragraph.classList.add('text');
-          paragraphs.push(paragraph);
-          paragraph.dataset.start = pos;
-          if (content[pos - 1] !== '\n') {
-            paragraph.classList.add('text-truncated-start');
-          }
-          if (index && index.content && Array.isArray(index.content.items)) {
-            if (index.content.items.slice(1).some(item => item.cursor === pos - previous.length)) {
-              paragraph.setAttribute('role', 'heading');
-              paragraph.setAttribute('aria-level', '3');
-              paragraph.classList.add('text-heading');
-            }
-          }
-        }
-        if (line === '\n') {
-          paragraph = null;
-          previous = '';
-        } else {
-          paragraph.textContent += line;
-          previous += line;
-        }
-        pos += line.length;
-      });
-      if (isOverflow) break;
+    /** @type {PageRenderContext} */
+    const context = {
+      paragraphs: [],
+      paragraph: null,
+      start: this.ignoreSpaces(cursor),
+      end: null,
+      cursor: null,
+      previous: null,
+    };
+    while (!context.error) {
+      this.renderContent(body, context);
       if (body.clientHeight !== body.scrollHeight) {
-        isOverflow = true;
+        this.renderContent(body, context);
+        context.isOverflow = true;
+        break;
+      } else if (body.clientHeight > pageHeight * 4) {
+        context.error = true;
       }
     }
     let nextCursor;
-    if (isOverflow) {
+    if (context.isOverflow) {
       // 3. find out where the overflow happened
       const rect = body.getBoundingClientRect();
-      const firstOut = paragraphs.slice(0).reverse().find(p => {
+      const firstOut = context.paragraphs.slice(0).reverse().find(p => {
         return p.getBoundingClientRect().top < rect.bottom;
-      }) || paragraphs[0];
+      }) || context.paragraphs[0];
       const startPos = Number(firstOut.dataset.start);
       const textNode = firstOut.firstChild;
       let low, high;
@@ -420,10 +500,10 @@ export default class FlipTextPage extends TextPage {
       body.style.height = targetHeight + 'px';
       body.style.bottom = 'auto';
     } else {
-      nextCursor = content.length;
+      nextCursor = context.cursor;
     }
     // 5. Mark following contents hidden
-    paragraphs.forEach(paragraph => {
+    context.paragraphs.forEach(paragraph => {
       const start = Number(paragraph.dataset.start);
       const text = paragraph.textContent;
       const length = text.length;
@@ -455,7 +535,7 @@ export default class FlipTextPage extends TextPage {
    */
   layoutPageStartsWith(cursor) {
     const content = this.readPage.getContent();
-    const index = this.readPage.getIndex();
+    const readIndex = this.readPage.readIndex;
     const start = this.ignoreSpaces(cursor);
     if (start >= content.length) {
       return null;
@@ -466,12 +546,10 @@ export default class FlipTextPage extends TextPage {
     const progress = ref.get('progress');
     title.textContent = this.readPage.meta.title;
     container.dataset.title = this.readPage.meta.title;
-    if (index && index.content && index.content.items) {
-      const items = index.content.items;
-      const next = items.findIndex(i => i.cursor > start);
-      const itemIndex = next === -1 ? (items.length || 0) - 1 : next - 1;
-      if (itemIndex !== -1) title.textContent = items[itemIndex].title;
-      container.dataset.section = itemIndex;
+    const contentsIndex = readIndex.getIndexOfContentsByCursor(start);
+    if (contentsIndex !== -1) {
+      container.dataset.section = contentsIndex;
+      title.textContent = readIndex.getContentsList()[contentsIndex].title;
     }
     progress.textContent = (start / content.length * 100).toFixed(2) + '%';
     container.lang = this.readPage.getLang();
@@ -495,9 +573,10 @@ export default class FlipTextPage extends TextPage {
       nextCursor = this.layoutPageColumn(cursor, body);
     }
 
-    // 5. Everything done
+    // 6. Everything done
     this.pagesContainer.removeChild(container);
     container.classList.remove('read-text-page-processing');
+
     return { container, cursor, nextCursor };
   }
   /**
@@ -506,6 +585,7 @@ export default class FlipTextPage extends TextPage {
    * @returns {PageRender}
    */
   layoutPageEndsWith(nextCursor) {
+
     if (!nextCursor) {
       return null;
     }
@@ -516,18 +596,73 @@ export default class FlipTextPage extends TextPage {
     const content = this.readPage.getContent();
     container.lang = this.readPage.getLang();
 
-    const tryFill = function (nextCursor, body) {
-      let low = 0, high = nextCursor;
+    /**
+     * @param {number} nextCursor
+     * @param {HTMLElement} body
+     */
+    const tryFill = (nextCursor, body) => {
+      const end = this.ignoreSpacesBackward(nextCursor);
+      body.replaceChildren();
+      let low = Math.max(end - step, 0), high = end;
+      while (1) {
+        const context = {
+          paragraphs: [],
+          paragraph: null,
+          start: this.ignoreSpaces(low),
+          end: high,
+          cursor: null,
+          previous: null,
+          before: body.firstChild,
+        };
+        this.renderContent(body, context);
+        if (body.clientHeight === body.scrollHeight && low !== 0) {
+          if (body.firstChild) body.firstChild.remove();
+          if (body.firstChild) {
+            high = Number(body.firstChild.dataset.start);
+          }
+          low = Math.max(low - step, 0);
+        } else {
+          break;
+        }
+      }
+      if (body.clientHeight === body.scrollHeight) {
+        return low;
+      }
+      /** @type {HTMLElement} */
+      let firstOut = body.lastChild;
+      const boundary = body.getBoundingClientRect().top + body.scrollHeight - body.clientHeight;
+      for (; firstOut; firstOut = firstOut.previousSibling) {
+        if (firstOut.getBoundingClientRect().top < boundary) break;
+      }
+      if (firstOut) {
+        while (firstOut.parentNode) body.firstChild.remove();
+      }
+      while (body.clientHeight !== body.scrollHeight) {
+        firstOut = body.removeChild(body.firstChild);
+      }
+      low = Number(firstOut.dataset.start);
+      if (body.firstChild) {
+        high = Number(body.firstChild.dataset.start);
+      }
+      const next = high;
       while (low <= high) {
+        while (body.firstChild && Number(body.firstChild.dataset.start) !== next) {
+          body.firstChild.remove();
+        }
         const mid = Math.max(Math.floor((low + high) / 2), high - step);
-        const trunk = content.slice(mid, nextCursor).replace(/\n\s*$/, '');
-        body.innerHTML = '';
-        trunk.split(/\n/).forEach(line => {
-          const paragraph = body.appendChild(document.createElement('p'));
-          paragraph.textContent += line;
-        });
-        const isOverflow = body.clientHeight !== body.scrollHeight;
-        if (isOverflow) {
+        /** @type {PageRenderContext} */
+        const context = {
+          paragraphs: [],
+          paragraph: null,
+          isOverflow: false,
+          start: this.ignoreSpaces(mid),
+          end: next,
+          cursor: null,
+          previous: null,
+          before: body.firstChild,
+        };
+        this.renderContent(body, context);
+        if (body.clientHeight !== body.scrollHeight) {
           low = mid + 1;
         } else {
           high = mid - 1;
@@ -536,15 +671,23 @@ export default class FlipTextPage extends TextPage {
       return low;
     };
 
-    const body = ref.get('body');
-    const left = ref.get('left');
-
-    const [target, times] = this.isTwoColumn() ? [left, 2] : [body, 1];
-    const prevprev = [...Array(times + 1)].reduce(cursor => tryFill(cursor, target), nextCursor);
-    const prevCursor = this.layoutPageColumn(prevprev, target);
+    let target, cursor;
+    if (this.isTwoColumn()) {
+      target = ref.get('left');
+      cursor = tryFill(tryFill(nextCursor, target), target);
+    } else {
+      target = ref.get('body');
+      cursor = tryFill(nextCursor, target);
+    }
+    // We look back one more column (and hope the paragraph is not longer than it)
+    // So we can have a better knowledge about where to split pages
+    if (cursor > 0) {
+      cursor = this.layoutPageColumn(tryFill(cursor, target), target);
+    }
     this.pagesContainer.removeChild(container);
 
-    return this.layoutPageStartsWith(prevCursor);
+
+    return this.layoutPageStartsWith(cursor);
   }
   clearHighlight() {
     Array.from(document.querySelectorAll('.read-highlight')).forEach(container => {

@@ -95,20 +95,19 @@ export default class IndexSubPage extends ReadSubPage {
     this.itemList = null;
   }
   focusCurrentItem() {
-    if (this.itemList && this.currentContentsIndex != null) {
-      const element = this.itemList.getItemElement(this.currentContentsIndex).closest('.list-item');
-      const list = element.closest('.index-list');
-      list.scrollTop = element.offsetTop;
+    if (this.currentContentsIndex) {
+      this.itemList.scrollIntoView(this.currentContentsIndex);
     }
   }
   getCurrentHighlightIndex() {
     return null;
   }
   updateCurrentHighlight() {
-    const current = this.getCurrentHighlightIndex();
+    const index = this.getCurrentHighlightIndex();
+    const current = index === -1 ? null : index;
     if (this.currentContentsIndex === current) return;
     this.itemList.clearSelectItem();
-    if (current != null) {
+    if (current != null && current !== -1) {
       this.itemList.setSelectItem(current, true);
       this.itemList.scrollIntoView(current);
     }
@@ -124,7 +123,7 @@ export default class IndexSubPage extends ReadSubPage {
   emptyListRender() { }
   listItemRender() { }
   onItemClick(item) {
-    this.readPage.setCursor(item.cursor, {});
+    this.readPage.setCursor(item.cursor, { resetSpeech: true });
     if (!this.readPage.useSideIndex) {
       this.indexPage.hide();
     }
@@ -132,6 +131,10 @@ export default class IndexSubPage extends ReadSubPage {
   pageButtonAction() { }
   setList(newList) {
     this.itemList.setList(newList);
+    this.currentContentsIndex = null;
     this.updateCurrentHighlight();
+  }
+  updateList() {
+    this.setList([...this.getListItems()]);
   }
 }
