@@ -49,6 +49,7 @@ template.icon = function (type, title = null) {
   return icon;
 };
 
+/** @returns {HTMLButtonElement} */
 template.iconButton = function (type, title = null) {
   const button = template.create('iconButton');
   const icon = template.icon(type, title);

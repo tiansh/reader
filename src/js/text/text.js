@@ -87,6 +87,7 @@ text.generateContent = function (article, template, { maxLength, limit }) {
     });
     matchReg = new RegExp(`^\\s*(?:${escape})`, 'u');
   }
+  /** @type {{ title: string, cursor: number }[]} */
   const content = [];
   let cursor = 0;
   const limitExceed = article.split('\n').some(line => {

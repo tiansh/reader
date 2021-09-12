@@ -124,5 +124,10 @@ export default class TextPage {
     if (cursor >= length) return length;
     return lineBreak + 1;
   }
+  ignoreSpacesBackward(cursor) {
+    const content = this.readPage.getContent();
+    while (/\s/.test(content[cursor - 1])) cursor--;
+    return cursor;
+  }
 }
 

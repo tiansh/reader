@@ -33,6 +33,7 @@
   width: 30px;
   height: 30px;
   color: var(--active-color);
+  line-height: 30px;
 }
 button.list-sort {
   -moz-appearance: none;

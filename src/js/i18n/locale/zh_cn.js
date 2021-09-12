@@ -29,6 +29,7 @@ export default {
   readContentsTemplate: '目录模板',
   readContentsTemplateDescription: '使用星号(*)作通配符',
   readContentsTemplateHistory: '最近设置模板',
+  readContentsTemplateSubmit: '生成目录',
   readContentsTemplateClear: '清空',
   readContentsEmpty: '暂无目录\n点击刷新按钮生成目录',
   readBookmarkEmpty: '暂无书签\n点击添加按钮添加书签',
@@ -106,6 +107,7 @@ export default {
   buttonSpeech: '开始朗读',
   buttonSpeechStop: '停止朗读',
   buttonContentsRefresh: '刷新目录',
+  buttonSearchSubmit: '搜索',
   buttonSearchClear: '清除搜索结果',
   buttonBookmarkAdd: '添加书签',
 

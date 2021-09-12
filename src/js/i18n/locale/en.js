@@ -29,6 +29,7 @@ export default {
   readContentsTemplate: 'Template',
   readContentsTemplateDescription: 'Template for the table of content: Use asterisk (*) for wildcard',
   readContentsTemplateHistory: 'Recent',
+  readContentsTemplateSubmit: 'Build',
   readContentsTemplateClear: 'Clear Recent',
   readContentsEmpty: 'No table of contents yet.\nYou may click refresh button to build one.',
   readBookmarkEmpty: 'No bookmarks yet.\nYou may click add bookmark button to add one.',
@@ -106,6 +107,7 @@ export default {
   buttonSpeech: 'Start Text to Speech',
   buttonSpeechStop: 'Stop Text to Speech',
   buttonContentsRefresh: 'Refresh Table of Contents',
+  buttonSearchSubmit: 'Search',
   buttonSearchClear: 'Clear Search Result',
   buttonBookmarkAdd: 'Add Bookmark',
 

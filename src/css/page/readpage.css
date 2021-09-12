@@ -243,7 +243,7 @@ button.tab-item:focus {
 }
 
 #read_index_contents_config {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -283,6 +283,7 @@ button.contents-history-clear {
 .contents-history-item {
   padding: 10px 0;
   line-height: 32px;
+  min-height: 32px;
 }
 
 .contents-history-item-regex {
@@ -336,7 +337,7 @@ button.contents-history-clear {
 }
 
 .search-box {
-  padding: 8px 10px;
+  padding: 7px 10px;
   height: 36px;
   position: relative;
 }

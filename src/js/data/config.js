@@ -46,13 +46,13 @@ config.expert = async (key, type, defaultValue, { normalize, validator } = {}) =
   const expert = (await config.get(config.EXPERT_CONFIG_NAME)) || '';
   let prefix = '';
   const text = expert.split('\n').filter(text => {
-    if (/^\s*[;#]/.test(text)) return false;
     if (/^\s*\[.*\]\s*$/.test(text)) {
       prefix = text.trim().slice(1, -1);
-    } else if (text.includes('=')) {
+    } else if (!/^\s*[;#]/.test(text) && text.includes('=')) {
       const name = text.split('=', 1)[0].trim();
       return (prefix ? prefix + '.' + name : name) === key;
     }
+    return false;
   }).pop();
   let value = text == null ? defaultValue : text.slice(text.indexOf('=') + 1).trim();
   try {
