@@ -172,7 +172,7 @@ export default class ReadPage extends Page {
     }
   }
   isIndexActive() {
-    return this.indexPage && this.indexPage.isCurrent;
+    return this.indexPage?.isCurrent;
   }
   isSideIndexActive() {
     return this.useSideIndex && this.indexPage.isCurrent;

@@ -120,7 +120,7 @@ const common = function (type, actionType) {
     put: (store, ...param) => store.put(...param),
     getAll: store => store.getAll(),
   }[actionType];
-  const mode = { put: 'readwrite' }[actionType] || 'readonly';
+  const mode = { put: 'readwrite' }[actionType] ?? 'readonly';
   return async function (...param) {
     return new Promise(async (resolve, reject) => {
       const db = await dbPromise;

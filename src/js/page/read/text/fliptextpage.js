@@ -347,7 +347,7 @@ export default class FlipTextPage extends TextPage {
     if (this.stepCache) return this.stepCache;
     const [width, height] = onResize.currentSize();
     const area = width * height;
-    const textArea = (this.configs && this.configs.font_size || 18) ** 2;
+    const textArea = (this.configs?.font_size || 18) ** 2;
     this.stepCache = Math.floor(area / textArea);
     return this.stepCache;
   }
@@ -458,7 +458,7 @@ export default class FlipTextPage extends TextPage {
       const rect = body.getBoundingClientRect();
       const firstOut = paragraphs.slice(0).reverse().find(p => {
         return p.getBoundingClientRect().top < rect.bottom;
-      }) || paragraphs[0];
+      }) ?? paragraphs[0];
       const startPos = Number(firstOut.dataset.start);
       const textNode = firstOut.firstChild;
       let low = 0;
@@ -683,13 +683,13 @@ export default class FlipTextPage extends TextPage {
       return this.highlightChars(start, length, depth + 1);
     }
 
-    const prevNext = this.pages.prev ? this.pages.prev.nextCursor : void 0;
+    const prevNext = this.pages.prev?.nextCursor;
     const currentPage = this.pages.current.cursor;
     const currentNext = this.pages.current.nextCursor;
-    const nextPage = this.pages.next ? this.pages.next.cursor : void 0;
-    const nextNext = this.pages.next ? this.pages.next.nextCursor : void 0;
+    const nextPage = this.pages.next?.cursor;
+    const nextNext = this.pages.next?.nextCursor;
 
-    if (start + length < Math.min(currentPage, prevNext || 0)) {
+    if (start + length < Math.min(currentPage, prevNext ?? 0)) {
       // Maybe something went wrong
       this.readPage.setCursor(start, { resetSpeech: false });
       return this.highlightChars(start, length, depth + 1);

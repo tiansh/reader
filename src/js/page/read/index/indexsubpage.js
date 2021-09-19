@@ -75,7 +75,7 @@ export default class IndexSubPage extends ReadSubPage {
     const onItemClick = this.onItemClick.bind(this);
     const render = this.listItemRender.bind(this);
     const emptyListRender = this.emptyListRender.bind(this);
-    const onRemove = this.onRemoveItem && this.onRemoveItem.bind(this);
+    const onRemove = this.onRemoveItem?.bind(this);
     this.itemList = new ItemList(this.listElement, {
       list: items.slice(0),
       onItemClick,
