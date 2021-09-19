@@ -457,6 +457,18 @@ class AboutConfigOptionPage extends ConfigOptionPage {
   constructor(container, mainPage) {
     super(container, mainPage);
   }
+  onFirstActivate() {
+    super.onFirstActivate();
+    this.version = this.container.querySelector('.config-page-version');
+    fetch('./sw.js?version').then(resp => resp.text()).then(text => {
+      try {
+        const version = JSON.parse(text.match(/(?<=\/\*\s*VERSION\s*\*\/)".{1,20}"(?=\/\*\s*VERSION\s*\*\/)/));
+        if (typeof version === 'string') this.version.textContent = version;
+      } catch (_ignore) {
+        // ignore
+      }
+    });
+  }
 }
 
 class ExpertConfigOptionPage extends ConfigOptionPage {
