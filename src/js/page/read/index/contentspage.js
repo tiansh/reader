@@ -233,7 +233,7 @@ export default class IndexContentsPage extends IndexSubPage {
     return index.content && index.content.items || [];
   }
   getCurrentHighlightIndex() {
-    const cursor = this.readPage.meta.cursor;
+    const cursor = this.readPage.getRenderCursor();
     const readIndex = this.readPage.readIndex;
     return readIndex.getIndexOfContentsByCursor(cursor);
   }

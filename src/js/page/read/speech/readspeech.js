@@ -214,7 +214,7 @@ export default class ReadSpeech {
     this.readMoreBusy = false;
     const page = this.page;
     page.element.classList.add('read-speech');
-    this.next = page.getCursor();
+    this.next = page.getRenderCursor();
     if (this.spoken != null && this.page.textPage.isInPage(this.spoken)) {
       this.next = this.spoken;
     }

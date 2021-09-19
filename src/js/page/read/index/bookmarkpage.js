@@ -36,7 +36,7 @@ export default class IndexBookmarkPage extends IndexSubPage {
     this.dateLang = navigator.language;
   }
   addBookmark() {
-    this.readPage.readIndex.addBookmark(this.readPage.meta.cursor);
+    this.readPage.readIndex.addBookmark(this.readPage.getRenderCursor());
     this.updateList();
   }
   pageButtonAction() {
@@ -69,7 +69,7 @@ export default class IndexBookmarkPage extends IndexSubPage {
   }
   getCurrentHighlightIndex() {
     const readIndex = this.readPage.readIndex;
-    const cursor = this.readPage.meta.cursor;
+    const cursor = this.readPage.getRenderCursor();
     return readIndex.getIndexOfBookmarksByCursor(cursor);
   }
   onRemoveItem(bookmark) {
