@@ -222,9 +222,18 @@
   white-space: normal;
 }
 
-.config-page-about h1 {
+.config-page-about .config-page-about-header {
   margin-top: 35px;
+}
+
+.config-page-about .config-page-version {
+  margin-left: 20px;
+}
+
+.config-page-about h1 {
   font-size: 150%;
+  margin: 0;
+  display: inline;
 }
 
 .config-option-expert {
