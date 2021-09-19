@@ -172,7 +172,7 @@ export default class ReadPage extends Page {
     }
   }
   isIndexActive() {
-    return this.indexPage && this.indexPage.isCurrent;
+    return this.indexPage?.isCurrent;
   }
   isSideIndexActive() {
     return this.useSideIndex && this.indexPage.isCurrent;
@@ -216,8 +216,17 @@ export default class ReadPage extends Page {
   toggleSpeech() {
     return this.speech.toggle();
   }
-  getCursor() {
+  /**
+   * @returns The text position where user had read
+   */
+  getRawCursor() {
     return this.meta.cursor;
+  }
+  /**
+   * @returns The text position where current page rendered
+   */
+  getRenderCursor() {
+    return this.textPage.getRenderCursor();
   }
   /**
    * @typedef {Object} CursorChangeConfig

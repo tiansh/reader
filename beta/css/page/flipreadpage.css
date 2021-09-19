@@ -95,6 +95,15 @@
   margin-top: 0;
 }
 
+.read-body p.text-heading {
+  font-size: 120%;
+  font-weight: bold;
+}
+
+.read-body p.text-heading:not(:first-child) {
+  margin-top: 100vh;
+}
+
 .read-meta {
   position: absolute;
   bottom: var(--page-margin-y);

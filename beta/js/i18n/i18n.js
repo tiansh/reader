@@ -19,8 +19,8 @@ const locales = [
 const prefer = (function () {
   const languages = navigator.languages;
   const prefer = languages.reduce((match, lang) => {
-    return match || locales.find(locale => locale.name.test(lang));
-  }, null) || locales[0];
+    return match ?? locales.find(locale => locale.name.test(lang));
+  }, null) ?? locales[0];
   document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.lang = prefer.lang;
   });

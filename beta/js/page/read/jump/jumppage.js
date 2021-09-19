@@ -56,7 +56,7 @@ export default class JumpPage extends ReadSubPage {
     this.updateInputValue();
   }
   updateInputValue() {
-    const cursor = this.readPage.meta.cursor;
+    const cursor = this.readPage.getRawCursor();
     this.rangeInput.setValue(cursor);
   }
 }

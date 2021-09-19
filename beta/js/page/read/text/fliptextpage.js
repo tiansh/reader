@@ -251,7 +251,7 @@ export default class FlipTextPage extends TextPage {
   updatePages(config) {
     this.updatePageBusy = true;
     const content = this.readPage.getContent();
-    const cursor = Math.max(this.readPage.getCursor() || 0, 0);
+    const cursor = Math.max(this.readPage.getRawCursor() || 0, 0);
     const start = this.ignoreSpaces(cursor);
     const pages = this.pages;
     // Current Page
@@ -347,16 +347,14 @@ export default class FlipTextPage extends TextPage {
     if (this.stepCache) return this.stepCache;
     const [width, height] = onResize.currentSize();
     const area = width * height;
-    const textArea = (this.configs && this.configs.font_size || 18) ** 2;
+    const textArea = (this.configs?.font_size || 18) ** 2;
     this.stepCache = Math.floor(area / textArea);
     return this.stepCache;
   }
   /**
    * @typedef {Object} PageRenderContext
-   * @property {HTMLParagraphElement[]} paragraphs
    * @property {HTMLParagraphElement} paragraph
    * @property {HTMLElement} before
-   * @property {boolean} isOverflow
    * @property {number} start
    * @property {number} end
    * @property {number} cursor
@@ -386,7 +384,7 @@ export default class FlipTextPage extends TextPage {
     if (readIndex.getContentsList().length && context.nextSection == null) {
       const contents = readIndex.getContentsList();
       const ref = pos - context.previous.length - 1;
-      const nextSection = Math.max(readIndex.getIndexOfContentsByCursor(ref), 1) + 1;
+      const nextSection = Math.max(readIndex.getIndexOfContentsByCursor(ref), 0) + 1;
       if (nextSection >= contents.length) context.nextSection = 0;
       else context.nextSection = nextSection;
     }
@@ -399,7 +397,6 @@ export default class FlipTextPage extends TextPage {
       if (!context.paragraph && line) {
         const paragraph = context.paragraph = document.createElement('p');
         paragraph.classList.add('text');
-        context.paragraphs.push(paragraph);
         paragraph.dataset.start = pos;
         if (content[pos - 1] !== '\n') {
           paragraph.classList.add('text-truncated-start');
@@ -439,58 +436,48 @@ export default class FlipTextPage extends TextPage {
     body.setAttribute('aria-setsize', content.length);
     body.setAttribute('aria-posinset', cursor);
     // 2. fill texts until it overflow the content
+    let isOverflow = false;
     /** @type {PageRenderContext} */
     const context = {
-      paragraphs: [],
-      paragraph: null,
       start: this.ignoreSpaces(cursor),
-      end: null,
-      cursor: null,
-      previous: null,
     };
     while (!context.error) {
       this.renderContent(body, context);
       if (body.clientHeight !== body.scrollHeight) {
         this.renderContent(body, context);
-        context.isOverflow = true;
+        isOverflow = true;
         break;
       } else if (body.clientHeight > pageHeight * 4) {
         context.error = true;
       }
     }
+    const paragraphs = Array.from(body.querySelectorAll('p[data-start]'));
     let nextCursor;
-    if (context.isOverflow) {
+    if (isOverflow) {
       // 3. find out where the overflow happened
       const rect = body.getBoundingClientRect();
-      const firstOut = context.paragraphs.slice(0).reverse().find(p => {
+      const firstOut = paragraphs.slice(0).reverse().find(p => {
         return p.getBoundingClientRect().top < rect.bottom;
-      }) || context.paragraphs[0];
+      }) ?? paragraphs[0];
       const startPos = Number(firstOut.dataset.start);
       const textNode = firstOut.firstChild;
-      let low, high;
-      if (textNode) {
-        const range = document.createRange();
-        low = 0;
-        high = textNode.textContent.length - 1;
-        while (low <= high) {
-          const mid = Math.floor((low + high) / 2);
-          range.setStart(textNode, mid);
-          range.setEnd(textNode, mid + 1);
-          if (range.getBoundingClientRect().bottom > rect.bottom) {
-            high = mid - 1;
-          } else {
-            low = mid + 1;
-          }
+      let low = 0;
+      let high = textNode ? textNode.textContent.length - 1 : -1;
+      const range = document.createRange();
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        range.setStart(textNode, mid);
+        range.setEnd(textNode, mid + 1);
+        if (range.getBoundingClientRect().bottom > rect.bottom) {
+          high = mid - 1;
+        } else {
+          low = mid + 1;
         }
-      } else {
-        low = 0;
-        high = -1;
       }
       let targetHeight = null;
       if (high < 0) {
         targetHeight = firstOut.getBoundingClientRect().top - rect.top;
       } else {
-        const range = document.createRange();
         range.setStart(textNode, low - 1);
         range.setEnd(textNode, low);
         targetHeight = range.getBoundingClientRect().bottom - rect.top;
@@ -503,7 +490,7 @@ export default class FlipTextPage extends TextPage {
       nextCursor = context.cursor;
     }
     // 5. Mark following contents hidden
-    context.paragraphs.forEach(paragraph => {
+    paragraphs.forEach(paragraph => {
       const start = Number(paragraph.dataset.start);
       const text = paragraph.textContent;
       const length = text.length;
@@ -600,93 +587,76 @@ export default class FlipTextPage extends TextPage {
      * @param {number} nextCursor
      * @param {HTMLElement} body
      */
-    const tryFill = (nextCursor, body) => {
+    const findColumnStartByEndsWith = (nextCursor, body) => {
+      const [pageWidth, pageHeight] = onResize.currentSize();
       const end = this.ignoreSpacesBackward(nextCursor);
-      body.replaceChildren();
+      // Try to fill some contents until it got overflowed or reach the start of text
       let low = Math.max(end - step, 0), high = end;
-      while (1) {
+      while (true) {
         const context = {
-          paragraphs: [],
-          paragraph: null,
           start: this.ignoreSpaces(low),
           end: high,
-          cursor: null,
-          previous: null,
           before: body.firstChild,
         };
         this.renderContent(body, context);
-        if (body.clientHeight === body.scrollHeight && low !== 0) {
-          if (body.firstChild) body.firstChild.remove();
-          if (body.firstChild) {
-            high = Number(body.firstChild.dataset.start);
-          }
-          low = Math.max(low - step, 0);
-        } else {
-          break;
+        if (low === 0) break;
+        if (body.clientHeight !== body.scrollHeight) break;
+        if (body.scrollHeight > pageHeight * 4) break;
+        if (body.firstChild) {
+          body.firstChild.remove();
         }
+        if (body.firstChild) {
+          high = Number(body.firstChild.dataset.start);
+        }
+        low = Math.max(low - step, 0);
       }
       if (body.clientHeight === body.scrollHeight) {
         return low;
       }
-      /** @type {HTMLElement} */
-      let firstOut = body.lastChild;
+      // Find out first paragraph which is overflowed the container
       const boundary = body.getBoundingClientRect().top + body.scrollHeight - body.clientHeight;
-      for (; firstOut; firstOut = firstOut.previousSibling) {
-        if (firstOut.getBoundingClientRect().top < boundary) break;
-      }
-      if (firstOut) {
-        while (firstOut.parentNode) body.firstChild.remove();
-      }
-      while (body.clientHeight !== body.scrollHeight) {
-        firstOut = body.removeChild(body.firstChild);
-      }
-      low = Number(firstOut.dataset.start);
-      if (body.firstChild) {
-        high = Number(body.firstChild.dataset.start);
-      }
-      const next = high;
-      while (low <= high) {
-        while (body.firstChild && Number(body.firstChild.dataset.start) !== next) {
-          body.firstChild.remove();
-        }
-        const mid = Math.max(Math.floor((low + high) / 2), high - step);
-        /** @type {PageRenderContext} */
+      const paragraphs = Array.from(body.querySelectorAll('p[data-start]'));
+      let firstOut = paragraphs.find(p => p.getBoundingClientRect().bottom > boundary);
+      if (firstOut === body.firstChild) {
+        const ref = firstOut.nextSibling;
+        firstOut.remove();
         const context = {
-          paragraphs: [],
-          paragraph: null,
-          isOverflow: false,
-          start: this.ignoreSpaces(mid),
-          end: next,
-          cursor: null,
-          previous: null,
-          before: body.firstChild,
+          start: this.ignoreSpaces(Math.max(low - step, 0)),
+          end: Number(ref.dataset.start),
+          before: ref,
         };
         this.renderContent(body, context);
-        if (body.clientHeight !== body.scrollHeight) {
+        firstOut = ref.previousSibling;
+      }
+      const firstOutStart = Number(firstOut.dataset.start);
+      // Find out first character which is overflowed the container in paragraph
+      const textNode = firstOut.firstChild;
+      low = 0;
+      high = textNode ? textNode.length - 1 : -1;
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        const range = document.createRange();
+        range.setStart(textNode, mid);
+        range.setEnd(textNode, mid + 1);
+        if (range.getBoundingClientRect().top < boundary) {
           low = mid + 1;
         } else {
           high = mid - 1;
         }
       }
-      return low;
+      return this.ignoreSpaces(firstOutStart + low);
     };
 
-    let target, cursor;
+    let cursor;
     if (this.isTwoColumn()) {
-      target = ref.get('left');
-      cursor = tryFill(tryFill(nextCursor, target), target);
+      const midCursor = findColumnStartByEndsWith(nextCursor, ref.get('right'));
+      cursor = findColumnStartByEndsWith(midCursor, ref.get('left'));
     } else {
-      target = ref.get('body');
-      cursor = tryFill(nextCursor, target);
-    }
-    // We look back one more column (and hope the paragraph is not longer than it)
-    // So we can have a better knowledge about where to split pages
-    if (cursor > 0) {
-      cursor = this.layoutPageColumn(tryFill(cursor, target), target);
+      cursor = findColumnStartByEndsWith(nextCursor, ref.get('body'));
     }
     this.pagesContainer.removeChild(container);
 
-
+    // Finally, we reuse starts with to render the page
     return this.layoutPageStartsWith(cursor);
   }
   clearHighlight() {
@@ -713,13 +683,13 @@ export default class FlipTextPage extends TextPage {
       return this.highlightChars(start, length, depth + 1);
     }
 
-    const prevNext = this.pages.prev ? this.pages.prev.nextCursor : void 0;
+    const prevNext = this.pages.prev?.nextCursor;
     const currentPage = this.pages.current.cursor;
     const currentNext = this.pages.current.nextCursor;
-    const nextPage = this.pages.next ? this.pages.next.cursor : void 0;
-    const nextNext = this.pages.next ? this.pages.next.nextCursor : void 0;
+    const nextPage = this.pages.next?.cursor;
+    const nextNext = this.pages.next?.nextCursor;
 
-    if (start + length < Math.min(currentPage, prevNext || 0)) {
+    if (start + length < Math.min(currentPage, prevNext ?? 0)) {
       // Maybe something went wrong
       this.readPage.setCursor(start, { resetSpeech: false });
       return this.highlightChars(start, length, depth + 1);

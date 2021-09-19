@@ -226,8 +226,8 @@ class ValueConfigOption extends ConfigOption {
   /** @param {{ name: string, title: string, default: any, validator?: (any) => boolean, normalize: (any) => any }} config */
   constructor(config) {
     super(config);
-    this.isValidValue = config.validator || (() => true);
-    this.normalizeConfig = config.normalize || (value => value);
+    this.isValidValue = config.validator ?? (() => true);
+    this.normalizeConfig = config.normalize ?? (value => value);
   }
   get type() { return 'value'; }
   async setConfig(value) {

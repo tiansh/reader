@@ -39,7 +39,7 @@ export default class ItemList {
 
     this.onItemClick = config.onItemClick;
     this.onRemove = config.onRemove;
-    this.mayRemove = config.mayRemove || (() => true);
+    this.mayRemove = config.mayRemove ?? (() => true);
     this.selectable = config.selectable;
     this.selected = new Set();
     this.emptyListRender = config.emptyListRender;
@@ -261,9 +261,13 @@ export default class ItemList {
       this.selected.delete(index);
     }
   }
-  scrollIntoView(index) {
+  /**
+   * @param {number} index
+   * @param {ScrollIntoViewOptions} options
+   */
+  scrollIntoView(index, options) {
     const element = this.elements.get(index);
-    element.scrollIntoView({ block: 'nearest' });
+    element.scrollIntoView(options ?? { block: 'nearest' });
   }
   clearSelectItem() {
     if (!this.selectable) return;

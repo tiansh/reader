@@ -7,7 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-const version = '20210912';
+const version = /* VERSION */"20210920"/* VERSION */; // eslint-disable-line quotes
 
 const resourceList = [
   './css/common/input.css',
@@ -86,6 +86,12 @@ self.addEventListener('install', function (event) {
 });
 
 self.addEventListener('fetch', function (event) {
-  event.respondWith(caches.match(event.request));
+  if (event.request.url === new URL('?version', location.href).href) {
+    const versionText = `/* VERSION */${JSON.stringify(version)}/* VERSION */`;
+    const init = { status: 200, headers: { 'Content-Type': 'text/plain' } };
+    event.respondWith(new Response(versionText, init));
+  } else {
+    event.respondWith(caches.match(event.request));
+  }
 });
 

@@ -81,6 +81,14 @@ export default class TextPage {
   clearHighlight() { }
   highlightChars(start, length) { return false; }
   cursorChange(cursor, config) { }
+  getRenderCursor() {
+    // I know this could be weird. This acturlly assumed we only need to ignore spaces.
+    // But I didn't find out any better approach. As render text page requires the table
+    // of contexts ready, while render the table of contexts requires text page been
+    // rendered, which is a circular. So, this would be the best I can do here.
+    // Hopefully it works.
+    return this.ignoreSpaces(this.readPage.getRawCursor());
+  }
   async updateStyleConfig() {
     this.customFont = document.querySelector('#custom_font');
     this.customStyle = document.querySelector('#custom_style');
@@ -116,13 +124,18 @@ export default class TextPage {
     this.configs = configs;
   }
   ignoreSpaces(cursor) {
+    if (this.ignoreSpacesMemorizeStart === cursor) {
+      return this.ignoreSpacesMemorizeEnd;
+    }
+    this.ignoreSpacesMemorizeStart = cursor;
     const content = this.readPage.getContent(), length = content.length;
     let lineBreak = cursor - 1;
     for (; /\s/.test(content[cursor]); cursor++) {
       if (content[cursor] === '\n') lineBreak = cursor;
     }
-    if (cursor >= length) return length;
-    return lineBreak + 1;
+    const result = cursor >= length ? length : lineBreak + 1;
+    this.ignoreSpacesMemorizeEnd = result;
+    return result;
   }
   ignoreSpacesBackward(cursor) {
     const content = this.readPage.getContent();

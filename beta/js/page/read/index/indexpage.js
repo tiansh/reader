@@ -117,8 +117,7 @@ export default class IndexPage extends ReadSubPage {
     }
   }
   isSubPageActive(/** @type {'contents'|'bookmark'|'search'} */page = null) {
-    const subPage = this.subPageMap[page];
-    return subPage && subPage.isShow;
+    return this.subPageMap[page]?.isShow;
   }
   cursorChange(cursor, config) {
     this.subPages.forEach(page => {

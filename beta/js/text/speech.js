@@ -132,6 +132,7 @@ speech.prepare = function (text) {
   ssu.voice = preferVoice;
   ssu.rate = speechRate;
   ssu.pitch = speechPitch;
+  ssu.lang = preferVoice.lang;
   return ssu;
 };
 

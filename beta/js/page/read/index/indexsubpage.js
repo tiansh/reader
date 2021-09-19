@@ -34,10 +34,10 @@ export default class IndexSubPage extends ReadSubPage {
   }
   show() {
     this.isShow = true;
+    this.updateCurrentHighlight();
     this.indexPage.container.style.setProperty('--tab-index-current', this.pageIndex);
     this.tabGroup.style.setProperty('--active-index', this.pageIndex);
     this.indexPage.currentActiveIndex = this.pageIndex;
-    this.focusCurrentItem();
     this.container.removeAttribute('aria-hidden');
     dom.enableKeyboardFocus(this.container);
   }
@@ -75,7 +75,7 @@ export default class IndexSubPage extends ReadSubPage {
     const onItemClick = this.onItemClick.bind(this);
     const render = this.listItemRender.bind(this);
     const emptyListRender = this.emptyListRender.bind(this);
-    const onRemove = this.onRemoveItem && this.onRemoveItem.bind(this);
+    const onRemove = this.onRemoveItem?.bind(this);
     this.itemList = new ItemList(this.listElement, {
       list: items.slice(0),
       onItemClick,
@@ -94,11 +94,6 @@ export default class IndexSubPage extends ReadSubPage {
     this.itemList.dispatch();
     this.itemList = null;
   }
-  focusCurrentItem() {
-    if (this.currentContentsIndex) {
-      this.itemList.scrollIntoView(this.currentContentsIndex);
-    }
-  }
   getCurrentHighlightIndex() {
     return null;
   }
@@ -107,7 +102,7 @@ export default class IndexSubPage extends ReadSubPage {
     const current = index === -1 ? null : index;
     if (this.currentContentsIndex === current) return;
     this.itemList.clearSelectItem();
-    if (current != null && current !== -1) {
+    if (current != null) {
       this.itemList.setSelectItem(current, true);
       this.itemList.scrollIntoView(current);
     }

@@ -78,6 +78,6 @@ export default class Router {
       document.title = i18n.getMessage('titleWithName', text);
     }
     const title = document.head.querySelector('title');
-    title.lang = lang || i18n.getMessage('locale');
+    title.lang = lang ?? i18n.getMessage('locale');
   }
 }

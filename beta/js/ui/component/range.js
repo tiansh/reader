@@ -169,7 +169,7 @@ export default class RangeInput {
       ArrowLeft: -1,
       PageUp: 10,
       PageDown: -10,
-    }[event.code] || 0;
+    }[event.code] ?? 0;
     if (!ratio) return;
     const total = (this.config.max - this.config.min) / this.config.step;
     const move = Math.min(base, total / 50) * ratio * this.config.step;
