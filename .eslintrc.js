@@ -2,7 +2,7 @@ module.exports = {
   root: true,
   extends: 'eslint:recommended',
   parserOptions: {
-    ecmaVersion: 8,
+    ecmaVersion: 2021,
     sourceType: 'module',
     'import/extensions': [".js"],
   },
