@@ -638,7 +638,13 @@ export default class FlipTextPage extends TextPage {
         const range = document.createRange();
         range.setStart(textNode, mid);
         range.setEnd(textNode, mid + 1);
-        if (range.getBoundingClientRect().top < boundary) {
+        // When Safari break some line earlier in order to handle line breaking rules, the extra
+        // space introduced is considered a part of the next character. In which case,
+        // getClientRects() may returns length 2 array while the first element has a zero width.
+        // We should ignore it so we would not voilate the line breaking rules.
+        const rects = Array.from(range.getClientRects());
+        const rectTop = rects.find(rect => rect.width * rect.height)?.top ?? rects[0].top;
+        if (rectTop < boundary) {
           low = mid + 1;
         } else {
           high = mid - 1;
