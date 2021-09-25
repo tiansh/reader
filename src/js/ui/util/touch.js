@@ -201,6 +201,7 @@ export class TouchMoveListener {
       document.removeEventListener('touchmove', touchMoveHandler);
     };
     const touchStartHandler = event => {
+      if (event.touches.length > 1) return;
       touchStart = true;
       const touch = event.touches.item(0);
       this.triggerCallback('start', { position: [touch.pageX, touch.pageY], touch: true });
