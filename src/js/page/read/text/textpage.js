@@ -123,6 +123,7 @@ export default class TextPage {
       this.customStyle.textContent += '\n' + this.userCustomCss;
     }
     this.configs = configs;
+    await document.fonts.load(`${configs.font_size}px CustomFont`);
   }
   ignoreSpaces(cursor) {
     if (this.ignoreSpacesMemorizeStart === cursor) {
