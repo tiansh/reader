@@ -105,6 +105,7 @@ export default class TextPage {
     ];
     /** @type {{ [key in typeof keys[0]]?: string }} */
     const configs = Object.fromEntries(await Promise.all(keys.map(async key => [key, await config.get(key)])));
+
     const font = configs.font_family && Array.isArray(configs.font_list) &&
       configs.font_list.find(font => font.id === configs.font_family).content || null;
     this.customFont.textContent = [

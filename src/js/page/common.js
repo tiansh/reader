@@ -37,10 +37,13 @@ document.documentElement.addEventListener('mouseout', function (event) {
 
 document.body.addEventListener('touchmove', function (event) {
   const target = event.target;
-  do {
-    if (!(target instanceof Element)) break;
-    if (!target.matches('.scroll, .scroll *')) break;
-    if (document.body.classList.contains('noscroll')) break;
+  if (target instanceof Node) check: do {
+    for (let ref = target; ref; ref = ref.parent) {
+      if (ref instanceof Element) {
+        if (ref.classList.contains('scroll')) return;
+        if (ref.classList.contains('noscroll')) break check;
+      }
+    }
     return;
   } while (false);
   event.preventDefault();

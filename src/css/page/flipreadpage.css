@@ -6,7 +6,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-.read-text-pages {
+.read-page-flip .read-text-pages {
   position: absolute;
   top: 0;
   left: 0;
@@ -16,7 +16,7 @@
   contain: layout;
 }
 
-.read-text-page {
+.read-page-flip .read-text-page {
   box-sizing: border-box;
   position: absolute;
   width: 100%;
@@ -30,7 +30,7 @@
   transition: left ease-out 0.2s;
 }
 
-.read-text-page::after {
+.read-page-flip .read-text-page::after {
   content: " ";
   position: absolute;
   top: 0;
@@ -40,29 +40,29 @@
   z-index: 1;
 }
 
-.read-text-page-prev {
+.read-page-flip .read-text-page-prev {
   left: calc(calc(-1 * var(--window-width)) + var(--slide-x));
 }
 
-.read-text-page-next {
+.read-page-flip .read-text-page-next {
   left: calc(var(--window-width) + var(--slide-x));
 }
 
-.read-text-pages-slide .read-text-page {
+.read-page-flip .read-text-pages-slide .read-text-page {
   transition: none;
 }
 
-.read-text-page-processing {
+.read-page-flip .read-text-page-processing {
   transition: none;
   visibility: hidden;
   z-index: -1;
 }
 
-.read-text-page-processing .read-body {
+.read-page-flip .read-text-page-processing .read-body {
   overflow: visible;
 }
 
-.read-body {
+.read-page-flip .read-body {
   position: absolute;
   top: var(--page-margin-y);
   bottom: calc(var(--page-margin-y) + 20px);
@@ -79,32 +79,32 @@
   z-index: 2;
 }
 
-.read-body-left {
+.read-page-flip .read-body-left {
   right: calc(50% + calc(var(--page-margin-x) / 2));
 }
 
-.read-body-right {
+.read-page-flip .read-body-right {
   left: calc(50% + calc(var(--page-margin-x) / 2));
 }
 
-.read-body p:empty::before {
+.read-page-flip .read-body p:empty::before {
   content: " ";
 }
 
-.read-body p:first-child {
+.read-page-flip .read-body p:first-child {
   margin-top: 0;
 }
 
-.read-body p.text-heading {
+.read-page-flip .read-body p.text-heading {
   font-size: 120%;
   font-weight: bold;
 }
 
-.read-body p.text-heading:not(:first-child) {
+.read-page-flip .read-body p.text-heading:not(:first-child) {
   margin-top: 100vh;
 }
 
-.read-meta {
+.read-page-flip .read-meta {
   position: absolute;
   bottom: var(--page-margin-y);
   left: var(--page-margin-x);
@@ -117,19 +117,19 @@
   z-index: 2;
 }
 
-.read-title {
+.read-page-flip .read-title {
   flex: 1 1 auto;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.read-progress {
+.read-page-flip .read-progress {
   flex: 0 0 auto;
   white-space: nowrap;
 }
 
-.read-highlight {
+.read-page-flip .read-highlight {
   display: none;
   position: absolute;
   top: 0;
@@ -141,22 +141,22 @@
   contain: strict;
 }
 
-.read-speech .read-highlight {
+.read-page-flip .read-speech .read-highlight {
   display: block;
 }
 
-.read-highlight span {
+.read-page-flip .read-highlight span {
   position: absolute;
   background: var(--highlight-background);
 }
 
-.read-text-page-buttons {
+.read-page-flip .read-text-page-buttons {
   z-index: -1;
   position: absolute;
 }
 
-.read-text-page-buttons #read_page_prev,
-.read-text-page-buttons #read_page_next {
+.read-page-flip .read-text-page-buttons #read_page_prev,
+.read-page-flip .read-text-page-buttons #read_page_next {
   position: absolute;
   top: -2px;
   width: 1px;

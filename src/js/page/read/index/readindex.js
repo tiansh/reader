@@ -86,12 +86,14 @@ export default class ReadIndex {
     }
     return high;
   }
+  getContentsByIndex(index) {
+    const contents = this.getContentsList();
+    if (!contents) return null;
+    return contents[index] ?? null;
+  }
   getContentsByCursor(cursor) {
     const index = this.getIndexOfContentsByCursor(cursor);
-    if (index == null || index === -1) {
-      return null;
-    }
-    return this.getContentsList()[index];
+    return this.getContentsByIndex(index);
   }
   getContentsTemplate() {
     return this.index.content.template;
