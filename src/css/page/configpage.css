@@ -48,7 +48,6 @@
   z-index: 0;
   display: flex;
   flex-wrap: wrap;
-  position: relative;
 }
 
 .config-item:not(:last-child) {

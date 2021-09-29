@@ -23,8 +23,8 @@
   height: var(--window-height);
   top: 0;
   left: var(--slide-x);
-  -webkit-user-select: auto;
-  user-select: auto;
+  -webkit-user-select: text;
+  user-select: text;
   overflow: hidden;
   overflow-wrap: break-word;
   transition: left ease-out 0.2s;
