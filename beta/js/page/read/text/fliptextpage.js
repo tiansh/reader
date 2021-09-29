@@ -39,9 +39,9 @@ export default class FlipTextPage extends TextPage {
     await super.onActivate({ id });
 
     // EXPERT_CONFIG When to use two column page
-    this.screenWidthTwoColumn = await config.expert('read_flip.screen_width_two_column', 'number', 960);
+    this.screenWidthTwoColumn = await config.expert('appearance.screen_width_two_column', 'number', 960);
     // EXPERT_CONFIG When to use two column page when side index active
-    this.screenWidthTwoColumnIndex = await config.expert('read_flip.screen_width_two_column_index', 'number', 1260);
+    this.screenWidthTwoColumnIndex = await config.expert('appearance.screen_width_two_column_index', 'number', 1260);
     this.maxContentLength = await config.expert('text.content_max_length', 'number', 100);
 
     /** @type {PageRenderCollection} */
@@ -536,7 +536,8 @@ export default class FlipTextPage extends TextPage {
     const contentsIndex = readIndex.getIndexOfContentsByCursor(start);
     if (contentsIndex !== -1) {
       container.dataset.section = contentsIndex;
-      title.textContent = readIndex.getContentsList()[contentsIndex].title;
+      const contents = readIndex.getContentsByIndex(contentsIndex);
+      if (contents?.title != null) title.textContent = contents.title;
     }
     progress.textContent = (start / content.length * 100).toFixed(2) + '%';
     container.lang = this.readPage.getLang();

@@ -24,5 +24,7 @@ const router = new Router({
   if ('serviceWorker' in navigator) {
     await navigator.serviceWorker.register('./sw.js');
   }
-}());
+}()).catch(() => {
+  // Service Worker may be rejected due to not supported, privacy setting, ect.
+});
 

@@ -26,8 +26,6 @@ export default class TextPage {
   async onActivate({ id }) {
     this.isCurrent = true;
 
-    // EXPERT_CONFIG Add some custom CSS (danger)
-    this.userCustomCss = await config.expert('appearance.custom_css', 'string', '');
     await this.updateStyleConfig();
 
     this.container = this.createContainer();
@@ -105,6 +103,7 @@ export default class TextPage {
     ];
     /** @type {{ [key in typeof keys[0]]?: string }} */
     const configs = Object.fromEntries(await Promise.all(keys.map(async key => [key, await config.get(key)])));
+
     const font = configs.font_family && Array.isArray(configs.font_list) &&
       configs.font_list.find(font => font.id === configs.font_family).content || null;
     this.customFont.textContent = [
@@ -118,10 +117,8 @@ export default class TextPage {
       `.read-text-page p:not(:first-child) { margin-top: ${configs.paragraph_spacing * configs.line_height * configs.font_size}px; }`,
       font ? `.read-text-page { font-family: CustomFont; }` : '',
     ].join('\n');
-    if (this.userCustomCss) {
-      this.customStyle.textContent += '\n' + this.userCustomCss;
-    }
     this.configs = configs;
+    await document.fonts.load(`${configs.font_size}px CustomFont`);
   }
   ignoreSpaces(cursor) {
     if (this.ignoreSpacesMemorizeStart === cursor) {

@@ -29,8 +29,6 @@ export default class ReadSpeech {
     this.spoken = null;
     this.speakingSsu = null;
 
-    this.listenEvents();
-
     this.onStart = this.onStart.bind(this);
     this.onBoundary = this.onBoundary.bind(this);
     this.onEnd = this.onEnd.bind(this);
@@ -71,12 +69,29 @@ export default class ReadSpeech {
     });
     // EXPERT_CONFIG Loop when speech reach end of text
     this.enableLoop = await config.expert('speech.loop_enable', 'boolean', false);
+    // EXPERT_CONFIG Pause reading when webpage is been hidden (user switched to other tabs)
+    this.pauseOnHidden = await config.expert('speech.pause_on_hidden', 'boolean', false);
+
+    this.listenEvents();
   }
   listenEvents() {
     this.listenMediaDeviceChange();
     window.addEventListener('beforeunload', event => {
       this.stop();
     });
+    if (this.pauseOnHidden) {
+      this.hiddenPause = false;
+      document.addEventListener('visibilitychange', event => {
+        if (this.speaking && document.hidden) {
+          this.hiddenPause = true;
+          this.stop();
+        }
+        if (this.hiddenPause && !document.hidden) {
+          this.hiddenPause = false;
+          this.reset();
+        }
+      });
+    }
   }
   async listenMediaDeviceChange() {
     if (!navigator.mediaDevices) return false;
@@ -229,11 +244,16 @@ export default class ReadSpeech {
     this.readMore();
   }
   async stop() {
-    if (!this.speaking || this.stopping) return;
+    if (!this.speaking) return;
+    if (this.stopping) {
+      await this.stopping;
+      return;
+    }
     this.page.element.classList.remove('read-speech');
     this.page.textPage.clearHighlight();
     this.speaking = false;
-    this.stopping = true;
+    let stopped = null;
+    this.stopping = new Promise(resolve => { stopped = resolve; });
     while (speechSynthesis.speaking || speechSynthesis.pending) {
       speechSynthesis.cancel();
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -244,6 +264,7 @@ export default class ReadSpeech {
       await new Promise(resolve => setTimeout(resolve, 0));
     }
     this.stopping = false;
+    stopped();
     if (this.mediaSessionEnable) {
       if (this.fakeAudio) this.fakeAudio.pause();
       this.updateMediaSession();

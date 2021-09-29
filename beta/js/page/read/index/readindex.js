@@ -32,8 +32,10 @@ export default class ReadIndex {
     }
     this.config = null;
     Promise.all([
-      config.expert('text.content_max_length', 'number', 100),
-      config.expert('text.content_size_limit', 'number', 10000),
+      // EXPERT_CONFIG Maximum length of line for table of contents
+      config.expert('text.contents_max_length', 'number', 100),
+      // EXPERT_CONFIG Maximum size of table of contents
+      config.expert('text.contents_size_limit', 'number', 2000),
     ]).then(([maxLength, limit]) => {
       this.config = { maxLength, limit };
     });
@@ -86,12 +88,14 @@ export default class ReadIndex {
     }
     return high;
   }
+  getContentsByIndex(index) {
+    const contents = this.getContentsList();
+    if (!contents) return null;
+    return contents[index] ?? null;
+  }
   getContentsByCursor(cursor) {
     const index = this.getIndexOfContentsByCursor(cursor);
-    if (index == null || index === -1) {
-      return null;
-    }
-    return this.getContentsList()[index];
+    return this.getContentsByIndex(index);
   }
   getContentsTemplate() {
     return this.index.content.template;

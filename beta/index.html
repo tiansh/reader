@@ -21,15 +21,19 @@ defined by the Mozilla Public License, v. 2.0.
 <meta name="application-name" content="tReader">
 <meta name="apple-mobile-web-app-title" content="tReader">
 <meta name="msapplication-starturl" content="./">
+<meta name="theme-color" content="black">
 
-<link rel="icon" href="favicon.ico" sizes="16x16" />
-<link rel="apple-touch-icon" sizes="180x180" href="./reader.png" />
+<link rel="icon" href="./icon/icon.ico" sizes="32x32 48x48 512x512 64x64 72x72 96x96 128x128" type="image/x-icon" />
+<link rel="icon" href="./icon/icon.png" sizes="512x512" type="image/png" />
+<link rel="icon" href="./icon/icon.svg" sizes="any" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="./icon/icon.png" sizes="512x512" type="image/png" />
 
 <link rel="stylesheet" href="./css/normalize-8.0.1.css" />
 <link rel="stylesheet" href="./css/index.css" />
 
 <style id="custom_font"></style>
 <style id="custom_style"></style>
+<style id="custom_css"></style>
 </head>
 <body>
 <div class="page" id="list_page">
@@ -38,14 +42,14 @@ defined by the Mozilla Public License, v. 2.0.
     <div class="list-action">
       <div class="list-filter">
         <div class="search-box">
-          <label><span class="icon icon-search"></span><input type="search" class="search-input" /></label>
+          <label><span class="icon icon-search" role="img"></span><input type="search" class="search-input" /></label>
         </div>
       </div>
       <div class="list-sort">
         <button type="button" class="list-sort">
           <div class="button-wrap" tabindex="-1">
             <span class="list-sort-title"><span data-i18n="listSortTitle"></span></span>
-            <span class="list-sort-content"><span></span><span class="icon icon-detail" title="Detail"></span></span>
+            <span class="list-sort-content"><span></span><span class="icon icon-detail" role="img"></span></span>
           </div>
         </button>
       </div>
@@ -109,7 +113,7 @@ defined by the Mozilla Public License, v. 2.0.
       <div class="index-tab-container">
         <div class="search-box">
           <div class="search-box-placehodler" tabindex="-1" aria-hidden="true"></div>
-          <form action="/"><label><span class="icon icon-search"></span><input type="search" name="search_box" class="search-input" /></label></form>
+          <form action="/"><label><span class="icon icon-search" role="img"></span><input type="search" name="search_box" class="search-input" /></label></form>
         </div>
         <div id="search_list" class="index-list scroll" tabindex="-1"></div>
       </div>
@@ -170,7 +174,7 @@ defined by the Mozilla Public License, v. 2.0.
       <p>Copyright (c) 2020 <span lang="zh-Hans">田生</span></p>
       <p>
         This project is released under the Mozilla Public License 2.0 with no copyleft exception.
-        Source code are available on its GitHub: <a href="https://github.com/tiansh/reader/" target="_blank">https://github.com/tiansh/reader/</a>.
+        Source code are available on its GitHub: <a href="https://github.com/tiansh/reader/" target="_blank" rel="noopener">https://github.com/tiansh/reader/</a>.
       </p>
       <p>
       </p>
@@ -186,7 +190,7 @@ defined by the Mozilla Public License, v. 2.0.
   </div>
 </div>
 <template id="icon">
-  <span class="icon"></span>
+  <span class="icon" role="img"></span>
 </template>
 <template id="icon_button">
   <button type="button"><div class="button-wrap" tabindex="-1" data-ref="icon"></div></button>
@@ -201,7 +205,7 @@ defined by the Mozilla Public License, v. 2.0.
 <template id="list_remove_action">
   <div class="list-item-remove">
     <button type="button" tabindex="-1" data-ref="button">
-      <div class="button-wrap" tabindex="-1"><span class="icon icon-remove" aria-hidden="true"></span></div>
+      <div class="button-wrap" tabindex="-1"><span class="icon icon-remove" aria-hidden="true" role="img"></span></div>
     </button>
   </div>
 </template>

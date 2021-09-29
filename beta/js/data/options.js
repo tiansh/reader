@@ -72,6 +72,12 @@ class ConfigOption {
       });
     });
   }
+  detailIcon() {
+    const detailIcon = template.icon('detail');
+    detailIcon.classList.add('config-item-detail');
+    detailIcon.setAttribute('aria-label', i18n.getMessage('configWithDetail'));
+    return detailIcon;
+  }
 }
 
 class SelectConfigOption extends ConfigOption {
@@ -90,8 +96,7 @@ class SelectConfigOption extends ConfigOption {
     const itemElement = container.firstChild;
     this.resultElement = itemElement.appendChild(document.createElement('span'));
     this.resultElement.classList.add('config-item-value');
-    const detailIcon = itemElement.appendChild(template.icon('detail'));
-    detailIcon.classList.add('config-item-detail');
+    itemElement.appendChild(this.detailIcon());
     this.resultElement.id = 'config_item_value_' + this.index;
     this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
     this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
@@ -117,8 +122,7 @@ class ColorConfigOption extends ConfigOption {
     const itemElement = container.firstChild;
     this.resultElement = itemElement.appendChild(document.createElement('span'));
     this.resultElement.classList.add('config-item-value', 'config-item-color-value');
-    const detailIcon = itemElement.appendChild(template.icon('detail'));
-    detailIcon.classList.add('config-item-detail');
+    itemElement.appendChild(this.detailIcon());
     this.resultElement.id = 'config_item_value_' + this.index;
     this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
     this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
@@ -147,8 +151,7 @@ class FontConfigOption extends ConfigOption {
     const itemElement = container.firstChild;
     this.resultElement = itemElement.appendChild(document.createElement('span'));
     this.resultElement.classList.add('config-item-value');
-    const detailIcon = itemElement.appendChild(template.icon('detail'));
-    detailIcon.classList.add('config-item-detail');
+    itemElement.appendChild(this.detailIcon());
     this.resultElement.id = 'config_item_value_' + this.index;
     this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
     this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
@@ -170,8 +173,7 @@ class VoiceConfigOption extends ConfigOption {
   render(container) {
     super.render(container);
     const itemElement = container.firstChild;
-    const detailIcon = itemElement.appendChild(template.icon('detail'));
-    detailIcon.classList.add('config-item-detail');
+    itemElement.appendChild(this.detailIcon());
   }
 }
 
@@ -190,8 +192,7 @@ class TextConfigOption extends ConfigOption {
     const itemElement = container.firstChild;
     this.resultElement = itemElement.appendChild(document.createElement('span'));
     this.resultElement.classList.add('config-item-value');
-    const detailIcon = itemElement.appendChild(template.icon('detail'));
-    detailIcon.classList.add('config-item-detail');
+    itemElement.appendChild(this.detailIcon());
     this.resultElement.id = 'config_item_value_' + this.index;
     this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
     this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
@@ -253,8 +254,7 @@ class ExpertConfigOption extends ConfigOption {
   render(container) {
     super.render(container);
     const itemElement = container.firstChild;
-    const detailIcon = itemElement.appendChild(template.icon('detail'));
-    detailIcon.classList.add('config-item-detail');
+    itemElement.appendChild(this.detailIcon());
   }
   renderValue(value) {
   }

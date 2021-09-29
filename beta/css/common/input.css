@@ -160,9 +160,6 @@ button .icon {
   grid-auto-rows: 50px;
 }
 
-.color-picker-candidate-list li {
-}
-
 .color-picker-candidate-list li button {
   width: 50px;
   height: 50px;

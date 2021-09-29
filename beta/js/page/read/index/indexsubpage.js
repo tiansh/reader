@@ -94,6 +94,12 @@ export default class IndexSubPage extends ReadSubPage {
     this.itemList.dispatch();
     this.itemList = null;
   }
+  enablePageButton() {
+    this.pageButton.disabled = false;
+  }
+  disablePageButton() {
+    this.pageButton.disabled = true;
+  }
   getCurrentHighlightIndex() {
     return null;
   }
