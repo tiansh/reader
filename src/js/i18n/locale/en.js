@@ -40,6 +40,7 @@ export default {
   readPagePrevious: 'Previous Page',
   readPageNext: 'Next Page',
 
+  configWithDetail: 'Detail',
   configThemeGroupTitle: 'Theme',
   configTheme: 'Theme',
   configThemeAuto: 'Auto',

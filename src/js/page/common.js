@@ -10,6 +10,7 @@
 import onResize from '../ui/util/onresize.js';
 import i18n from '../i18n/i18n.js';
 import theme from '../theme/theme.js';
+import config from '../data/config.js';
 
 onResize.addListener(([width, height]) => {
   const html = document.documentElement;
@@ -61,4 +62,10 @@ const updateTheme = function () {
 };
 theme.addChangeListener(updateTheme);
 updateTheme();
+
+; (async function () {
+  // EXPERT_CONFIG Add some custom CSS (danger)
+  const userCustomCss = await config.expert('appearance.custom_css', 'string', '');
+  document.getElementById('custom_css').textContent = userCustomCss;
+}());
 

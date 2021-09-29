@@ -45,6 +45,7 @@ export default class ListPage extends Page {
 
     this.searchInput.placeholder = i18n.getMessage('listSearchPlaceholder');
     this.searchClearButton.classList.add('list-filter-clear');
+    this.searchClearButton.disabled = true;
     this.searchContainer.appendChild(this.searchClearButton);
     this.initialListener();
     this.options = { sortBy: 'dateread', search: '' };
@@ -90,13 +91,18 @@ export default class ListPage extends Page {
     this.searchInput.addEventListener('focus', event => {
       this.fileListContainer.scrollTop = 0;
     });
-    this.searchInput.addEventListener('input', event => {
-      this.options.search = this.searchInput.value;
+    const updateSearch = () => {
+      const search = this.searchInput.value.trim();
+      this.options.search = search;
+      this.searchClearButton.disabled = !search;
       this.updateList();
+    };
+    this.searchInput.addEventListener('input', event => {
+      updateSearch();
     });
     this.searchClearButton.addEventListener('click', event => {
-      this.options.search = this.searchInput.value = '';
-      this.updateList();
+      this.searchInput.value = '';
+      updateSearch();
     });
     this.sortMenuKeyboardHandler = this.sortMenuKeyboardHandler.bind(this);
     this.sortButton.addEventListener('click', event => {

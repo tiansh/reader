@@ -119,7 +119,7 @@ screen_width_side_index=960
 screen_width_two_column=960
 ; 当屏幕宽度达到如下值时，即便显示了侧边栏目录，仍然使用两栏模式显示
 screen_width_two_column_index=1260
-; 在阅读页面添加自定义 CSS
+; 添加自定义 CSS
 custom_css=
 
 [text]

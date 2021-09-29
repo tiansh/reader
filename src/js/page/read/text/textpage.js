@@ -26,8 +26,6 @@ export default class TextPage {
   async onActivate({ id }) {
     this.isCurrent = true;
 
-    // EXPERT_CONFIG Add some custom CSS (danger)
-    this.userCustomCss = await config.expert('appearance.custom_css', 'string', '');
     await this.updateStyleConfig();
 
     this.container = this.createContainer();
@@ -119,9 +117,6 @@ export default class TextPage {
       `.read-text-page p:not(:first-child) { margin-top: ${configs.paragraph_spacing * configs.line_height * configs.font_size}px; }`,
       font ? `.read-text-page { font-family: CustomFont; }` : '',
     ].join('\n');
-    if (this.userCustomCss) {
-      this.customStyle.textContent += '\n' + this.userCustomCss;
-    }
     this.configs = configs;
     await document.fonts.load(`${configs.font_size}px CustomFont`);
   }

@@ -21,7 +21,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: none;
   -webkit-user-select: none;

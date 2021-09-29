@@ -40,6 +40,7 @@ export default {
   readPagePrevious: '上一页',
   readPageNext: '下一页',
 
+  configWithDetail: '详情',
   configThemeGroupTitle: '主题',
   configTheme: '主题',
   configThemeAuto: '自动',

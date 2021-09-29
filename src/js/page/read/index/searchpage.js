@@ -48,6 +48,8 @@ export default class IndexSearchPage extends IndexSubPage {
       event.preventDefault();
       this.searchPlaceholder.focus();
     });
+
+    this.disablePageButton();
   }
   onActivate() {
     super.onActivate();
@@ -101,10 +103,12 @@ export default class IndexSearchPage extends IndexSubPage {
     this.lastSearchCursor = cursor;
     this.totalSearchHit += searchHit;
     this.itemList.appendList(searchResult.slice(lastSearchResultSize));
+    this.enablePageButton();
   }
   clearSearch() {
     this.lastSearchResult = [];
     this.itemList.setList([]);
+    this.disablePageButton();
     this.emptyListSpan.textContent = i18n.getMessage('readSearchInitial');
   }
   pageButtonAction() {
