@@ -141,7 +141,7 @@
   contain: strict;
 }
 
-.read-page-flip .read-speech .read-highlight {
+.read-page-flip.read-speech .read-highlight {
   display: block;
 }
 

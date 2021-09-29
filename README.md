@@ -129,9 +129,9 @@ custom_css=
 ; 该项设置仅影响导入 txt 时的行为，对导入完成的 txt 无影响
 encoding=utf-8,gbk,big5,utf-8
 ; 生成目录时，仅考虑长度不超过如下值的行
-content_max_length=100
+contents_max_length=100
 ; 生成目录时，如果识别到的目录条目数量超过如下限制，会拒绝生成目录
-content_size_limit=10000
+contents_size_limit=2000
 
 [speech]
 ; 语音朗读时，单条语音最多的字数
@@ -144,6 +144,8 @@ media_session_enable=false
 skip_text_regex=/^\s*$/u
 ; 语音朗读遇到文章结尾时自动从开头重读
 loop_enable=false
+; 页面切换到后台时暂停朗读
+pause_on_hidden=false
 ```
 
 请谨慎配置高级设置功能，错误配置可能造成显示错误甚至完全无法使用。
