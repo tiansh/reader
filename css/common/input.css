@@ -1,0 +1,200 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+ */
+
+input[type="button"],
+button[type="button"],
+button[type="submit"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  border: 0 none;
+  color: inherit;
+  font-size: 100%;
+  font-family: inherit;
+  outline: none;
+  border-style: none;
+  white-space: nowrap;
+}
+
+button .icon {
+  padding: 0;
+}
+
+.range-outer {
+  padding: 10px;
+  height: 40px;
+  display: flex;
+}
+
+.range-number-container {
+  flex: 0 0 80px;
+  line-height: 40px;
+}
+
+.range-number {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--default-background);
+  color: var(--default-color);
+  border: 1px solid var(--border-color);
+}
+
+.range-container {
+  height: 40px;
+  position: relative;
+  --range-ratio: 0;
+  z-index: 0;
+  box-sizing: border-box;
+  -webkit-user-select: none;
+  user-select: none;
+  flex: 1 1 100%;
+  margin-right: 10px;
+}
+
+.range-wrap {
+  padding: 10px;
+  outline: none;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+.range-thumb {
+  display: block;
+  height: 20px;
+  width: 20px;
+  border-radius: 10px;
+  position: absolute;
+  z-index: 1;
+  left: calc(calc(100% - 20px) * var(--range-ratio));
+  top: calc(50% - 11px);
+  background: var(--range-thumb-color);
+  border: 1px solid var(--range-thumb-border-color);
+  box-shadow: 0 1px 1px #000;
+}
+
+.range-track {
+  border-radius: 1.5px;
+  position: absolute;
+  top: 0;
+  left: 10px;
+  right: 10px;
+  bottom: 0;
+  margin: auto 0;
+  height: 3px;
+  z-index: 0;
+  background: linear-gradient(to right,
+    var(--range-lower-color) 0%,
+    var(--range-lower-color) calc(100% * var(--range-ratio)),
+    var(--range-upper-color) calc(100% * var(--range-ratio)),
+    var(--range-upper-color) 100%
+  );
+}
+
+.color-picker {
+  width: 100%;
+  padding: 10px 20px;
+  box-sizing: border-box;
+}
+
+.color-picker-result {
+  width: calc(100% - 20px);
+  height: 60px;
+  border: 1px solid var(--range-thumb-border-color);
+  box-shadow: 0 0 1px black;
+  background: var(--color-picker-color);
+  margin: 20px 10px;
+}
+
+.color-picker .range-outer {
+  margin-top: 10px;
+}
+
+.color-picker .range-track {
+  height: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--range-thumb-border-color);
+}
+
+.color-picker .range-thumb {
+  border-width: 2px;
+  height: 18px;
+  width: 18px;
+}
+
+.color-picker-hue .range-track {
+  background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+}
+
+.color-picker-hue .range-thumb {
+  background: var(--color-picker-hue-color);
+}
+
+.color-picker-saturation .range-track {
+  background: linear-gradient(to right, var(--color-picker-empty-saturation), var(--color-picker-full-saturation));
+}
+
+.color-picker-value .range-track {
+  background: linear-gradient(to right, var(--color-picker-empty-value), var(--color-picker-full-value));
+}
+
+.color-picker-saturation .range-thumb,
+.color-picker-value .range-thumb {
+  background: var(--color-picker-color);
+}
+
+.color-picker-candidate-list {
+  list-style: none;
+  padding: 0 10px;
+  margin: 10px -10px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 50px);
+  grid-gap: 10px;
+  justify-content: space-between;
+  grid-auto-rows: 50px;
+}
+
+.color-picker-candidate-list li button {
+  width: 50px;
+  height: 50px;
+  border: 1px solid var(--border-color);
+}
+
+.range-container:focus,
+:root button:focus {
+  outline: var(--active-color) solid 2px;
+  outline-offset: -2px;
+}
+
+input[type="button"].hover,
+button[type="button"].hover,
+button[type="submit"].hover {
+  outline: var(--active-color) solid 2px;
+  outline-offset: -2px;
+}
+
+input.input-with-submit {
+  padding-right: 50px;
+}
+button.submit-button {
+  position: absolute;
+  box-sizing: border-box;
+  width: 50px;
+  height: 50px;
+  padding: 10px;
+  line-height: 30px;
+  top: 1px;
+  right: 1px;
+  color: var(--active-color);
+}
+button.submit-button .icon-go {
+  line-height: 30px;
+  display: inline-block;
+  vertical-align: middle;
+}

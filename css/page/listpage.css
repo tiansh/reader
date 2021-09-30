@@ -1,0 +1,222 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+ */
+
+.file-list-container {
+  height: calc(var(--window-height) - 50px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#file {
+  position: absolute;
+  top: -1000px;
+}
+
+.list-filter {
+  padding-right: 40px;
+  position: relative;
+}
+.list-filter-clear {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+.list-filter-clear .button-wrap {
+  padding: 10px;
+  width: 30px;
+  height: 30px;
+  color: var(--active-color);
+  line-height: 30px;
+}
+button.list-sort {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: none;
+  color: inherit;
+  margin: 0 0 0 10px;
+  padding: 0 10px;
+  display: block;
+  height: 52px;
+  line-height: 52px;
+}
+
+.list-sort-title {
+  color: var(--search-title-color);
+  display: inline;
+}
+
+.list-sort-content {
+  margin-left: 10px;
+  display: inline;
+}
+
+.list-sort-menu {
+  display: none;
+}
+
+.screen-option {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--window-width);
+  height: var(--window-height);
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.backdrop {
+  content: " ";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: var(--default-background);
+  color: var(--default-color);
+  opacity: 0.6;
+  z-index: 1;
+}
+
+.screen-option-group {
+  overflow: hidden;
+  border-radius: 16px;
+  margin: 8px 0;
+  max-width: 600px;
+  display: block;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 16px);
+}
+
+button.screen-option-item {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  outline-offset: -2px;
+  display: block;
+  width: 100%;
+  border: 0 none;
+  padding: 0 12px;
+  height: 53px;
+  line-height: 53px;
+  font-size: 25px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--menu-background);
+  color: var(--menu-color);
+  text-align: left;
+}
+
+.screen-option .button-wrap {
+  margin: 0 -12px;
+  padding: 0 20px;
+}
+
+.screen-option-item:last-child {
+  border-bottom: 0 none;
+}
+
+.screen-option-group:last-child {
+  margin-bottom: 10px;
+}
+
+.screen-option-group:last-child .screen-option-item {
+  text-align: center;
+}
+
+.file-item {
+  position: relative;
+}
+
+.file-item:last-child {
+  border-width: 1px 0;
+}
+
+.file-item-content {
+  margin: 0 -15px;
+  padding: 18px 30px;
+  height: 60px;
+  display: block;
+  transition: height, padding ease 0.1s;
+  overflow-y: hidden;
+}
+
+.file-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--list-title-color);
+  line-height: 35px;
+  margin: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.file-comment {
+  line-height: 25px;
+  font-size: 18px;
+}
+
+.file-date {
+  color: var(--list-comment-color);
+  display: inline;
+}
+
+.file-detail {
+  color: var(--list-detail-color);
+  margin-left: 15px;
+  display: inline;
+}
+
+#file_list {
+  min-height: calc(100% + 2px);
+}
+
+#file_list .list-item-remove .icon {
+  font-size: 30px;
+}
+
+#import_tip {
+  display: none;
+}
+
+#import_tip .tip-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 30px 0;
+  width: 270px;
+  height: 20px;
+  line-height: 20px;
+  font-size: 20px;
+  background: var(--alert-background);
+  color: var(--alert-color);
+  text-align: center;
+  border-radius: 10px;
+  z-index: 10;
+}
+
+#import_tip .tip-cover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--alert-cover-background);
+  z-index: 10;
+}
+
+.file-list-container .list-item-empty {
+  padding: 20px 0;
+}
+

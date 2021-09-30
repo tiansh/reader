@@ -6,13 +6,13 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-@import "light.css";
-@import "dark.css";
-@import "icons.css";
-@import "input.css";
-@import "main.css";
-
-@import "listpage.css";
-@import "readpage.css";
-@import "configpage.css";
+@import "./theme/light.css";
+@import "./theme/dark.css";
+@import "./icons/icons.css";
+@import "./common/input.css";
+@import "./common/main.css";
+@import "./page/listpage.css";
+@import "./page/readpage.css";
+@import "./page/flipreadpage.css";
+@import "./page/configpage.css";
 

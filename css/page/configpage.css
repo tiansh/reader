@@ -1,0 +1,272 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * This Source Code Form is "Incompatible With Secondary Licenses", as
+ * defined by the Mozilla Public License, v. 2.0.
+ */
+
+.config-page {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--window-width);
+  background: var(--config-background);
+}
+
+.config-page-content {
+  position: absolute;
+  top: 50px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.config-group {
+  margin: 35px 0;
+  background: var(--config-item-background);
+}
+
+.config-title {
+  padding: 0 15px;
+  line-height: 36px;
+  font-size: 16px;
+  color: var(--config-title-color);
+  margin: 35px 0 -35px;
+}
+
+.config-item {
+  padding: 0 25px;
+  position: relative;
+  color: var(--config-content-color);
+  z-index: 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.config-item:not(:last-child) {
+  padding-bottom: 1px;
+}
+
+.config-item:not(:last-child)::after {
+  content: " ";
+  position: absolute;
+  bottom: 0;
+  left: 15px;
+  right: 0;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.config-item-title,
+.config-item-value {
+  line-height: 50px;
+  font-size: 20px;
+  white-space: pre;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.config-item-title {
+  flex: 1 1 auto;
+  margin-left: -25px;
+}
+.config-item-value {
+  flex: 0 1 auto;
+  text-align: right;
+  color: var(--list-comment-color);
+  position: relative;
+}
+.config-item-color-value {
+  flex-basis: 60px;
+  background-size: contain;
+  margin: 5px 0;
+  box-sizing: border-box;
+  border: 1px solid var(--border-color);
+}
+.config-item-detail {
+  position: absolute;
+  right: 0;
+  width: 20px;
+  line-height: 50px;
+  top: calc(50% - 25px);
+  color: var(--list-comment-color);
+}
+.config-item-detail::before {
+  transform: rotate(-90deg);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.config-option-page  {
+  left: 100%;
+  transition: left ease 0.05s;
+}
+
+.config-option-page-show {
+  left: 0;
+  transition: none;
+}
+
+.config-option-select-list {
+  line-height: 50px;
+  margin-top: 35px;
+  background: var(--config-item-background);
+}
+
+.select-font-button-inner {
+  line-height: 50px;
+  text-align: center;
+  color: var(--active-color);
+}
+
+.select-config-option-item {
+  padding: 10px 0;
+  line-height: 30px;
+}
+
+#select_font_file {
+  position: absolute;
+  height: 50px;
+  left: 50%;
+  bottom: 85px;
+  width: 0;
+  z-index: -1;
+}
+
+.font-select-section {
+  background: var(--config-item-background);
+  margin: 35px 0;
+}
+
+.config-page-close-slide {
+  left: var(--close-slide-x);
+}
+
+.config-page-close-slide::before {
+  content: " ";
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to right,
+    var(--default-background) 0, var(--default-background) var(--close-slide-x),
+    transparent var(--close-slide-x), transparent var(--close-slide-x));
+  opacity: 0.6;
+}
+
+.config-option-text {
+  margin-top: 35px;
+  background: var(--config-item-background);
+  border: 0 solid var(--border-color);
+  border-width: 1px 0;
+  height: 50px;
+  line-height: 50px;
+  position: relative;
+}
+
+.config-option-text-input {
+  background: transparent;
+  position: absolute;
+  border: 0 none;
+  margin: 0;
+  padding: 10px 15px 10px 120px;
+  color: inherit;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  box-sizing: border-box;
+  height: 50px;
+  line-height: 30px;
+  width: 100%;
+  outline: none;
+}
+
+.config-option-text-title {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 20px;
+}
+
+.config-option-text-description {
+  margin-top: 10px;
+  padding: 0 20px;
+  font-size: 16px;
+  color: var(--list-comment-color);
+}
+
+.config-credits-iframe {
+  border: 0 none;
+  width: 100%;
+  height: 100%;
+}
+
+.config-page-about {
+  padding: 0 20px;
+}
+
+.config-page-about pre {
+  white-space: normal;
+}
+
+.config-page-about .config-page-about-header {
+  margin-top: 35px;
+}
+
+.config-page-about .config-page-version {
+  margin-left: 20px;
+}
+
+.config-page-about h1 {
+  font-size: 150%;
+  margin: 0;
+  display: inline;
+}
+
+.config-option-expert {
+  margin-top: 35px;
+  background: var(--config-item-background);
+  border: 0 solid var(--border-color);
+  border-width: 1px 0;
+  height: calc(100% - 120px);
+  min-height: 200px;
+  line-height: 30px;
+  position: relative;
+}
+
+.config-option-expert-input {
+  background: transparent;
+  position: absolute;
+  border: 0 none;
+  margin: 0;
+  padding: 10px 15px;
+  color: inherit;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  box-sizing: border-box;
+  line-height: 30px;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  resize: none;
+}
+
+.config-option-expert-description {
+  margin: 10px 0;
+  padding: 0 20px;
+  font-size: 16px;
+  color: var(--list-comment-color);
+}

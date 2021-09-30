@@ -7,11 +7,11 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-import Router from './router.js';
-import ListPage from './listpage.js';
-import ReadPage from './readpage.js';
-import ConfigPage from './configpage.js';
-import './mainpage.js';
+import Router from './page/router.js';
+import ListPage from './page/list/listpage.js';
+import ReadPage from './page/read/readpage.js';
+import ConfigPage from './page/config/configpage.js';
+import './page/common.js';
 
 const router = new Router({
   list: new ListPage(),
@@ -24,5 +24,7 @@ const router = new Router({
   if ('serviceWorker' in navigator) {
     await navigator.serviceWorker.register('./sw.js');
   }
-}());
+}()).catch(() => {
+  // Service Worker may be rejected due to not supported, privacy setting, ect.
+});
 
