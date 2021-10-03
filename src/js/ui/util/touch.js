@@ -14,12 +14,13 @@ export class TouchGestureListener {
   /**
    * @param {HTMLElement} targetElement
    */
-  constructor(targetElement, { minDistanceX = 20, minDistanceY = 20, clickParts = 3, yRadian = Math.PI / 2 } = {}) {
+  constructor(targetElement, { minDistanceX = 20, minDistanceY = 20, clickGridX = 1, clickGridY = 1, yRadian = Math.PI / 2 } = {}) {
     this.listeners = new Map();
     this.minDistanceX = minDistanceX;
     this.minDistanceY = minDistanceY;
     this.minDistance = Math.min(minDistanceX, minDistanceY);
-    this.clickParts = clickParts;
+    this.clickGridX = clickGridX;
+    this.clickGridY = clickGridY;
 
     /** @type {Point} */
     let startPos = null, lastPos = null;
@@ -73,16 +74,12 @@ export class TouchGestureListener {
       const [dx, dy] = [lastPos[0] - startPos[0], lastPos[1] - startPos[1]];
       const offset = direction === 'x' ? dx : direction === 'y' ? dy : 0;
       if (!direction) {
-        const parts = this.clickParts;
         const rect = targetElement.getBoundingClientRect();
         const x = startPos[0] - rect.x, w = rect.width;
-        let action = 'touch';
-        if (parts === 2) {
-          action = x < w / 2 ? 'touchleft' : 'touchright';
-        } else if (parts === 3) {
-          action = x < w / 3 ? 'touchleft' : x > w / 3 * 2 ? 'touchright' : 'touchmiddle';
-        }
-        this.trigger(action, { touch });
+        const y = startPos[1] - rect.y, h = rect.height;
+        const gridX = Math.max(Math.min(Math.floor(x * this.clickGridX / w), this.clickGridX - 1), 0);
+        const gridY = Math.max(Math.min(Math.floor(y * this.clickGridY / h), this.clickGridY - 1), 0);
+        this.trigger('touch', { touch, grid: { x: gridX, y: gridY } });
       } else {
         const minDistanceArrow = direction === 'x' ? this.minDistanceX : this.minDistanceY;
         if (Math.abs(offset) < minDistanceArrow) {
@@ -123,9 +120,6 @@ export class TouchGestureListener {
   onStart(listener) { return this.addListener('start', listener); }
   onEnd(listener) { return this.addListener('end', listener); }
   onTouch(listener) { return this.addListener('touch', listener); }
-  onTouchLeft(listener) { return this.addListener('touchleft', listener); }
-  onTouchRight(listener) { return this.addListener('touchright', listener); }
-  onTouchMiddle(listener) { return this.addListener('touchmiddle', listener); }
   onMoveX(listener) { return this.addListener('movex', listener); }
   onMoveY(listener) { return this.addListener('movey', listener); }
   onCancelX(listener) { return this.addListener('cancelx', listener); }

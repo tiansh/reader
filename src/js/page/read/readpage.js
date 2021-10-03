@@ -13,12 +13,11 @@ import JumpPage from './jump/jumppage.js';
 import ReadSpeech from './speech/readspeech.js';
 import ControlPage from './control/controlpage.js';
 import FlipTextPage from './text/fliptextpage.js';
-import TextPage from './text/textpage.js';
+import ScrollTextPage from './text/scrolltextpage.js';
 import Page from '../page.js';
 import file from '../../data/file.js';
 import config from '../../data/config.js';
 import onResize from '../../ui/util/onresize.js';
-import i18n from '../../i18n/i18n.js';
 
 export default class ReadPage extends Page {
   constructor() {
@@ -68,6 +67,8 @@ export default class ReadPage extends Page {
 
     // EXPERT_CONFIG when index page show as side bar
     this.screenWidthSideIndex = await config.expert('appearance.screen_width_side_index', 'number', 960);
+    // EXPERT_CONFIG (temp) Render style
+    this.renderStyle = await config.expert('appearance.read_style', 'string') === 'scroll' ? 'scroll' : 'flip';
 
     this.articleId = id;
     const [meta, index, content] = await Promise.all([
@@ -85,11 +86,12 @@ export default class ReadPage extends Page {
     await file.setMeta(this.meta);
 
     this.readIndex = new ReadIndex(this);
-    this.renderStyle = 'flip';
     if (this.renderStyle === 'flip') {
-      /** @type {TextPage} */
       this.textPage = new FlipTextPage(this);
       this.container.classList.add('read-page-flip');
+    } else {
+      this.textPage = new ScrollTextPage(this);
+      this.container.classList.add('read-page-scroll');
     }
     await this.textPage.onActivate({ id });
     this.speech.metaLoad(this.meta);

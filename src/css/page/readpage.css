@@ -212,7 +212,7 @@ button.tab-item:focus {
 }
 
 .index-list .item-list {
-  flex: 1 0  auto;
+  flex: 1 0 auto;
   position: relative;
 }
 
@@ -240,6 +240,14 @@ button.tab-item:focus {
 #contents_list .list-item-selected,
 #bookmark_list .list-item-selected {
   background: var(--list-active-background);
+}
+
+#contents_list .list-item,
+#search_list .list-item {
+  height: 50px;
+}
+#bookmark_list .list-item {
+  height: 70px;
 }
 
 #read_index_contents_config {

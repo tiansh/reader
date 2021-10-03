@@ -84,6 +84,7 @@ export default class FlipTextPage extends TextPage {
     const listener = new TouchGestureListener(this.pagesContainer, {
       yRadian: Math.PI / 5,
       minDistanceY: 60,
+      clickGridX: 3,
     });
     const wos = (f, g) => (...p) => {
       if (this.isAnythingSelected()) {
@@ -124,9 +125,16 @@ export default class FlipTextPage extends TextPage {
     }, cancelY));
     listener.onCancelY(cancelY);
 
-    listener.onTouchLeft(wos(() => { this.prevPage({ resetSpeech: true }); }));
-    listener.onTouchRight(wos(() => { this.nextPage({ resetSpeech: true }); }));
-    listener.onTouchMiddle(wos(() => { this.readPage.showControlPage(); }));
+    listener.onTouch(wos(({ grid }) => {
+      const x = grid.x;
+      if (x === 0) {
+        this.prevPage({ resetSpeech: true });
+      } else if (x === 2) {
+        this.nextPage({ resetSpeech: true });
+      } else if (x === 1) {
+        this.readpage.showControlPage();
+      }
+    }));
 
     this.pagesContainer.addEventListener('contextmenu', event => {
       if (this.isAnythingSelected()) return;
