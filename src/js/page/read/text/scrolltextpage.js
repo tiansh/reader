@@ -85,8 +85,15 @@ export default class ScrollTextPage extends TextPage {
       clickGridY: 3,
     });
 
+    const startSlideX = () => {
+      this.readScrollElement.classList.add('read-body-scroll-slide-x');
+    };
+    const stopSlideX = () => {
+      this.readScrollElement.classList.remove('read-body-scroll-slide-x');
+    };
     listener.onMoveX((offset, { touch }) => {
       if (!touch) return;
+      startSlideX();
       if (this.isAnythingSelected()) {
         this.readPage.slideIndexPage('cancel');
       } else {
@@ -95,6 +102,7 @@ export default class ScrollTextPage extends TextPage {
     });
     listener.onSlideLeft(({ touch }) => {
       if (!touch) return;
+      stopSlideX();
       if (this.isAnythingSelected()) {
         this.readPage.slideIndexPage('cancel');
       } else if (this.readPage.isIndexActive()) {
@@ -105,6 +113,7 @@ export default class ScrollTextPage extends TextPage {
     });
     listener.onSlideRight(({ touch }) => {
       if (!touch) return;
+      stopSlideX();
       if (this.isAnythingSelected()) {
         this.readPage.slideIndexPage('cancel');
       } else {
@@ -113,6 +122,7 @@ export default class ScrollTextPage extends TextPage {
     });
     listener.onCancelX(({ touch }) => {
       if (!touch) return;
+      stopSlideX();
       this.readPage.slideIndexPage('cancel');
     });
     listener.onTouch(({ touch, grid }) => {
@@ -125,11 +135,14 @@ export default class ScrollTextPage extends TextPage {
       }
     });
 
+    this.readBodyElement.addEventListener('transitionend', () => {
+      this.onScrollToEnd();
+    });
+
     return container.get('root');
   }
   onScroll() {
     const scrollTop = this.readScrollElement.scrollTop;
-    const isScrollTo = this.targetScrollTop != null;
     const thisScrollEvent = this.lastScrollEvent = {};
     console.log('onscroll: ', this.readScrollElement.scrollTop);
 
@@ -137,19 +150,8 @@ export default class ScrollTextPage extends TextPage {
       this.onScrollDirty = true;
       return;
     }
-    this.onscrollBusy = true;
-
-    if (isScrollTo) {
-      const lastDistance = Math.abs(this.lastScrollTop - this.targetScrollTop);
-      const currentDistance = Math.abs(scrollTop - this.targetScrollTop);
-      if (currentDistance > lastDistance) {
-        this.targetScrollTop = null;
-      }
-      if (currentDistance === 0) {
-        this.targetScrollTop = null;
-      }
-      console.log('ScrollTo: ', this.targetScrollTop != null ? 'running' : 'end');
-    }
+    if (this.scrollToBusy) return;
+    this.onScrollBusy = true;
 
     const textBufferHeight = this.getTextBufferHeight();
 
@@ -162,23 +164,14 @@ export default class ScrollTextPage extends TextPage {
       this.readScrollElement.style.overflow = 'hidden';
       window.requestAnimationFrame(() => {
         this.readScrollElement.style.overflow = '';
-        this.onscrollBusy = false;
+        this.onScrollBusy = false;
         if (this.onScrollDirty) {
           this.onScroll();
         }
       });
     }
 
-    if (this.targetScrollTop == null) {
-      if (isScrollTo) {
-        this.updatePageRender();
-      } else {
-        this.updatePage({ resetSpeech: true });
-      }
-    } else {
-      this.lastScrollTop = scrollTop;
-    }
-
+    this.updatePage({ resetSpeech: true });
     setTimeout(() => {
       if (thisScrollEvent !== this.lastScrollEvent) return;
       console.log('scroll done: ', this.readScrollElement.scrollTop);
@@ -189,17 +182,40 @@ export default class ScrollTextPage extends TextPage {
   onScrollDone() {
     this.updatePage({ resetSpeech: false });
   }
+  onScrollToEnd() {
+    const container = this.readScrollElement;
+    const body = this.readBodyElement;
+    const placeholder = container.querySelector('.read-body-scroll-placeholder');
+    container.classList.remove('read-body-scroll-to');
+    placeholder.remove();
+    body.style.top = '';
+    this.scrollToBusy = false;
+    this.updatePageRender();
+  }
+  abortScrollTo() {
+    const container = this.readScrollElement;
+    const body = this.readBodyElement;
+    const remained = Number.parseInt(window.getComputedStyle(body).top, 10);
+    container.scrollTop -= remained;
+    this.onScrollToEnd();
+  }
   scrollTo(scrollTop) {
-    const thisScrollTo = this.lastScrollTo = {};
-    this.targetScrollTop = scrollTop;
-    console.log('Scroll to: ', scrollTop);
-    this.readScrollElement.scrollTo({ top: scrollTop, behavior: 'smooth' });
-    setTimeout(() => {
-      if (this.lastScrollTo !== thisScrollTo) return;
-      if (this.targetScrollTop == null) return;
-      this.targetScrollTop = null;
-      this.onScroll();
-    }, this.scrollToTimeout);
+    const container = this.readScrollElement;
+    const body = this.readBodyElement;
+    if (this.scrollToBusy) this.abortScrollTo();
+    const oldScrollTop = container.scrollTop;
+    const scrollDistance = scrollTop - oldScrollTop;
+    if (!scrollDistance) return;
+    this.scrollToBusy = true;
+    const placeholder = container.appendChild(document.createElement('div'));
+    placeholder.classList.add('read-body-scroll-placeholder');
+    placeholder.style.height = body.clientHeight + 'px';
+    container.classList.add('read-body-scroll-to');
+    container.scrollTop = scrollTop;
+    body.style.top = scrollDistance + 'px';
+    window.requestAnimationFrame(() => {
+      body.style.top = '0';
+    });
   }
   removeContainer(container) {
     container.remove();
@@ -462,9 +478,9 @@ export default class ScrollTextPage extends TextPage {
   resetPage(config) {
     this.clearPage();
     this.currentScrollPosition = null;
-    if (this.onscrollBusy) {
+    if (this.onScrollBusy) {
       this.readScrollElement.style.overflow = '';
-      this.onscrollBusy = null;
+      this.onScrollBusy = null;
     }
     this.updatePage(config);
   }
@@ -489,7 +505,7 @@ export default class ScrollTextPage extends TextPage {
     } else {
       this.clearPage();
       lastHeight = 0;
-      cursor = this.readPage.getRawCursor();
+      cursor = this.readPage.getRawCursor() ?? 0;
       position = this.updatePageCurrent(cursor);
       current = position.paragraph;
     }
@@ -518,7 +534,7 @@ export default class ScrollTextPage extends TextPage {
   }
   async updatePage(config) {
     const cursor = this.updatePageRender();
-    if (this.readPage.getRawCursor() !== cursor) {
+    if ((this.readPage.getRawCursor() ?? 0) !== cursor) {
       this.readPage.setCursor(cursor, config);
     }
   }
