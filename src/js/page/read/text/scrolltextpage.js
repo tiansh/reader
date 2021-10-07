@@ -34,10 +34,10 @@ export default class ScrollTextPage extends TextPage {
 
     // EXPERT_CONFIG How many pages of text rendered off-screen
     this.textBufferSize = await config.expert('appearance.text_buffer_factor', 'number', 3) || 3;
-    this.ignoreScrollSize = 2;
+    this.minimumBufferHeight = 500;
     this.pageMoveFactor = 0.8;
     this.scrollDoneTimeout = 500;
-    this.scrollToTimeout = 1000;
+    this.scrollToTimeout = 500;
 
     const outerRect = this.readScrollElement.getBoundingClientRect();
     const outerStyle = window.getComputedStyle(this.readScrollElement);
@@ -57,6 +57,15 @@ export default class ScrollTextPage extends TextPage {
     await super.onInactivate();
 
     this.paragraphs = null;
+
+    this.readBodyElement = null;
+    this.readScrollElement = null;
+    this.titleElement = null;
+    this.progressElement = null;
+
+    this.currentScrollPosition = null;
+    this.scrollActive = null;
+    this.scrollToBusy = null;
   }
   createContainer() {
     const container = template.create('read_text_scroll');
@@ -65,16 +74,10 @@ export default class ScrollTextPage extends TextPage {
     this.titleElement = container.get('title');
     this.progressElement = container.get('progress');
 
-    let lastScrollEventRaf = false;
+
     this.readScrollElement.addEventListener('scroll', event => {
-      if (lastScrollEventRaf) return;
-      lastScrollEventRaf = true;
-      this.scrollActive = true;
-      window.requestAnimationFrame(() => {
-        lastScrollEventRaf = false;
-        this.onScroll();
-      });
-    }, { passive: true });
+      this.onScroll();
+    }, { passive: true, capture: true });
 
     /** @type {ParagraphInfo[]} */
     this.paragraphs = [];
@@ -136,86 +139,82 @@ export default class ScrollTextPage extends TextPage {
     });
 
     this.readBodyElement.addEventListener('transitionend', () => {
-      this.onScrollToEnd();
+      // Add another raf makes transition looks better on iOS
+      // I don't know why.
+      window.requestAnimationFrame(() => {
+        this.onScrollToEnd();
+      });
     });
 
     return container.get('root');
   }
-  onScroll() {
-    const scrollTop = this.readScrollElement.scrollTop;
-    const thisScrollEvent = this.lastScrollEvent = {};
-    console.log('onscroll: ', this.readScrollElement.scrollTop);
-
-    if (this.onScrollBusy) {
-      this.onScrollDirty = true;
-      return;
-    }
+  // During momentum scrolling on iOS, updating `scrollTop` may be ignored due to some data hazard.
+  // I have tried ~2 weeks to make it somehow looks like working.
+  fixIosScrollReset() {
     if (this.scrollToBusy) return;
-    this.onScrollBusy = true;
-
-    const textBufferHeight = this.getTextBufferHeight();
-
-    // You cannot update scrollTop of the element on iOS during momentum scrolling (sometimes).
-    // And I have no idea why following codes may solve this issue.
-    // But it magically works.
-    if (Math.abs(this.readScrollElement.scrollTop - this.lastScrollTop) > textBufferHeight) {
-      console.log('Reset scroll: %o -> %o', this.readScrollElement.scrollTop, this.lastScrollTop);
-      this.setScrollTop(this.lastScrollTop);
-      this.readScrollElement.style.overflow = 'hidden';
-      window.requestAnimationFrame(() => {
-        this.readScrollElement.style.overflow = '';
-        this.onScrollBusy = false;
-        if (this.onScrollDirty) {
-          this.onScroll();
-        }
-      });
-    }
-
-    this.updatePage({ resetSpeech: true });
-    setTimeout(() => {
-      if (thisScrollEvent !== this.lastScrollEvent) return;
-      console.log('scroll done: ', this.readScrollElement.scrollTop);
-      this.scrollActive = false;
-      this.onScrollDone();
-    }, this.scrollDoneTimeout);
+    let scrollTop = this.readScrollElement.scrollTop;
+    const scrollDistance = Math.abs(scrollTop - this.lastScrollTop);
+    if (scrollDistance < this.getTextBufferHeight()) return;
+    this.setScrollTop(this.lastScrollTop);
   }
-  onScrollDone() {
-    this.updatePage({ resetSpeech: false });
+  onScroll() {
+    const thisScrollEvent = this.lastScrollEvent = {};
+    if (this.scrollToBusy) return;
+    this.scrollActive = true;
+    if (this.onScrollScheduled) return;
+    this.fixIosScrollReset();
+    this.onScrollScheduled = true;
+    window.requestAnimationFrame(() => {
+      this.onScrollScheduled = false;
+      this.updatePageRender();
+      setTimeout(() => {
+        if (thisScrollEvent !== this.lastScrollEvent) return;
+        this.scrollActive = false;
+        this.onScrollDone({ resetSpeech: true });
+      }, this.scrollDoneTimeout);
+    });
+  }
+  onScrollDone(config) {
+    // LOG('DONE');
+    this.updatePage(config);
   }
   onScrollToEnd() {
+    if (!this.scrollToBusy) return;
     const container = this.readScrollElement;
     const body = this.readBodyElement;
-    const placeholder = container.querySelector('.read-body-scroll-placeholder');
     container.classList.remove('read-body-scroll-to');
-    placeholder.remove();
     body.style.top = '';
     this.scrollToBusy = false;
-    this.updatePageRender();
+    this.onScrollDone(this.scrollToConfig);
   }
   abortScrollTo() {
+    if (!this.scrollToBusy) return;
     const container = this.readScrollElement;
     const body = this.readBodyElement;
     const remained = Number.parseInt(window.getComputedStyle(body).top, 10);
-    container.scrollTop -= remained;
+    this.setScrollTop(container.scrollTop - remained);
     this.onScrollToEnd();
   }
-  scrollTo(scrollTop) {
+  scrollTo(scrollTop, config) {
     const container = this.readScrollElement;
     const body = this.readBodyElement;
+    this.scrollActive = false;
     if (this.scrollToBusy) this.abortScrollTo();
+    this.scrollToConfig = config;
     const oldScrollTop = container.scrollTop;
     const scrollDistance = scrollTop - oldScrollTop;
     if (!scrollDistance) return;
     this.scrollToBusy = true;
-    const placeholder = container.appendChild(document.createElement('div'));
-    placeholder.classList.add('read-body-scroll-placeholder');
-    placeholder.style.height = body.clientHeight + 'px';
-    container.classList.add('read-body-scroll-to');
-    container.scrollTop = scrollTop;
+    this.setScrollTop(scrollTop);
+    this.updatePageRender();
     body.style.top = scrollDistance + 'px';
+    container.classList.add('read-body-scroll-to');
     window.requestAnimationFrame(() => {
       body.style.top = '0';
     });
+    setTimeout(() => {
+      this.abortScrollTo();
+    }, this.scrollToTimeout);
   }
   removeContainer(container) {
     container.remove();
@@ -270,7 +269,7 @@ export default class ScrollTextPage extends TextPage {
     this.pageTo(this.readScrollElement.scrollTop + height * factor, config);
   }
   pageTo(scrollTop, config) {
-    this.scrollTo(scrollTop);
+    this.scrollTo(scrollTop, config);
   }
   getParagraphIndexByCursor(cursor) {
     const paragraphs = this.paragraphs;
@@ -287,6 +286,7 @@ export default class ScrollTextPage extends TextPage {
     }
   }
   clearPage() {
+    // LOG('clear');
     this.readBodyElement.replaceChildren();
     this.paragraphs.splice(0);
     this.setScrollTop(0);
@@ -320,12 +320,12 @@ export default class ScrollTextPage extends TextPage {
     return rects.find(rect => rect.width * rect.height) ?? rects[0];
   }
   getScrollPosition() {
-    // We cannot use document.elementFromPoint as certain position may belongs to padding of some paragraph
+    // We cannot use document.elementFromPoint as certain position may belongs to margin of some paragraph
     const paragraphs = this.paragraphs;
     if (!paragraphs || !paragraphs.length) {
       return null;
     }
-    const scrollTop = this.readScrollElement.scrollTop + this.textRenderArea.top - this.readBodyElement.offsetTop;
+    const scrollTop = this.textRenderArea.top - this.readBodyElement.getBoundingClientRect().top;
     let low = 0, high = paragraphs.length - 1;
     while (low < high) {
       const mid = Math.floor((low + high) / 2);
@@ -360,29 +360,31 @@ export default class ScrollTextPage extends TextPage {
     return this.getScrollPosition()?.cursor ?? super.getRenderCursor();
   }
   getTextBufferHeight() {
-    const textBufferSize = this.textBufferSize;
-    const textBufferHeight = onResize.currentSize()[1] * textBufferSize;
+    const height = Math.max(onResize.currentSize()[1], this.minimumBufferHeight);
+    const textBufferHeight = height * this.textBufferSize;
     return textBufferHeight;
   }
   setScrollTop(scrollTop) {
-    console.log('Set scrollTop: ', scrollTop);
-    if (Math.abs(this.readScrollElement.scrollTop - scrollTop) > this.ignoreScrollSize) {
-      this.readScrollElement.scrollTop = scrollTop;
-      this.lastScrollTop = scrollTop;
-    } else {
-      this.lastScrollTop = this.readScrollElement.scrollTop;
+    const container = this.readScrollElement;
+    if (container.scrollTop !== scrollTop) {
+      this.lastScrollTopBefore = container.scrollTop;
+      container.scrollTop = scrollTop;
     }
+    this.lastScrollTop = container.scrollTop;
   }
   updatePagePrev(current, prevContentsIndex) {
+    // const startTime = performance.now();
     const body = this.readBodyElement;
     const content = this.readPage.getContent();
     const readIndex = this.readPage.readIndex;
     const paragraphs = this.paragraphs;
     const textBufferHeight = this.getTextBufferHeight();
+    const heightBefore = body.clientHeight;
 
     // 3A. Let's render previous paragraphs
-    const minimumHeight = body.clientHeight - current.element.offsetTop + textBufferHeight * (this.scrollActive ? 1 : 3);
-    const targetHeight = body.clientHeight - current.element.offsetTop + textBufferHeight * 3;
+    const minimumHeight = body.clientHeight - current.element.offsetTop + textBufferHeight * (this.scrollActive ? 2 : 4);
+    const targetHeight = body.clientHeight - current.element.offsetTop + textBufferHeight * 4;
+    const newElements = [];
     if (body.clientHeight < minimumHeight) do {
       const first = paragraphs[0];
       if (first.start === 0) break;
@@ -390,21 +392,29 @@ export default class ScrollTextPage extends TextPage {
       const start = content.lastIndexOf('\n', end - 1) + 1;
       const heading = readIndex.getContentsByIndex(prevContentsIndex)?.cursor === start;
       const paragraph = this.renderParagraph(content.slice(start, end), { start, end, heading });
-      body.insertBefore(paragraph.element, body.firstChild);
+      // Use appendChild and prepend later instead of insertBefore will boost its performance on iOS Safari
+      // from ~500ms to ~50ms accroding to my testing
+      body.appendChild(paragraph.element);
+      newElements.unshift(paragraph.element);
       paragraphs.unshift(paragraph);
       if (heading) prevContentsIndex--;
     } while (body.clientHeight < targetHeight);
+    body.prepend(...newElements);
 
     // 3A. Let's remove previous paragraph far away
     const currentTop = current.element.offsetTop;
-    const maximumHeight = textBufferHeight * (this.scrollActive ? 8 : 5);
+    const maximumHeight = textBufferHeight * (this.scrollActive ? 12 : 8);
     if (currentTop > maximumHeight) {
-      const allowOffset = currentTop - textBufferHeight * 4;
+      const allowOffset = currentTop - textBufferHeight * 6;
       const keepIndex = paragraphs.findIndex(paragraph => paragraph.element.offsetTop >= allowOffset) - 1;
       if (keepIndex > 0) {
         paragraphs.splice(0, keepIndex).forEach(paragraph => { paragraph.element.remove(); });
       }
     }
+
+    const heightAfter = body.clientHeight;
+    // if (heightAfter - heightBefore) LOG('PREV time ' + (performance.now() - startTime));
+    return heightAfter - heightBefore;
   }
   updatePageCurrent(cursor) {
     const body = this.readBodyElement;
@@ -412,7 +422,7 @@ export default class ScrollTextPage extends TextPage {
     const readIndex = this.readPage.readIndex;
     const paragraphs = this.paragraphs;
 
-    const start = content.lastIndexOf('\n', cursor) + 1;
+    const start = content.lastIndexOf('\n', cursor - 1) + 1;
     let end = content.indexOf('\n', start + 1);
     if (end === -1) end = content.length + 1;
     const contentsIndex = readIndex.getIndexOfContentsByCursor(start);
@@ -437,15 +447,17 @@ export default class ScrollTextPage extends TextPage {
     return { paragraph: current, cursor, offset, offsetTop };
   }
   updatePageNext(current, nextContentsIndex) {
+    // const startTime = performance.now();
     const body = this.readBodyElement;
     const content = this.readPage.getContent();
     const readIndex = this.readPage.readIndex;
     const paragraphs = this.paragraphs;
     const textBufferHeight = this.getTextBufferHeight();
+    const heightBefore = body.clientHeight;
 
     const currentBottom = current.element.offsetTop + current.element.clientHeight;
     // 2A. Let's render following paragraphs
-    const minimumHeight = currentBottom + textBufferHeight * (this.scrollActive ? 2 : 3);
+    const minimumHeight = currentBottom + textBufferHeight * (this.scrollActive ? 3 : 6);
     const targetHeight = currentBottom + textBufferHeight * 6;
     if (body.clientHeight < minimumHeight) do {
       const last = paragraphs[paragraphs.length - 1];
@@ -460,9 +472,9 @@ export default class ScrollTextPage extends TextPage {
     } while (body.clientHeight < targetHeight);
 
     // 2B. Let's remove any paragraphs far away
-    const maximumHeight = currentBottom + textBufferHeight * (this.scrollActive ? 8 : 12);
+    const maximumHeight = currentBottom + textBufferHeight * 16;
     if (body.scrollHeight > maximumHeight) {
-      const allowOffset = currentBottom + textBufferHeight * 6;
+      const allowOffset = currentBottom + textBufferHeight * 12;
       while (paragraphs.length > 2) {
         const ref = paragraphs[paragraphs.length - 2];
         const bottom = ref.element.offsetTop + ref.element.clientHeight;
@@ -470,18 +482,19 @@ export default class ScrollTextPage extends TextPage {
         paragraphs.pop().element.remove();
       }
     }
+
+    const heightAfter = body.clientHeight;
+    // if (heightAfter - heightBefore) LOG('NEXT time ' + (performance.now() - startTime));
+    return heightAfter - heightBefore;
   }
   updatePageMeta({ title, progress }) {
     this.titleElement.textContent = title;
     this.progressElement.textContent = (progress * 100).toFixed(2) + '%';
   }
   resetPage(config) {
+    // LOG('reset');
     this.clearPage();
     this.currentScrollPosition = null;
-    if (this.onScrollBusy) {
-      this.readScrollElement.style.overflow = '';
-      this.onScrollBusy = null;
-    }
     this.updatePage(config);
   }
   updatePageRender() {
@@ -490,7 +503,6 @@ export default class ScrollTextPage extends TextPage {
     const textBufferHeight = this.getTextBufferHeight();
 
     let position = this.getScrollPosition();
-    let lastHeight = body.clientHeight;
     let oldScrollTop = this.readScrollElement.scrollTop;
 
     // 1. Let's render current reading paragraph
@@ -498,13 +510,11 @@ export default class ScrollTextPage extends TextPage {
     let cursor;
     /** @type {ParagraphInfo} */
     let current;
-
     if (position?.paragraph) {
       cursor = position.cursor;
       current = position.paragraph;
     } else {
       this.clearPage();
-      lastHeight = 0;
       cursor = this.readPage.getRawCursor() ?? 0;
       position = this.updatePageCurrent(cursor);
       current = position.paragraph;
@@ -518,14 +528,13 @@ export default class ScrollTextPage extends TextPage {
       progress: position.cursor / this.readPage.getContent().length,
     });
     const currentIsContents = readIndex.getContentsByIndex(this.contentsIndex)?.cursor === current.start;
+
+    const nextContentsIndex = contentsIndex !== -1 ? contentsIndex + 1 : -1;
+    const endingSizeChange = this.updatePageNext(current, nextContentsIndex);
     const prevContentsIndex = contentsIndex !== -1 ? contentsIndex - currentIsContents : -1;
-    const nextContentsIndex = contentsIndex !== -1 ? contentsIndex + currentIsContents : -1;
-
-    this.updatePageNext(current, nextContentsIndex);
-    const endingSizeChange = body.clientHeight - lastHeight;
-    this.updatePagePrev(current, prevContentsIndex);
-    const startingSizeChange = body.clientHeight - lastHeight - endingSizeChange;
-
+    const startingSizeChange = this.updatePagePrev(current, prevContentsIndex);
+    // if (endingSizeChange) LOG('Ending size ' + endingSizeChange + ` [${this.scrollActive ? '+' : '-'}]`);
+    // if (startingSizeChange) LOG('Starting size ' + startingSizeChange + ` [${this.scrollActive ? '+' : '-'}]`);
 
     const newScrollTop = oldScrollTop + startingSizeChange;
     this.setScrollTop(newScrollTop);
@@ -558,21 +567,15 @@ export default class ScrollTextPage extends TextPage {
     if (this.currentScrollPosition?.cursor === cursor) {
       return;
     }
-    console.trace();
-    console.log('Cursor Change: ', cursor, this.readPage.getContent().substr(cursor - 10, 20));
     const paragraph = this.paragraphs[this.getParagraphIndexByCursor(cursor)];
     if (!paragraph) {
-      console.log('RESET');
       this.resetPage(config);
     } else {
       const textNode = paragraph.element.firstChild;
       const rect = this.getTextRect(textNode, cursor - paragraph.start);
       const top = rect.top - this.textRenderArea.top;
       const scrollTop = this.readScrollElement.scrollTop;
-      console.log('CHANGE TO', rect.top, this.textRenderArea.top);
-      if (Math.abs(top) > this.ignoreScrollSize) {
-        this.pageTo(scrollTop + top, config);
-      }
+      this.pageTo(scrollTop + top, config);
     }
   }
   onResize() {
@@ -580,4 +583,11 @@ export default class ScrollTextPage extends TextPage {
     this.resetPage({ resetSpeech: false });
   }
 }
+
+// const LOG_AREA = document.body.appendChild(document.createElement('div'));
+// LOG_AREA.style = 'position: fixed; top: 80px; left: 100px; right: 40px; bottom: 120px; background: #030; color: #fff; font-size: 12px; z-index: 10; overflow-y: scroll; white-space: pre-wrap; word-break: break-all;';
+// const LOG = message => {
+//   LOG_AREA.appendChild(document.createElement('div')).textContent = message;
+//   LOG_AREA.scrollTop = LOG_AREA.scrollHeight - LOG_AREA.clientHeight;
+// };
 

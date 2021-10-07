@@ -55,6 +55,7 @@
 }
 
 .read-page-scroll .read-body {
+  position: relative;
   box-sizing: border-box;
   width: var(--window-width);
   margin: calc(-1 * var(--page-margin-y)) calc(-1 * var(--page-margin-x)) calc(-1 * calc(var(--page-margin-y) + 20px));
@@ -66,11 +67,11 @@
   text-justify: auto;
 }
 
+.read-page-scroll .read-body-scroll-to {
+  overflow: hidden;
+}
 .read-page-scroll .read-body-scroll-to .read-body {
-  position: absolute;
-  left: var(--page-margin-x);
-  left: var(--page-margin-x);
-  transition: top ease-out 0.2s;
+  transition: top ease-out 0.35s;
 }
 
 .read-page-scroll .read-body p:empty::before {
@@ -105,16 +106,6 @@
 .read-page-scroll .read-progress {
   flex: 0 0 auto;
   white-space: nowrap;
-}
-
-.read-page-scroll .read-scroll-smooth {
-  overflow: hidden;
-}
-.read-page-scroll .read-scroll-smooth-before {
-  transition: height ease-out 0.5s;
-}
-.read-page-scroll .read-scroll-smooth-after {
-  transition: height ease-out 0.5s;
 }
 
 .read-page-scroll .read-highlight {
