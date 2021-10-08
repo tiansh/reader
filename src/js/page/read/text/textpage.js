@@ -44,6 +44,7 @@ export default class TextPage {
 
     this.removeContainer(this.container);
     this.container = null;
+    this.stepCache = null;
 
     document.removeEventListener('keydown', this.keyboardEvents);
     document.removeEventListener('wheel', this.wheelEvents);
@@ -72,7 +73,9 @@ export default class TextPage {
   isInPage(cursor) {
     return false;
   }
-  onResize() { }
+  onResize() {
+    this.stepCache = null;
+  }
   forceUpdate() { }
   keyboardEvents(event) { }
   wheelEvents(event) { }
@@ -114,7 +117,8 @@ export default class TextPage {
       `.light-theme .read-text-page { color: ${configs.light_text}; background: ${configs.light_background}; }`,
       `.read-text-page { font-size: ${configs.font_size}px; line-height: ${configs.line_height}; }`,
       `.read-text-page p { margin: 0; }`,
-      `.read-text-page p:not(:first-child) { margin-top: ${configs.paragraph_spacing * configs.line_height * configs.font_size}px; }`,
+      // `.read-text-page p:not(:first-child) { margin-top: ${configs.paragraph_spacing * configs.line_height * configs.font_size}px; }`,
+      `.read-text-page p { margin-top: ${configs.paragraph_spacing * configs.line_height * configs.font_size}px; }`,
       font ? `.read-text-page { font-family: CustomFont; }` : '',
     ].join('\n');
     this.configs = configs;
@@ -138,6 +142,14 @@ export default class TextPage {
     const content = this.readPage.getContent();
     while (/\s/.test(content[cursor - 1])) cursor--;
     return cursor;
+  }
+  step() {
+    if (this.stepCache) return this.stepCache;
+    const [width, height] = onResize.currentSize();
+    const area = width * height;
+    const textArea = (this.configs?.font_size || 18) ** 2;
+    this.stepCache = Math.floor(area / textArea);
+    return this.stepCache;
   }
 }
 

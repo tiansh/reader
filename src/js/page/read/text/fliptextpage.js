@@ -251,7 +251,6 @@ export default class FlipTextPage extends TextPage {
   }
   resetPage(config) {
     this.slideCancel();
-    this.stepCache = null;
     this.initPrevCursor();
     this.disposePages();
     this.updatePages(config);
@@ -350,14 +349,6 @@ export default class FlipTextPage extends TextPage {
     if (width < this.screenWidthTwoColumnIndex && this.readPage.isSideIndexActive()) return false;
     if (width < height * 1.2) return false;
     return true;
-  }
-  step() {
-    if (this.stepCache) return this.stepCache;
-    const [width, height] = onResize.currentSize();
-    const area = width * height;
-    const textArea = (this.configs?.font_size || 18) ** 2;
-    this.stepCache = Math.floor(area / textArea);
-    return this.stepCache;
   }
   /**
    * @typedef {Object} PageRenderContext

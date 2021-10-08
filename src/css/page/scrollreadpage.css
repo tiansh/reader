@@ -48,6 +48,7 @@
   z-index: 2;
   scrollbar-width: none;
   clip-path: content-box;
+  /**/
 }
 
 .read-page-scroll .read-body-scroll.read-body-scroll-slide-x {
@@ -81,6 +82,15 @@
 .read-page-scroll .read-body p.text-heading {
   font-size: 120%;
   font-weight: bold;
+}
+
+.read-page-scroll .read-body-trunk {
+  display: flow-root;
+  position: relative;
+}
+
+.read-page-scroll .read-body-trunk.read-body-trunk-processing {
+  position: fixed;
 }
 
 .read-page-scroll .read-meta {
