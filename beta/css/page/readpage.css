@@ -22,6 +22,32 @@
   contain: strict;
 }
 
+.dark-theme .read-text-page {
+  color: var(--read-dark-text-color);
+  background: var(--read-dark-background-color);
+}
+
+.light-theme .read-text-page {
+  color: var(--read-light-text-color);
+  background: var(--read-light-background-color);
+}
+
+.read-text-page {
+  font-size: var(--read-font-size);
+  line-height: var(--read-line-height);
+}
+
+.read-text-page p {
+  margin-top: var(--read-paragraph-margin);
+  margin-bottom: 0;
+}
+
+.read-text-page {
+  font-family: var(--read-font-family);
+}
+
+
+
 .read-control {
   opacity: 0;
   transition: opacity linear 0.1s;
@@ -84,6 +110,14 @@
   height: var(--window-height);
   background: var(--default-background);
   overflow: hidden;
+  --tab-index-current: 0;
+  --read-index-slide-x: 0px;
+  z-index: 9;
+  position: relative;
+}
+
+.read-index:not(.read-sub-page-current):not(.read-index-slide) {
+  visibility: hidden;
 }
 
 .index-tab-group {
@@ -92,13 +126,6 @@
   width: 100%;
   padding: 5px 0;
   height: 40px;
-}
-
-.read-index {
-  --tab-index-current: 0;
-  --read-index-slide-x: 0px;
-  z-index: 9;
-  position: relative;
 }
 
 .index-tab-panel {
@@ -212,7 +239,7 @@ button.tab-item:focus {
 }
 
 .index-list .item-list {
-  flex: 1 0  auto;
+  flex: 1 0 auto;
   position: relative;
 }
 
@@ -240,6 +267,14 @@ button.tab-item:focus {
 #contents_list .list-item-selected,
 #bookmark_list .list-item-selected {
   background: var(--list-active-background);
+}
+
+#contents_list .list-item,
+#search_list .list-item {
+  height: 50px;
+}
+#bookmark_list .list-item {
+  height: 70px;
 }
 
 #read_index_contents_config {
@@ -314,6 +349,19 @@ button.contents-history-clear {
   color: var(--list-comment-color);
   display: flex;
 }
+
+..read-highlight {
+  display: none;
+}
+
+.read-speech .read-highlight {
+  display: block;
+}
+
+.read-highlight span {
+  background: var(--highlight-background);
+}
+
 
 .bookmark-contents {
   margin-left: 10px;

@@ -177,7 +177,7 @@ export default class ReadSpeech {
   readEnd() {
     if (this.enableLoop) {
       this.reset();
-      this.page.setCursor(0, { resetSpeech: true });
+      this.page.setCursor(0, { resetSpeech: true, resetRender: false });
     } else {
       this.stop();
     }
@@ -222,6 +222,10 @@ export default class ReadSpeech {
       this.readEnd();
     }
   }
+  spokenInPage() {
+    if (this.spoken == null) return false;
+    return this.page.textPage.isInPage(this.spoken);
+  }
   async start() {
     if (this.lastReset) return;
     if (this.speaking || this.stopping) return;
@@ -230,7 +234,7 @@ export default class ReadSpeech {
     const page = this.page;
     page.element.classList.add('read-speech');
     this.next = page.getRenderCursor();
-    if (this.spoken != null && this.page.textPage.isInPage(this.spoken)) {
+    if (this.spoken != null && this.spokenInPage()) {
       this.next = this.spoken;
     }
     this.spoken = this.next;

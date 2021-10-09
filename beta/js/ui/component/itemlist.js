@@ -162,7 +162,7 @@ export default class ItemList {
           showDeleteMove = false;
         }
       };
-      const listener = new TouchGestureListener(li, { clickParts: 1 });
+      const listener = new TouchGestureListener(li);
       listener.onMoveX(offset => { slideDelete('move', offset); });
       listener.onSlideLeft(() => { slideDelete('show'); });
       listener.onSlideRight(() => { slideDelete('hide'); });

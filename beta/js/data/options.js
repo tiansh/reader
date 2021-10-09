@@ -267,6 +267,18 @@ class ExpertConfigOption extends ConfigOption {
  */
 /** @type {(ConfigGroup & { list?: boolean })[]} */
 const options = [{
+  title: i18n.getMessage('configModeGroupTitle'),
+  items: [new SelectConfigOption({
+    name: 'view_mode',
+    title: i18n.getMessage('configMode'),
+    select: [
+      { value: 'flip', text: i18n.getMessage('configModeFlip') },
+      { value: 'scroll', text: i18n.getMessage('configModeScroll') },
+    ],
+    default: 'flip',
+    description: 'Description',
+  })],
+}, {
   title: i18n.getMessage('configThemeGroupTitle'),
   items: [new SelectConfigOption({
     name: 'theme',

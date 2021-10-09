@@ -26,9 +26,8 @@ export default class TextPage {
   async onActivate({ id }) {
     this.isCurrent = true;
 
-    await this.updateStyleConfig();
-
     this.container = this.createContainer();
+    await this.updateStyleConfig();
     this.readPage.container.prepend(this.container);
 
     document.addEventListener('keydown', this.keyboardEvents);
@@ -44,6 +43,7 @@ export default class TextPage {
 
     this.removeContainer(this.container);
     this.container = null;
+    this.stepCache = null;
 
     document.removeEventListener('keydown', this.keyboardEvents);
     document.removeEventListener('wheel', this.wheelEvents);
@@ -72,7 +72,9 @@ export default class TextPage {
   isInPage(cursor) {
     return false;
   }
-  onResize() { }
+  onResize() {
+    this.stepCache = null;
+  }
   forceUpdate() { }
   keyboardEvents(event) { }
   wheelEvents(event) { }
@@ -109,14 +111,19 @@ export default class TextPage {
     this.customFont.textContent = [
       font ? `@font-face { font-family: "CustomFont"; src: url("${font}"); }` : '',
     ].join('\n');
-    this.customStyle.textContent = [
-      `.dark-theme .read-text-page { color: ${configs.dark_text}; background: ${configs.dark_background}; }`,
-      `.light-theme .read-text-page { color: ${configs.light_text}; background: ${configs.light_background}; }`,
-      `.read-text-page { font-size: ${configs.font_size}px; line-height: ${configs.line_height}; }`,
-      `.read-text-page p { margin: 0; }`,
-      `.read-text-page p:not(:first-child) { margin-top: ${configs.paragraph_spacing * configs.line_height * configs.font_size}px; }`,
-      font ? `.read-text-page { font-family: CustomFont; }` : '',
-    ].join('\n');
+    const styles = {
+      '--read-dark-text-color': configs.dark_text,
+      '--read-dark-background-color': configs.dark_background,
+      '--read-light-text-color': configs.light_text,
+      '--read-light-background-color': configs.light_background,
+      '--read-font-size': configs.font_size + 'px',
+      '--read-line-height': configs.line_height,
+      '--read-paragraph-margin': configs.paragraph_spacing * configs.line_height * configs.font_size + 'px',
+      '--read-font-family': font ? 'CustomFont' : 'auto',
+    };
+    const style = Object.keys(styles).map(prop => `${prop}: ${styles[prop]};`).join('\n');
+    this.customStyle.textContent = `:root {\n${style}\n}`;
+
     this.configs = configs;
     await document.fonts.load(`${configs.font_size}px CustomFont`);
   }
@@ -138,6 +145,14 @@ export default class TextPage {
     const content = this.readPage.getContent();
     while (/\s/.test(content[cursor - 1])) cursor--;
     return cursor;
+  }
+  step() {
+    if (this.stepCache) return this.stepCache;
+    const [width, height] = onResize.currentSize();
+    const area = width * height;
+    const textArea = (this.configs?.font_size || 18) ** 2;
+    this.stepCache = Math.floor(area / textArea);
+    return this.stepCache;
   }
 }
 

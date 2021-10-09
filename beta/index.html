@@ -236,7 +236,18 @@ defined by the Mozilla Public License, v. 2.0.
       <div class="read-title" data-ref="title"></div>
       <div class="read-progress" data-ref="progress"></div>
     </div>
-    <div class="read-highlight"></div>
+    <div class="read-highlight" data-ref="highlight"></div>
+  </div>
+</template>
+<template id="read_text_scroll">
+  <div class="read-layer read-text-scroll read-text">
+    <div id="read_text_scroll_main" class="read-text-page" role="main" data-ref="page">
+      <div class="read-body-scroll scroll" data-ref="scroll"><article class="read-body" data-ref="body"><div class="read-highlight" data-ref="highlight"></div></article></div>
+      <div class="read-meta">
+        <div class="read-title" data-ref="title"></div>
+        <div class="read-progress" data-ref="progress"></div>
+      </div>
+    </div>
   </div>
 </template>
 <template id="bookmark_item">

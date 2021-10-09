@@ -41,6 +41,10 @@ export default {
   readPageNext: '下一页',
 
   configWithDetail: '详情',
+  configModeGroupTitle: '模式',
+  configMode: '阅读模式',
+  configModeFlip: '翻页',
+  configModeScroll: '滚动',
   configThemeGroupTitle: '主题',
   configTheme: '主题',
   configThemeAuto: '自动',
