@@ -41,6 +41,10 @@ export default {
   readPageNext: 'Next Page',
 
   configWithDetail: 'Detail',
+  configModeGroupTitle: 'Mode',
+  configMode: 'View Mode',
+  configModeFlip: 'Flip',
+  configModeScroll: 'Scroll',
   configThemeGroupTitle: 'Theme',
   configTheme: 'Theme',
   configThemeAuto: 'Auto',

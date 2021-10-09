@@ -115,10 +115,14 @@ Android 的话作者没试过，有问题欢迎 PR。计算机上、以及 iOS S
 [appearance]
 ; 当屏幕宽度达到如下值时，目录信息使用侧栏显示
 screen_width_side_index=960
-; 当屏幕宽度达到如下值时，使用两栏模式显示
+; （仅翻页模式）当屏幕宽度达到如下值时，使用两栏模式显示
 screen_width_two_column=960
-; 当屏幕宽度达到如下值时，即便显示了侧边栏目录，仍然使用两栏模式显示
+; （仅翻页模式）当屏幕宽度达到如下值时，即便显示了侧边栏目录，仍然使用两栏模式显示
 screen_width_two_column_index=1260
+; （仅滚动模式）在屏幕外预加载的文本数量，设置更大的数字以加载更多文本
+text_buffer_factor=1
+; （仅滚动模式）文本区域的最大宽度
+scroll_max_text_width=800
 ; 添加自定义 CSS
 custom_css=
 

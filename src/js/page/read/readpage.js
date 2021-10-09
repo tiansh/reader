@@ -64,11 +64,10 @@ export default class ReadPage extends Page {
    */
   async onActivate({ id }) {
     this.langTag = await config.get('cjk_lang_tag');
+    this.renderStyle = await config.get('view_mode');
 
     // EXPERT_CONFIG when index page show as side bar
     this.screenWidthSideIndex = await config.expert('appearance.screen_width_side_index', 'number', 960);
-    // EXPERT_CONFIG (temp) Render style
-    this.renderStyle = await config.expert('appearance.read_style', 'string') === 'scroll' ? 'scroll' : 'flip';
 
     this.articleId = id;
     const [meta, index, content] = await Promise.all([

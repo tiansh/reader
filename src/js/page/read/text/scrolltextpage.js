@@ -43,10 +43,16 @@ export default class ScrollTextPage extends TextPage {
 
     // EXPERT_CONFIG How many pages of text rendered off-screen
     this.textBufferSize = await config.expert('appearance.text_buffer_factor', 'number', 3) || 3;
+    // EXPERT_CONFIG Width for text
+    this.maxTextWidth = await config.expert('appearance.scroll_max_text_width', 'number', 0);
     this.minimumBufferHeight = 500;
     this.scrollDoneTimeout = 500;
     this.scrollToTimeout = 500;
 
+    if (this.maxTextWidth) {
+      const container = this.readScrollElement.parentNode;
+      container.style.setProperty('--text-max-width', this.maxTextWidth + 'px');
+    }
     const outerRect = this.readScrollElement.getBoundingClientRect();
     const outerStyle = window.getComputedStyle(this.readScrollElement);
     const value = prop => Number.parseInt(outerStyle.getPropertyValue(prop), 10);
@@ -83,7 +89,6 @@ export default class ScrollTextPage extends TextPage {
     this.titleElement = container.get('title');
     this.progressElement = container.get('progress');
     this.highlightContainer = container.get('highlight');
-
 
     this.readScrollElement.addEventListener('scroll', event => {
       this.onScroll();

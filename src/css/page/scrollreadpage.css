@@ -23,6 +23,7 @@
   overflow-wrap: break-word;
   contain: layout;
   will-change: scroll-position;
+  --text-max-width: 100%;
 }
 
 .read-page-scroll .read-text-page::after {
@@ -41,7 +42,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  margin: 0;
+  margin: 0 auto;
+  max-width: var(--text-max-width);
   padding: var(--page-margin-y) var(--page-margin-x) calc(var(--page-margin-y) + 20px);
   overflow: hidden scroll;
   overflow-wrap: break-word;
@@ -98,6 +100,8 @@
   bottom: var(--page-margin-y);
   left: var(--page-margin-x);
   right: var(--page-margin-x);
+  max-width: var(--text-max-width);
+  margin: 0 auto;
   height: 12px;
   display: flex;
   color: #808080;

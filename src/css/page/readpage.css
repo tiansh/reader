@@ -39,6 +39,7 @@
 
 .read-text-page p {
   margin-top: var(--read-paragraph-margin);
+  margin-bottom: 0;
 }
 
 .read-text-page {
