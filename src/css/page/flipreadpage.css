@@ -40,6 +40,10 @@
   z-index: 1;
 }
 
+.read-page-flip .read-text-page p:first-child {
+  margin-top: 0;
+}
+
 .read-page-flip .read-text-page-prev {
   left: calc(calc(-1 * var(--window-width)) + var(--slide-x));
 }

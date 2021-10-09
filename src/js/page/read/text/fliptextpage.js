@@ -48,7 +48,7 @@ export default class FlipTextPage extends TextPage {
     this.pages = {};
     this.initPrevCursor();
     window.requestAnimationFrame(() => {
-      this.updatePages({ resetSpeech: true });
+      this.updatePages({ resetSpeech: true, resetRender: false });
     });
   }
   async onInactivate() {
@@ -128,11 +128,11 @@ export default class FlipTextPage extends TextPage {
     listener.onTouch(wos(({ grid }) => {
       const x = grid.x;
       if (x === 0) {
-        this.prevPage({ resetSpeech: true });
+        this.prevPage({ resetSpeech: true, resetRender: false });
       } else if (x === 2) {
-        this.nextPage({ resetSpeech: true });
+        this.nextPage({ resetSpeech: true, resetRender: false });
       } else if (x === 1) {
-        this.readpage.showControlPage();
+        this.readPage.showControlPage();
       }
     }));
 
@@ -145,11 +145,15 @@ export default class FlipTextPage extends TextPage {
     /** @type {HTMLButtonElement} */
     this.prevButton = container.get('prev');
     this.prevButton.title = i18n.getMessage('readPagePrevious');
-    this.prevButton.addEventListener('click', () => { this.prevPage({ resetSpeech: true }); });
+    this.prevButton.addEventListener('click', () => {
+      this.prevPage({ resetSpeech: true, resetRender: false });
+    });
     /** @type {HTMLButtonElement} */
     this.nextButton = container.get('next');
     this.nextButton.title = i18n.getMessage('readPageNext');
-    this.nextButton.addEventListener('click', () => { this.nextPage({ resetSpeech: true }); });
+    this.nextButton.addEventListener('click', () => {
+      this.nextPage({ resetSpeech: true, resetRender: false });
+    });
 
     return container.get('root');
   }
@@ -178,9 +182,9 @@ export default class FlipTextPage extends TextPage {
     const current = this.readPage.activedSubpage();
     if (!current) {
       if (['PageUp', 'ArrowLeft'].includes(event.code)) {
-        this.prevPage({ resetSpeech: true });
+        this.prevPage({ resetSpeech: true, resetRender: false });
       } else if (['PageDown', 'ArrowRight'].includes(event.code)) {
-        this.nextPage({ resetSpeech: true });
+        this.nextPage({ resetSpeech: true, resetRender: false });
       } else if (['ArrowUp'].includes(event.code)) {
         this.readPage.showControlPage(true);
       } else if (['ArrowDown'].includes(event.code)) {
@@ -199,8 +203,8 @@ export default class FlipTextPage extends TextPage {
     if (this.wheelBusy) return;
     const deltaY = event.deltaY;
     if (!deltaY) return;
-    if (deltaY > 0) this.nextPage({ resetSpeech: true });
-    else if (deltaY < 0) this.prevPage({ resetSpeech: true });
+    if (deltaY > 0) this.nextPage({ resetSpeech: true, resetRender: false });
+    else if (deltaY < 0) this.prevPage({ resetSpeech: true, resetRender: false });
     setTimeout(() => { this.wheelBusy = false; }, 250);
     this.wheelBusy = true;
   }
@@ -225,8 +229,8 @@ export default class FlipTextPage extends TextPage {
       this.pagesContainer.classList.remove('read-text-pages-slide');
     }
     window.requestAnimationFrame(() => {
-      if (action === 'left') this.nextPage({ resetSpeech: true });
-      if (action === 'right') this.prevPage({ resetSpeech: true });
+      if (action === 'left') this.nextPage({ resetSpeech: true, resetRender: false });
+      if (action === 'right') this.prevPage({ resetSpeech: true, resetRender: false });
     });
   }
   slideCancel() {
@@ -685,7 +689,7 @@ export default class FlipTextPage extends TextPage {
     if (depth > 3) return null;
 
     if (!this.pages.current) {
-      this.readPage.setCursor(start, { resetSpeech: false });
+      this.readPage.setCursor(start, { resetSpeech: false, resetRender: false });
       return this.highlightChars(start, length, depth + 1);
     }
 
@@ -697,15 +701,15 @@ export default class FlipTextPage extends TextPage {
 
     if (start + length < Math.min(currentPage, prevNext ?? 0)) {
       // Maybe something went wrong
-      this.readPage.setCursor(start, { resetSpeech: false });
+      this.readPage.setCursor(start, { resetSpeech: false, resetRender: false });
       return this.highlightChars(start, length, depth + 1);
     }
 
     if (start >= nextPage) {
       if (start < nextNext) {
-        this.nextPage({ resetSpeech: false });
+        this.nextPage({ resetSpeech: false, resetRender: false });
       } else {
-        this.readPage.setCursor(start, { resetSpeech: false });
+        this.readPage.setCursor(start, { resetSpeech: false, resetRender: false });
       }
       return this.highlightChars(start, length, depth + 1);
     }
@@ -754,7 +758,7 @@ export default class FlipTextPage extends TextPage {
     return highlightSpanList.filter(x => x != null).length > 0;
   }
   forceUpdate() {
-    this.resetPage({ resetSpeech: true });
+    this.resetPage({ resetSpeech: true, resetRender: true });
   }
   isInPage(cursor) {
     const current = this.pages.current;
@@ -777,6 +781,6 @@ export default class FlipTextPage extends TextPage {
   }
   onResize() {
     super.onResize();
-    this.resetPage({ resetSpeech: false });
+    this.resetPage({ resetSpeech: false, resetRender: true });
   }
 }

@@ -71,8 +71,12 @@
 .read-page-scroll .read-body-scroll-to {
   overflow: hidden;
 }
+
 .read-page-scroll .read-body-scroll-to .read-body {
-  transition: top ease-out 0.35s;
+  transition: top ease-out 0.3333s;
+}
+.read-page-scroll .read-body-scroll-fast .read-body {
+  transition-duration: 0.1667s;
 }
 
 .read-page-scroll .read-body p:empty::before {
@@ -87,10 +91,6 @@
 .read-page-scroll .read-body-trunk {
   display: flow-root;
   position: relative;
-}
-
-.read-page-scroll .read-body-trunk.read-body-trunk-processing {
-  position: fixed;
 }
 
 .read-page-scroll .read-meta {

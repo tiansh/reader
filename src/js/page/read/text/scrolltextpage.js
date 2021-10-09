@@ -58,7 +58,7 @@ export default class ScrollTextPage extends TextPage {
     };
 
     window.requestAnimationFrame(() => {
-      this.updatePage({ resetSpeech: true });
+      this.updatePage({ resetSpeech: true, resetRender: true });
     });
   }
   async onInactivate() {
@@ -141,13 +141,19 @@ export default class ScrollTextPage extends TextPage {
     });
     listener.onTouch(({ touch, grid }) => {
       if (grid.y === 0) {
-        this.pageUp({ resetSpeech: true });
+        this.pageUp({ resetSpeech: true, resetRender: false });
       } else if (grid.y === 2) {
-        this.pageDown({ resetSpeech: true });
+        this.pageDown({ resetSpeech: true, resetRender: false });
       } else if (grid.y === 1) {
         this.readPage.showControlPage();
       }
     });
+
+    this.readScrollElement.addEventListener('contextmenu', event => {
+      if (this.isAnythingSelected()) return;
+      event.preventDefault();
+      this.readPage.toggleControlPage();
+    }, false);
 
     this.readBodyElement.addEventListener('transitionend', () => {
       // Add another raf makes transition looks better on iOS
@@ -181,12 +187,12 @@ export default class ScrollTextPage extends TextPage {
       setTimeout(() => {
         if (thisScrollEvent !== this.lastScrollEvent) return;
         this.scrollActive = false;
-        this.onScrollDone({ resetSpeech: true });
+        this.onScrollDone({ resetSpeech: true, resetRender: false });
       }, this.scrollDoneTimeout);
     });
   }
   onScrollDone(config) {
-    LOG('DONE');
+    // LOG('DONE');
     this.updatePage(config);
   }
   onScrollToEnd() {
@@ -195,7 +201,8 @@ export default class ScrollTextPage extends TextPage {
     const body = this.readBodyElement;
     container.classList.remove('read-body-scroll-to');
     body.style.top = '';
-    this.scrollToBusy = false;
+    this.scrollToBusy = null;
+    if (this.pageBusy) this.pageDone();
     this.onScrollDone(this.scrollToConfig);
   }
   abortScrollTo() {
@@ -209,13 +216,13 @@ export default class ScrollTextPage extends TextPage {
   scrollTo(scrollTop, config) {
     const container = this.readScrollElement;
     const body = this.readBodyElement;
-    this.scrollActive = false;
+    this.scrollActive = true;
     if (this.scrollToBusy) this.abortScrollTo();
+    const currentScrollTo = this.scrollToBusy = {};
     this.scrollToConfig = config;
     const oldScrollTop = container.scrollTop;
     const scrollDistance = scrollTop - oldScrollTop;
     if (!scrollDistance) return;
-    this.scrollToBusy = true;
     this.setScrollTop(scrollTop);
     this.updatePageRender();
     body.style.top = scrollDistance + 'px';
@@ -224,7 +231,9 @@ export default class ScrollTextPage extends TextPage {
       body.style.top = '0';
     });
     setTimeout(() => {
-      this.abortScrollTo();
+      if (currentScrollTo === this.scrollToBusy) {
+        this.abortScrollTo();
+      }
     }, this.scrollToTimeout);
   }
   removeContainer(container) {
@@ -257,9 +266,9 @@ export default class ScrollTextPage extends TextPage {
     const current = this.readPage.activedSubpage();
     if (!current) {
       if (['PageUp', 'ArrowUp'].includes(event.code)) {
-        this.pageUp({ resetSpeech: true });
+        this.pageUp({ resetSpeech: true, resetRender: false });
       } else if (['PageDown', 'ArrowDown'].includes(event.code)) {
-        this.pageDown({ resetSpeech: true });
+        this.pageDown({ resetSpeech: true, resetRender: false });
       } else if (['ArrowLeft'].includes(event.code)) {
         this.readPage.showControlPage();
       } else if (['ArrowRight'].includes(event.code)) {
@@ -271,6 +280,10 @@ export default class ScrollTextPage extends TextPage {
     }
   }
   pageUp(config) {
+    if (this.pageBusy) {
+      this.pagePending = 'up';
+      return;
+    }
     const startPosition = this.getPageStartPosition();
     const paragraph = startPosition.paragraph;
     const textNode = paragraph.element.firstChild;
@@ -278,12 +291,18 @@ export default class ScrollTextPage extends TextPage {
     if (textNode) {
       target = this.getTextRect(textNode, startPosition.cursor - paragraph.start).bottom;
     } else {
-      target = paragraph.element.getBoundingClientRect().bottom();
+      target = paragraph.element.getBoundingClientRect().bottom;
     }
     const scrollTo = this.readScrollElement.scrollTop - this.readScrollElement.clientHeight + this.textRenderArea.bottom + target;
+    this.pageBusy = 'up';
     this.pageTo(scrollTo, config);
   }
   pageDown(config) {
+    if (this.pageBusy) {
+      this.pagePending = 'down';
+      return;
+    }
+    this.lastPageDown = performance.now();
     const endPosition = this.getPageEndPosition();
     const paragraph = endPosition.paragraph;
     const textNode = paragraph.element.firstChild;
@@ -291,10 +310,27 @@ export default class ScrollTextPage extends TextPage {
     if (textNode) {
       target = this.getTextRect(textNode, endPosition.cursor - paragraph.start).top;
     } else {
-      target = paragraph.element.getBoundingClientRect().top();
+      target = paragraph.element.getBoundingClientRect().top;
     }
     const scrollTo = this.readScrollElement.scrollTop + target - this.textRenderArea.top;
+    this.pageBusy = 'down';
     this.pageTo(scrollTo, config);
+  }
+  pageDone() {
+    if (this.pageBusy && this.pagePending === this.pageBusy) {
+      // LOG('DONE CONTINUE');
+      this.readScrollElement.classList.add('read-body-scroll-fast');
+    } else {
+      // LOG('DONE DONE');
+      this.readScrollElement.classList.remove('read-body-scroll-fast');
+    }
+    this.pageBusy = null;
+    if (this.pagePending === 'up') {
+      this.pageUp();
+    } else if (this.pagePending === 'down') {
+      this.pageDown();
+    }
+    this.pagePending = null;
   }
   pageTo(scrollTop, config) {
     this.scrollTo(scrollTop, config);
@@ -303,7 +339,7 @@ export default class ScrollTextPage extends TextPage {
     const container = this.readScrollElement;
     if (container.scrollTop !== scrollTop) {
       // LOG('Set ' + scrollTop);
-      console.log('Set ', scrollTop);
+      // console.log('Set ', scrollTop);
       this.lastScrollTopBefore = container.scrollTop;
       container.scrollTop = scrollTop;
     }
@@ -327,7 +363,7 @@ export default class ScrollTextPage extends TextPage {
     }
   }
   clearPage() {
-    LOG('clear');
+    // LOG('clear');
     this.readBodyElement.replaceChildren();
     this.trunks.splice(0);
     this.setScrollTop(0);
@@ -376,7 +412,7 @@ export default class ScrollTextPage extends TextPage {
     let contents = readIndex.getContentsByIndex(contentsIndex);
     if (contents && contents.cursor < start) ++contentsIndex;
 
-    console.log('start: %o, end: %o', start, end);
+    // console.log('start: %o, end: %o', start, end);
     for (let pos = start, prev = start; pos !== end + 1; prev = ++pos) {
       pos = content.indexOf('\n', pos);
       const heading = readIndex.getContentsByIndex(contentsIndex)?.cursor === prev;
@@ -490,7 +526,10 @@ export default class ScrollTextPage extends TextPage {
       const trunk = this.renderTrunkEndsWith(end);
       prevHeight += trunk.height;
       heightChange += trunk.height;
-    } while (prevHeight < targetHeight);
+      // Render too many trunks during scrolling will harm scroll performance
+      // and cause unfriendly behavior. So we only render single trunk during
+      // scrolling.
+    } while (!this.scrollActive && prevHeight < targetHeight);
 
     // 3A. Let's remove previous paragraphs far away
     const maximumHeight = textBufferHeight * (this.scrollActive ? 12 : 8);
@@ -502,7 +541,7 @@ export default class ScrollTextPage extends TextPage {
       body.removeChild(trunk.element);
     }
 
-    if (heightChange) LOG('PREV time ' + (performance.now() - startTime));
+    // if (heightChange) LOG('PREV time ' + (performance.now() - startTime));
     return heightChange;
   }
   updatePageCurrent() {
@@ -529,11 +568,11 @@ export default class ScrollTextPage extends TextPage {
     if (!textNode) {
       return paragraph.element.offsetTop;
     } else {
-      const rect = this.getTextRect(textNode, Math.min(start, paragraph.end - 1) - paragraph.start)
+      const rect = this.getTextRect(textNode, Math.min(start, paragraph.end - 1) - paragraph.start);
       return rect.top - trunk.element.getBoundingClientRect().top;
     }
   }
-  updatePageNext(current, nextContentsIndex) {
+  updatePageNext() {
     const startTime = performance.now();
 
     const body = this.readBodyElement;
@@ -553,7 +592,7 @@ export default class ScrollTextPage extends TextPage {
       const trunk = this.renderTrunkStartsWith(start);
       nextHeight += trunk.height;
       heightChange += trunk.height;
-    } while (nextHeight < targetHeight && !this.scrollActive);
+    } while (!this.scrollActive && nextHeight < targetHeight);
 
     // 2A. Let's remove following paragraphs far away
     const maximumHeight = textBufferHeight * (this.scrollActive ? 16 : 12);
@@ -565,7 +604,7 @@ export default class ScrollTextPage extends TextPage {
       body.removeChild(trunk.element);
     }
 
-    if (heightChange) LOG('NEXT time ' + (performance.now() - startTime));
+    // if (heightChange) LOG('NEXT time ' + (performance.now() - startTime));
     return heightChange;
   }
   updatePageMeta() {
@@ -607,7 +646,7 @@ export default class ScrollTextPage extends TextPage {
     this.updatePageRender();
     const cursor = this.currentRenderCursor;
     if ((this.readPage.getRawCursor() ?? 0) !== cursor) {
-      console.log('Set Cursor ', cursor, config);
+      // console.log('Set Cursor ', cursor, config);
       this.readPage.setCursor(cursor, config);
     }
   }
@@ -618,7 +657,7 @@ export default class ScrollTextPage extends TextPage {
     // TODO
   }
   forceUpdate() {
-    this.resetPage({ resetSpeech: true });
+    this.resetPage({ resetSpeech: true, resetRender: true });
   }
   isInPage(cursor) {
     const paragraph = this.getParagraphByCursor(cursor);
@@ -632,20 +671,20 @@ export default class ScrollTextPage extends TextPage {
       return;
     }
     const paragraph = this.getParagraphByCursor(cursor);
-    if (!paragraph) {
+    if (!paragraph || config.resetRender) {
       this.resetPage(config);
     } else {
       const textNode = paragraph.element.firstChild;
       const rect = this.getTextRect(textNode, cursor - paragraph.start);
       const top = rect.top - this.textRenderArea.top;
       const scrollTop = this.readScrollElement.scrollTop;
-      this.pageTo(scrollTop + top, config);
+      this.scrollTo(scrollTop + top, config);
     }
   }
   resetPage(config) {
-    LOG('reset');
+    // LOG('reset');
     this.clearPage();
-    this.currentScrollPosition = null;
+    this.currentRenderCursor = null;
     this.updatePage(config);
   }
   onResize() {
@@ -653,14 +692,14 @@ export default class ScrollTextPage extends TextPage {
     this.resetPage({ resetSpeech: false });
   }
   step() {
-    return super.step();
+    return super.step() * 2;
   }
 }
 
-const LOG_AREA = document.body.appendChild(document.createElement('div'));
-LOG_AREA.style = 'position: fixed; top: 80px; left: 100px; right: 40px; bottom: 120px; background: #030; color: #fff; font-size: 12px; z-index: 10; overflow-y: scroll; white-space: pre-wrap; word-break: break-all;';
-const LOG = message => {
-  LOG_AREA.appendChild(document.createElement('div')).textContent = message;
-  LOG_AREA.scrollTop = LOG_AREA.scrollHeight - LOG_AREA.clientHeight;
-};
+// const LOG_AREA = document.body.appendChild(document.createElement('div'));
+// LOG_AREA.style = 'position: fixed; top: 80px; left: 100px; right: 40px; bottom: 120px; background: #030; color: #fff; font-size: 12px; z-index: 10; overflow-y: scroll; white-space: pre-wrap; word-break: break-all;';
+// const LOG = message => {
+//   LOG_AREA.appendChild(document.createElement('div')).textContent = message;
+//   LOG_AREA.scrollTop = LOG_AREA.scrollHeight - LOG_AREA.clientHeight;
+// };
 

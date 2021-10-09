@@ -120,6 +120,7 @@ export default class ReadPage extends Page {
     this.speech.metaUnload();
     this.textPage.onInactivate();
     this.textPage = null;
+    this.container.classList.remove('read-page-scroll', 'read-page-flip');
     this.router.setTitle();
   }
   gotoList() {
@@ -233,6 +234,7 @@ export default class ReadPage extends Page {
   /**
    * @typedef {Object} CursorChangeConfig
    * @property {boolean} resetSpeech
+   * @property {boolean} resetRender
    */
   /**
    * @param {number} cursor
@@ -242,8 +244,8 @@ export default class ReadPage extends Page {
     if (this.meta.cursor === cursor) return;
     this.meta.cursor = cursor;
     file.setMeta(this.meta);
-    this.subPages.forEach(page => page.cursorChange(cursor, config));
     this.textPage.cursorChange(cursor, config);
+    this.subPages.forEach(page => page.cursorChange(cursor, config));
     this.speech.cursorChange(cursor, config);
   }
   getContent() { return this.content; }

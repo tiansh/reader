@@ -124,7 +124,7 @@ export default class IndexSubPage extends ReadSubPage {
   emptyListRender() { }
   listItemRender() { }
   onItemClick(item) {
-    this.readPage.setCursor(item.cursor, { resetSpeech: true });
+    this.readPage.setCursor(item.cursor, { resetSpeech: true, resetRender: false });
     if (!this.readPage.useSideIndex) {
       this.indexPage.hide();
     }

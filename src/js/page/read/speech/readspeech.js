@@ -177,7 +177,7 @@ export default class ReadSpeech {
   readEnd() {
     if (this.enableLoop) {
       this.reset();
-      this.page.setCursor(0, { resetSpeech: true });
+      this.page.setCursor(0, { resetSpeech: true, resetRender: false });
     } else {
       this.stop();
     }
