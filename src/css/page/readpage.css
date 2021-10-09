@@ -349,6 +349,19 @@ button.contents-history-clear {
   display: flex;
 }
 
+..read-highlight {
+  display: none;
+}
+
+.read-speech .read-highlight {
+  display: block;
+}
+
+.read-highlight span {
+  background: var(--highlight-background);
+}
+
+
 .bookmark-contents {
   margin-left: 10px;
   flex: 1 1 auto;

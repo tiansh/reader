@@ -58,7 +58,6 @@
 .read-page-scroll .read-body {
   position: relative;
   box-sizing: border-box;
-  width: var(--window-width);
   margin: calc(-1 * var(--page-margin-y)) calc(-1 * var(--page-margin-x)) calc(-1 * calc(var(--page-margin-y) + 20px));
   padding: var(--page-margin-y) var(--page-margin-x) calc(var(--page-margin-y) + 20px);
   clip-path: content-box;
@@ -91,6 +90,7 @@
 .read-page-scroll .read-body-trunk {
   display: flow-root;
   position: relative;
+  z-index: 2;
 }
 
 .read-page-scroll .read-meta {
@@ -119,7 +119,6 @@
 }
 
 .read-page-scroll .read-highlight {
-  display: none;
   position: absolute;
   top: 0;
   bottom: 0;
@@ -130,13 +129,8 @@
   contain: strict;
 }
 
-.read-page-scroll .read-speech .read-highlight {
-  display: block;
-}
-
 .read-page-scroll .read-highlight span {
   position: absolute;
-  background: var(--highlight-background);
 }
 
 .read-page-scroll .read-text-page-buttons {
