@@ -689,7 +689,7 @@ export default class FlipTextPage extends TextPage {
     if (depth > 3) return null;
 
     if (!this.pages.current) {
-      this.readPage.setCursor(start, { resetSpeech: false, resetRender: false });
+      this.readPage.setCursor(start, { resetSpeech: false, resetRender: true });
       return this.highlightChars(start, length, depth + 1);
     }
 

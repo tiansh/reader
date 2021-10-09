@@ -82,6 +82,7 @@ export default class ScrollTextPage extends TextPage {
     this.readScrollElement = container.get('scroll');
     this.titleElement = container.get('title');
     this.progressElement = container.get('progress');
+    this.highlightContainer = container.get('highlight');
 
 
     this.readScrollElement.addEventListener('scroll', event => {
@@ -177,6 +178,7 @@ export default class ScrollTextPage extends TextPage {
   onScroll() {
     const thisScrollEvent = this.lastScrollEvent = {};
     if (this.scrollToBusy) return;
+    if (this.readScrollElement.scrollTop === this.lastScrollTop) return;
     this.scrollActive = true;
     if (this.onScrollScheduled) return;
     this.fixIosScrollReset();
@@ -187,12 +189,15 @@ export default class ScrollTextPage extends TextPage {
       setTimeout(() => {
         if (thisScrollEvent !== this.lastScrollEvent) return;
         this.scrollActive = false;
-        this.onScrollDone({ resetSpeech: true, resetRender: false });
+        const speech = this.readPage.speech;
+        this.onScrollDone({
+          resetSpeech: speech.speaking && !speech.spokenInPage(),
+          resetRender: false,
+        });
       }, this.scrollDoneTimeout);
     });
   }
   onScrollDone(config) {
-    // LOG('DONE');
     this.updatePage(config);
   }
   onScrollToEnd() {
@@ -201,9 +206,11 @@ export default class ScrollTextPage extends TextPage {
     const body = this.readBodyElement;
     container.classList.remove('read-body-scroll-to');
     body.style.top = '';
-    this.scrollToBusy = null;
-    if (this.pageBusy) this.pageDone();
-    this.onScrollDone(this.scrollToConfig);
+    requestAnimationFrame(() => {
+      this.scrollToBusy = null;
+      if (this.pageBusy) this.pageDone();
+      this.onScrollDone(this.scrollToConfig);
+    });
   }
   abortScrollTo() {
     if (!this.scrollToBusy) return;
@@ -281,10 +288,11 @@ export default class ScrollTextPage extends TextPage {
   }
   pageUp(config) {
     if (this.pageBusy) {
-      this.pagePending = 'up';
+      this.pagePending = { direction: 'up', config };
       return;
     }
     const startPosition = this.getPageStartPosition();
+    if (!startPosition) return;
     const paragraph = startPosition.paragraph;
     const textNode = paragraph.element.firstChild;
     let target;
@@ -299,11 +307,12 @@ export default class ScrollTextPage extends TextPage {
   }
   pageDown(config) {
     if (this.pageBusy) {
-      this.pagePending = 'down';
+      this.pagePending = { direction: 'down', config };
       return;
     }
     this.lastPageDown = performance.now();
     const endPosition = this.getPageEndPosition();
+    if (!endPosition) return;
     const paragraph = endPosition.paragraph;
     const textNode = paragraph.element.firstChild;
     let target;
@@ -317,18 +326,18 @@ export default class ScrollTextPage extends TextPage {
     this.pageTo(scrollTo, config);
   }
   pageDone() {
-    if (this.pageBusy && this.pagePending === this.pageBusy) {
-      // LOG('DONE CONTINUE');
+    if (this.pageBusy && this.pagePending?.direction === this.pageBusy) {
       this.readScrollElement.classList.add('read-body-scroll-fast');
     } else {
-      // LOG('DONE DONE');
       this.readScrollElement.classList.remove('read-body-scroll-fast');
     }
     this.pageBusy = null;
-    if (this.pagePending === 'up') {
-      this.pageUp();
-    } else if (this.pagePending === 'down') {
-      this.pageDown();
+    if (this.pagePending) {
+      if (this.pagePending.direction === 'up') {
+        this.pageUp(this.pagePending.config);
+      } else if (this.pagePending.direction === 'down') {
+        this.pageDown(this.pagePending.config);
+      }
     }
     this.pagePending = null;
   }
@@ -338,8 +347,6 @@ export default class ScrollTextPage extends TextPage {
   setScrollTop(scrollTop) {
     const container = this.readScrollElement;
     if (container.scrollTop !== scrollTop) {
-      // LOG('Set ' + scrollTop);
-      // console.log('Set ', scrollTop);
       this.lastScrollTopBefore = container.scrollTop;
       container.scrollTop = scrollTop;
     }
@@ -363,9 +370,7 @@ export default class ScrollTextPage extends TextPage {
     }
   }
   clearPage() {
-    // LOG('clear');
-    this.readBodyElement.replaceChildren();
-    this.trunks.splice(0);
+    this.trunks.splice(0).forEach(trunk => trunk.element.remove());
     this.setScrollTop(0);
   }
   /**
@@ -412,15 +417,15 @@ export default class ScrollTextPage extends TextPage {
     let contents = readIndex.getContentsByIndex(contentsIndex);
     if (contents && contents.cursor < start) ++contentsIndex;
 
-    // console.log('start: %o, end: %o', start, end);
-    for (let pos = start, prev = start; pos !== end + 1; prev = ++pos) {
+    for (let pos = start, prev = start; pos < end; prev = ++pos) {
       pos = content.indexOf('\n', pos);
+      if (pos === -1) pos = content.length;
       const heading = readIndex.getContentsByIndex(contentsIndex)?.cursor === prev;
       this.renderParagraph(content.slice(prev, pos), trunk, { start: prev, end: pos, heading });
       contentsIndex += heading;
     }
 
-    container.appendChild(element);
+    container.insertBefore(element, container.lastChild);
     trunk.height = element.clientHeight;
     element.style.height = trunk.height + 'px';
     element.classList.remove('read-body-trunk-processing');
@@ -430,7 +435,8 @@ export default class ScrollTextPage extends TextPage {
   renderTrunkStartsWith(start) {
     const content = this.readPage.getContent();
     const body = this.readBodyElement;
-    const end = content.indexOf('\n', start + this.step());
+    let end = content.indexOf('\n', start + this.step());
+    if (end === -1) end = content.length;
     const trunk = this.renderTrunk(start, end, body);
     this.trunks.push(trunk);
     return trunk;
@@ -487,6 +493,7 @@ export default class ScrollTextPage extends TextPage {
     const cursorOffset = useBefore ? textHigh === -1 ? -2 : textHigh : textLow === length ? textLow + 1 : textLow;
     const cursor = current.start + cursorOffset;
     const paragraph = cursor < current.start ? paragraphs[paragraphIndex - 1] : cursor > current.end ? paragraphs[paragraphIndex + 1] : current;
+    if (!paragraph) return null;
     const offset = cursor - paragraph.start;
     const offsetTop = reference - element.getBoundingClientRect() + element.offsetTop;
 
@@ -494,17 +501,20 @@ export default class ScrollTextPage extends TextPage {
   }
   getPageStartPosition() {
     const top = this.textRenderArea.top - this.readBodyElement.getBoundingClientRect().top;
-    return this.getScrollPosition(top, false);
+    // -2 for floating point errors
+    return this.getScrollPosition(top - 2, false);
   }
   getPageEndPosition() {
-    const bottom = onResize.currentSize()[1] - this.readBodyElement.getBoundingClientRect().top - this.textRenderArea.bottom;
+    const [screenWidth, screenHeight] = onResize.currentSize();
+    const bottom = screenHeight - this.readBodyElement.getBoundingClientRect().top - this.textRenderArea.bottom;
     return this.getScrollPosition(bottom, true);
   }
   getRenderCursor() {
     return this.currentRenderCursor ?? super.getRenderCursor();
   }
   getTextBufferHeight() {
-    const height = Math.max(onResize.currentSize()[1], this.minimumBufferHeight);
+    const [screenWidth, screenHeight] = onResize.currentSize();
+    const height = Math.max(screenHeight, this.minimumBufferHeight);
     const textBufferHeight = height * this.textBufferSize;
     return textBufferHeight;
   }
@@ -514,7 +524,7 @@ export default class ScrollTextPage extends TextPage {
     const trunks = this.trunks;
     const currentTrunkIndex = this.currentTrunkIndex;
     const textBufferHeight = this.getTextBufferHeight();
-    let heightChange = 0;
+    let heightChange = 0, anythingChanged = false;
 
     // 3A. Let's render previous paragraphs
     let prevHeight = trunks.slice(0, currentTrunkIndex).reduce((height, trunk) => height + trunk.height, 0);
@@ -526,6 +536,7 @@ export default class ScrollTextPage extends TextPage {
       const trunk = this.renderTrunkEndsWith(end);
       prevHeight += trunk.height;
       heightChange += trunk.height;
+      anythingChanged = true;
       // Render too many trunks during scrolling will harm scroll performance
       // and cause unfriendly behavior. So we only render single trunk during
       // scrolling.
@@ -539,10 +550,10 @@ export default class ScrollTextPage extends TextPage {
       prevHeight -= trunk.height;
       heightChange -= trunk.height;
       body.removeChild(trunk.element);
+      anythingChanged = true;
     }
 
-    // if (heightChange) LOG('PREV time ' + (performance.now() - startTime));
-    return heightChange;
+    return anythingChanged ? heightChange : null;
   }
   updatePageCurrent() {
     const content = this.readPage.getContent();
@@ -580,7 +591,7 @@ export default class ScrollTextPage extends TextPage {
     const trunks = this.trunks;
     const currentTrunkIndex = this.currentTrunkIndex;
     const textBufferHeight = this.getTextBufferHeight();
-    let heightChange = 0;
+    let heightChange = 0, anythingChanged = false;
 
     // 2A. Let's render following paragraphs
     let nextHeight = trunks.slice(currentTrunkIndex + 1).reduce((height, trunk) => height + trunk.height, 0);
@@ -588,10 +599,11 @@ export default class ScrollTextPage extends TextPage {
     const targetHeight = textBufferHeight * 10;
     if (nextHeight < minimumHeight) do {
       const start = trunks[trunks.length - 1].end + 1;
-      if (start === content.length) break;
+      if (start >= content.length) break;
       const trunk = this.renderTrunkStartsWith(start);
       nextHeight += trunk.height;
       heightChange += trunk.height;
+      anythingChanged = true;
     } while (!this.scrollActive && nextHeight < targetHeight);
 
     // 2A. Let's remove following paragraphs far away
@@ -602,10 +614,10 @@ export default class ScrollTextPage extends TextPage {
       nextHeight -= trunk.height;
       heightChange -= trunk.height;
       body.removeChild(trunk.element);
+      anythingChanged = true;
     }
 
-    // if (heightChange) LOG('NEXT time ' + (performance.now() - startTime));
-    return heightChange;
+    return anythingChanged ? heightChange : null;
   }
   updatePageMeta() {
     const length = this.readPage.getContent().length;
@@ -619,15 +631,19 @@ export default class ScrollTextPage extends TextPage {
   updatePageActiveParagraphs() {
     const paragraphs = this.getParagraphs();
     const startPosition = this.getPageStartPosition();
-    const firstIndex = paragraphs.indexOf(startPosition.paragraph);
     const endPosition = this.getPageEndPosition();
-    const lastIndex = paragraphs.indexOf(endPosition.paragraph);
-    const length = lastIndex - firstIndex + 1;
-    if (this.activeParagraphs[0] === startPosition.paragraph && this.activeParagraphs.length === length) return;
-    this.activeParagraphs.forEach(p => { p.element.setAttribute('aria-hidden', 'true'); });
-    this.activeParagraphs = paragraphs.slice(firstIndex, lastIndex + 1);
-    this.activeParagraphs.forEach(p => { p.element.setAttribute('aria-hidden', 'false'); });
-    // console.log('Text: \n', this.readPage.getContent().slice(startPosition.cursor, endPosition.cursor + 1));
+    if (startPosition && endPosition) {
+      const firstIndex = paragraphs.indexOf(startPosition.paragraph);
+      const lastIndex = paragraphs.indexOf(endPosition.paragraph);
+      const length = lastIndex - firstIndex + 1;
+      if (this.activeParagraphs[0] === startPosition.paragraph && this.activeParagraphs.length === length) return;
+      this.activeParagraphs.forEach(p => { p.element.setAttribute('aria-hidden', 'true'); });
+      this.activeParagraphs = paragraphs.slice(firstIndex, lastIndex + 1);
+      this.activeParagraphs.forEach(p => { p.element.setAttribute('aria-hidden', 'false'); });
+    } else {
+      this.activeParagraphs.forEach(p => { p.element.setAttribute('aria-hidden', 'true'); });
+      this.activeParagraphs = [];
+    }
   }
   updatePageRender() {
     const oldScrollTop = this.updatePageCurrent();
@@ -635,36 +651,99 @@ export default class ScrollTextPage extends TextPage {
     const nextChange = this.updatePageNext();
     this.updatePageMeta();
     this.updatePageActiveParagraphs();
-
-    // if (nextChange) LOG('NEXT size ' + nextChange + ` [${this.scrollActive ? '+' : '-'}]`);
-    // if (prevChange) LOG('PREV size ' + prevChange + ` [${this.scrollActive ? '+' : '-'}]`);
-
-    const newScrollTop = oldScrollTop + prevChange;
+    if (prevChange != null || nextChange != null) {
+      if (this.lastHighlightStart != null) this.resetHighlightChars();
+    }
+    const newScrollTop = oldScrollTop + (prevChange ?? 0);
     this.setScrollTop(newScrollTop);
   }
   async updatePage(config) {
     this.updatePageRender();
     const cursor = this.currentRenderCursor;
     if ((this.readPage.getRawCursor() ?? 0) !== cursor) {
-      // console.log('Set Cursor ', cursor, config);
       this.readPage.setCursor(cursor, config);
     }
   }
   clearHighlight() {
-    // TODO
+    this.highlightContainer.replaceChildren();
+    this.lastHighlightStart = null;
+    this.lastHighlightLength = null;
   }
-  highlightChars(start, length) {
-    // TODO
+  highlightChars(start, length, depth = 0) {
+    if (this.lastHighlightStart === start) {
+      if (this.lastHighlightLength === length) {
+        return null;
+      }
+    }
+    const resetAndRetry = () => {
+      if (this.scrollActive) return null;
+      this.readPage.setCursor(start, { resetSpeech: false, resetRender: true });
+      return this.highlightChars(start, length, depth + 1);
+    };
+    this.clearHighlight();
+    if (depth > 3) return null;
+    const paragraph = this.getParagraphByCursor(start);
+    if (!paragraph) {
+      if (!this.scrollToBusy) {
+        return resetAndRetry();
+      } else {
+        return null;
+      }
+    }
+    this.lastHighlightStart = start;
+    this.lastHighlightLength = length;
+
+    if (Math.min(start + length, paragraph.end) <= start) return [];
+    const containerRect = this.readBodyElement.getBoundingClientRect();
+    const screenHeight = onResize.currentSize()[1];
+    const range = document.createRange();
+    const textNode = paragraph.element.firstChild;
+    range.setStart(textNode, start - paragraph.start);
+    range.setEnd(textNode, Math.min(start + length, paragraph.end) - paragraph.start);
+    const rects = Array.from(range.getClientRects()).filter(rect => rect.width * rect.height);
+    const highlightSpanList = rects.map(rect => {
+      const span = document.createElement('span');
+      span.style.left = (rect.left - containerRect.left) + 'px';
+      span.style.width = rect.width + 'px';
+      span.style.top = (rect.top - containerRect.top) + 'px';
+      span.style.height = rect.height + 'px';
+      this.highlightContainer.appendChild(span);
+      return span;
+    });
+    const firstRect = rects.find(rect => rects.every(that => that.top >= rect.top));
+    if (!this.scrollToBusy) {
+      // bottom is used here instead of top is expected behavior
+      // Otherwise, some floating point errors may casue the page scroll up
+      // when first line of text is highlighted
+      if (firstRect.bottom < this.textRenderArea.top) {
+        return resetAndRetry();
+      } else if (firstRect.bottom > screenHeight - this.textRenderArea.bottom) {
+        const distance = firstRect.bottom - (screenHeight - this.textRenderArea.bottom);
+        if (distance > screenHeight / 2) {
+          return resetAndRetry();
+        } else {
+          this.pageDown({ resetSpeech: false, resetRender: false });
+        }
+      }
+    }
+    return highlightSpanList;
+  }
+  resetHighlightChars() {
+    if (this.lastHighlightStart == null) return;
+    const start = this.lastHighlightStart;
+    const length = this.lastHighlightLength;
+    this.clearHighlight();
+    this.highlightChars(start, length);
   }
   forceUpdate() {
     this.resetPage({ resetSpeech: true, resetRender: true });
   }
   isInPage(cursor) {
-    const paragraph = this.getParagraphByCursor(cursor);
-    if (!paragraph) return false;
-    const textNode = paragraph.element.firstChild;
-    const rect = this.getTextRect(textNode, cursor - paragraph.start);
-    return rect.top >= this.textRenderArea.top && rect.bottom <= this.textRenderArea.bottom;
+    const startPosition = this.getPageStartPosition();
+    if (!startPosition || cursor < startPosition.cursor) return false;
+    const endPosition = this.getPageEndPosition();
+    if (!endPosition || cursor > endPosition.cursor) return false;
+    return true;
   }
   cursorChange(cursor, config) {
     if (this.currentRenderCursor === cursor) {
@@ -682,24 +761,17 @@ export default class ScrollTextPage extends TextPage {
     }
   }
   resetPage(config) {
-    // LOG('reset');
     this.clearPage();
+    this.clearHighlight();
     this.currentRenderCursor = null;
     this.updatePage(config);
   }
   onResize() {
     super.onResize();
-    this.resetPage({ resetSpeech: false });
+    this.resetPage({ resetSpeech: false, resetRender: true });
   }
   step() {
     return super.step() * 2;
   }
 }
-
-// const LOG_AREA = document.body.appendChild(document.createElement('div'));
-// LOG_AREA.style = 'position: fixed; top: 80px; left: 100px; right: 40px; bottom: 120px; background: #030; color: #fff; font-size: 12px; z-index: 10; overflow-y: scroll; white-space: pre-wrap; word-break: break-all;';
-// const LOG = message => {
-//   LOG_AREA.appendChild(document.createElement('div')).textContent = message;
-//   LOG_AREA.scrollTop = LOG_AREA.scrollHeight - LOG_AREA.clientHeight;
-// };
 
