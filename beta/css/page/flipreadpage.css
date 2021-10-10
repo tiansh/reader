@@ -145,7 +145,7 @@
 }
 
 .read-page-flip .read-highlight span {
-  background: var(--highlight-background);
+  position: absolute;
 }
 
 .read-page-flip .read-text-page-buttons {
