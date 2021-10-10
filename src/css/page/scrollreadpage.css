@@ -165,7 +165,3 @@
   transition: left ease-out 0.1s;
 }
 
-:active {
-  background: red;
-}
-

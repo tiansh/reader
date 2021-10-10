@@ -48,6 +48,7 @@ export default class ScrollTextPage extends TextPage {
     this.minimumBufferHeight = 500;
     this.scrollDoneTimeout = 500;
     this.scrollToTimeout = 500;
+    this.updatePageActiveParagraphsTimeout = 200;
 
     if (this.maxTextWidth) {
       const container = this.readScrollElement.parentNode;
@@ -281,19 +282,21 @@ export default class ScrollTextPage extends TextPage {
   keyboardEvents(event) {
     const current = this.readPage.activedSubpage();
     if (!current) {
-      if (['PageUp'].includes(event.code)) {
+      if (['PageUp', 'PageDown'].includes(event.code)) {
         // wrap in raf so it may have correct transition effect
         window.requestAnimationFrame(() => {
-          this.pageUp({ resetSpeech: true, resetRender: false });
-        });
-      } else if (['PageDown'].includes(event.code)) {
-        window.requestAnimationFrame(() => {
-          this.pageDown({ resetSpeech: true, resetRender: false });
+          if (event.code === 'PageUp') {
+            this.pageUp({ resetSpeech: true, resetRender: false });
+          } else {
+            this.pageDown({ resetSpeech: true, resetRender: false });
+          }
         });
       } else if (['ArrowLeft'].includes(event.code)) {
         this.readPage.showControlPage();
       } else if (['ArrowRight'].includes(event.code)) {
         this.readPage.slideIndexPage('show');
+      } else if (['Home', 'End'].includes(event.code)) {
+        // do nothing
       } else {
         return;
       }
@@ -646,23 +649,52 @@ export default class ScrollTextPage extends TextPage {
     const length = this.readPage.getContent().length;
     const cursor = this.currentRenderCursor;
     const progress = cursor / length;
+    const progressText = (progress * 100).toFixed(2) + '%';
     const contents = this.readPage.readIndex.getContentsByCursor(cursor);
     const title = contents?.title ?? this.readPage.getMeta().title;
-    this.titleElement.textContent = title;
-    this.progressElement.textContent = (progress * 100).toFixed(2) + '%';
+    if (this.titleElement.textContent !== title) {
+      this.titleElement.textContent = title;
+    }
+    if (this.progressElement.textContent !== progressText) {
+      this.progressElement.textContent = progressText;
+    }
   }
-  updatePageActiveParagraphs() {
+  updatePageActiveParagraphs(withInCallback) {
+    if (!withInCallback) {
+      if (!window.requestIdleCallback) {
+        setTimeout(() => {
+          this.updatePageActiveParagraphs(true);
+        }, this.updatePageActiveParagraphsTimeout);
+      } else {
+        window.requestIdleCallback(() => {
+          this.updatePageActiveParagraphs(true);
+        }, { timeout: this.updatePageActiveParagraphsTimeout });
+      }
+      return;
+    }
+    const [screenWidth, screenHeight] = onResize.currentSize();
+    const top = Math.max(0, this.textRenderArea.top - this.readBodyElement.getBoundingClientRect().top - screenHeight / 2);
+    const startPosition = this.getScrollPosition(top - 2, false);
+    const bottom = screenHeight * 1.5 - this.readBodyElement.getBoundingClientRect().top - this.textRenderArea.bottom;
+    const endPosition = this.getScrollPosition(bottom, true);
     const paragraphs = this.getParagraphs();
-    const startPosition = this.getPageStartPosition();
-    const endPosition = this.getPageEndPosition();
     if (startPosition && endPosition) {
-      const firstIndex = paragraphs.indexOf(startPosition.paragraph);
-      const lastIndex = paragraphs.indexOf(endPosition.paragraph);
+      const firstIndex = Math.max(0, paragraphs.indexOf(startPosition.paragraph) - 1);
+      const lastIndex = Math.min(paragraphs.length - 1, paragraphs.indexOf(endPosition.paragraph) + 1);
       const length = lastIndex - firstIndex + 1;
       if (this.activeParagraphs[0] === startPosition.paragraph && this.activeParagraphs.length === length) return;
-      this.activeParagraphs.forEach(p => { p.element.setAttribute('aria-hidden', 'true'); });
-      this.activeParagraphs = paragraphs.slice(firstIndex, lastIndex + 1);
-      this.activeParagraphs.forEach(p => { p.element.setAttribute('aria-hidden', 'false'); });
+      const oldActiveParagraphs = this.activeParagraphs;
+      const newActiveParagraphs = paragraphs.slice(firstIndex, lastIndex + 1);
+      oldActiveParagraphs.forEach(p => {
+        if (!newActiveParagraphs.includes(p)) {
+          p.element.setAttribute('aria-hidden', 'true');
+        }
+      });
+      newActiveParagraphs.forEach(p => {
+        if (!oldActiveParagraphs.includes(p)) {
+          p.element.setAttribute('aria-hidden', 'false');
+        }
+      });
     } else {
       this.activeParagraphs.forEach(p => { p.element.setAttribute('aria-hidden', 'true'); });
       this.activeParagraphs = [];
@@ -673,12 +705,12 @@ export default class ScrollTextPage extends TextPage {
     const prevChange = this.updatePagePrev();
     const nextChange = this.updatePageNext();
     this.updatePageMeta();
-    this.updatePageActiveParagraphs();
     if (prevChange != null || nextChange != null) {
       if (this.lastHighlightStart != null) this.resetHighlightChars();
     }
     const newScrollTop = oldScrollTop + (prevChange ?? 0);
     this.setScrollTop(newScrollTop);
+    this.updatePageActiveParagraphs();
   }
   async updatePage(config) {
     this.updatePageRender();
