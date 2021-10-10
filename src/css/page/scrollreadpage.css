@@ -94,6 +94,12 @@
   position: relative;
   z-index: 2;
 }
+.read-page-scroll .read-body-trunk-first {
+  margin-top: 50px;
+}
+.read-page-scroll .read-body-trunk-last {
+  margin-bottom: 60px;
+}
 
 .read-page-scroll .read-meta {
   position: absolute;
@@ -157,5 +163,9 @@
 
 .read-page-scroll .read-index.read-sub-page-current:not(.read-index-slide) {
   transition: left ease-out 0.1s;
+}
+
+:active {
+  background: red;
 }
 

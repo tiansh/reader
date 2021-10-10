@@ -193,12 +193,12 @@ export default class ScrollTextPage extends TextPage {
       this.updatePageRender();
       setTimeout(() => {
         if (thisScrollEvent !== this.lastScrollEvent) return;
-        this.scrollActive = false;
         const speech = this.readPage.speech;
         this.onScrollDone({
           resetSpeech: speech.speaking && !speech.spokenInPage(),
           resetRender: false,
         });
+        this.scrollActive = false;
       }, this.scrollDoneTimeout);
     });
   }
@@ -228,13 +228,17 @@ export default class ScrollTextPage extends TextPage {
   scrollTo(scrollTop, config) {
     const container = this.readScrollElement;
     const body = this.readBodyElement;
+
+    const oldScrollTop = container.scrollTop;
+    const maxScrollTop = container.scrollHeight - container.clientHeight;
+    const targetScrollTop = Math.max(0, Math.min(scrollTop, maxScrollTop));
+    const scrollDistance = targetScrollTop - oldScrollTop;
+    if (!scrollDistance) return false;
+
     this.scrollActive = true;
     if (this.scrollToBusy) this.abortScrollTo();
     const currentScrollTo = this.scrollToBusy = {};
     this.scrollToConfig = config;
-    const oldScrollTop = container.scrollTop;
-    const scrollDistance = scrollTop - oldScrollTop;
-    if (!scrollDistance) return;
     this.setScrollTop(scrollTop);
     this.updatePageRender();
     body.style.top = scrollDistance + 'px';
@@ -247,6 +251,7 @@ export default class ScrollTextPage extends TextPage {
         this.abortScrollTo();
       }
     }, this.scrollToTimeout);
+    return true;
   }
   removeContainer(container) {
     container.remove();
@@ -274,13 +279,17 @@ export default class ScrollTextPage extends TextPage {
    * @param {KeyboardEvent} event
    */
   keyboardEvents(event) {
-    super.keyboardEvents(event);
     const current = this.readPage.activedSubpage();
     if (!current) {
-      if (['PageUp', 'ArrowUp'].includes(event.code)) {
-        this.pageUp({ resetSpeech: true, resetRender: false });
-      } else if (['PageDown', 'ArrowDown'].includes(event.code)) {
-        this.pageDown({ resetSpeech: true, resetRender: false });
+      if (['PageUp'].includes(event.code)) {
+        // wrap in raf so it may have correct transition effect
+        window.requestAnimationFrame(() => {
+          this.pageUp({ resetSpeech: true, resetRender: false });
+        });
+      } else if (['PageDown'].includes(event.code)) {
+        window.requestAnimationFrame(() => {
+          this.pageDown({ resetSpeech: true, resetRender: false });
+        });
       } else if (['ArrowLeft'].includes(event.code)) {
         this.readPage.showControlPage();
       } else if (['ArrowRight'].includes(event.code)) {
@@ -289,6 +298,7 @@ export default class ScrollTextPage extends TextPage {
         return;
       }
       event.preventDefault();
+      event.stopPropagation();
     }
   }
   pageUp(config) {
@@ -307,8 +317,7 @@ export default class ScrollTextPage extends TextPage {
       target = paragraph.element.getBoundingClientRect().bottom;
     }
     const scrollTo = this.readScrollElement.scrollTop - this.readScrollElement.clientHeight + this.textRenderArea.bottom + target;
-    this.pageBusy = 'up';
-    this.pageTo(scrollTo, config);
+    this.pageTo(scrollTo, config, 'up');
   }
   pageDown(config) {
     if (this.pageBusy) {
@@ -327,8 +336,7 @@ export default class ScrollTextPage extends TextPage {
       target = paragraph.element.getBoundingClientRect().top;
     }
     const scrollTo = this.readScrollElement.scrollTop + target - this.textRenderArea.top;
-    this.pageBusy = 'down';
-    this.pageTo(scrollTo, config);
+    this.pageTo(scrollTo, config, 'down');
   }
   pageDone() {
     if (this.pageBusy && this.pagePending?.direction === this.pageBusy) {
@@ -346,8 +354,11 @@ export default class ScrollTextPage extends TextPage {
     }
     this.pagePending = null;
   }
-  pageTo(scrollTop, config) {
-    this.scrollTo(scrollTop, config);
+  pageTo(scrollTop, config, action) {
+    this.pageBusy = action;
+    if (!this.scrollTo(scrollTop, config)) {
+      this.pageBusy = null;
+    }
   }
   setScrollTop(scrollTop) {
     const container = this.readScrollElement;
@@ -434,6 +445,13 @@ export default class ScrollTextPage extends TextPage {
     trunk.height = element.clientHeight;
     element.style.height = trunk.height + 'px';
     element.classList.remove('read-body-trunk-processing');
+
+    if (start === 0) {
+      element.classList.add('read-body-trunk-first');
+    }
+    if (end === content.length) {
+      element.classList.add('read-body-trunk-last');
+    }
 
     return trunk;
   }
@@ -680,9 +698,10 @@ export default class ScrollTextPage extends TextPage {
         return null;
       }
     }
-    const resetAndRetry = () => {
+    const resetAndRetry = pageDown => {
       if (this.scrollActive) return null;
-      this.readPage.setCursor(start, { resetSpeech: false, resetRender: true });
+      if (pageDown) this.pageDown({ resetSpeech: false, resetRender: false });
+      else this.readPage.setCursor(start, { resetSpeech: false, resetRender: true });
       return this.highlightChars(start, length, depth + 1);
     };
     this.clearHighlight();
@@ -690,7 +709,7 @@ export default class ScrollTextPage extends TextPage {
     const paragraph = this.getParagraphByCursor(start);
     if (!paragraph) {
       if (!this.scrollToBusy) {
-        return resetAndRetry();
+        return resetAndRetry(false);
       } else {
         return null;
       }
@@ -721,13 +740,13 @@ export default class ScrollTextPage extends TextPage {
       // Otherwise, some floating point errors may casue the page scroll up
       // when first line of text is highlighted
       if (firstRect.bottom < this.textRenderArea.top) {
-        return resetAndRetry();
+        return resetAndRetry(false);
       } else if (firstRect.bottom > screenHeight - this.textRenderArea.bottom) {
         const distance = firstRect.bottom - (screenHeight - this.textRenderArea.bottom);
         if (distance > screenHeight / 2) {
-          return resetAndRetry();
+          return resetAndRetry(false);
         } else {
-          this.pageDown({ resetSpeech: false, resetRender: false });
+          return resetAndRetry(true);
         }
       }
     }
