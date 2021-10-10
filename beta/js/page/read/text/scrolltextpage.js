@@ -48,7 +48,7 @@ export default class ScrollTextPage extends TextPage {
     this.minimumBufferHeight = 500;
     this.scrollDoneTimeout = 500;
     this.scrollToTimeout = 500;
-    this.updatePageActiveParagraphsTimeout = 200;
+    this.updateMetaTimeout = 200;
 
     if (this.maxTextWidth) {
       const container = this.readScrollElement.parentNode;
@@ -646,6 +646,7 @@ export default class ScrollTextPage extends TextPage {
     return anythingChanged ? heightChange : null;
   }
   updatePageMeta() {
+    this.lastMeta = performance.now();
     const length = this.readPage.getContent().length;
     const cursor = this.currentRenderCursor;
     const progress = cursor / length;
@@ -658,20 +659,9 @@ export default class ScrollTextPage extends TextPage {
     if (this.progressElement.textContent !== progressText) {
       this.progressElement.textContent = progressText;
     }
+    this.updatePageActiveParagraphs();
   }
   updatePageActiveParagraphs(withInCallback) {
-    if (!withInCallback) {
-      if (!window.requestIdleCallback) {
-        setTimeout(() => {
-          this.updatePageActiveParagraphs(true);
-        }, this.updatePageActiveParagraphsTimeout);
-      } else {
-        window.requestIdleCallback(() => {
-          this.updatePageActiveParagraphs(true);
-        }, { timeout: this.updatePageActiveParagraphsTimeout });
-      }
-      return;
-    }
     const [screenWidth, screenHeight] = onResize.currentSize();
     const top = Math.max(0, this.textRenderArea.top - this.readBodyElement.getBoundingClientRect().top - screenHeight / 2);
     const startPosition = this.getScrollPosition(top - 2, false);
@@ -704,13 +694,23 @@ export default class ScrollTextPage extends TextPage {
     const oldScrollTop = this.updatePageCurrent();
     const prevChange = this.updatePagePrev();
     const nextChange = this.updatePageNext();
-    this.updatePageMeta();
     if (prevChange != null || nextChange != null) {
       if (this.lastHighlightStart != null) this.resetHighlightChars();
     }
     const newScrollTop = oldScrollTop + (prevChange ?? 0);
     this.setScrollTop(newScrollTop);
-    this.updatePageActiveParagraphs();
+
+    if (this.updatePageMetaScheduled) return;
+    this.updatePageMetaScheduled = true;
+    const callback = () => {
+      this.updatePageMetaScheduled = false;
+      this.updatePageMeta();
+    };
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(callback, { timeout: this.updateMetaTimeout });
+    } else {
+      setTimeout(callback, this.updateMetaTimeout);
+    }
   }
   async updatePage(config) {
     this.updatePageRender();
