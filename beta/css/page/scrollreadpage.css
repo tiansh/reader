@@ -50,7 +50,7 @@
   z-index: 2;
   scrollbar-width: none;
   clip-path: content-box;
-  /**/
+  will-change: scroll-position;
 }
 
 .read-page-scroll .read-body-scroll.read-body-scroll-slide-x {

@@ -107,7 +107,9 @@ export default class ScrollTextPage extends TextPage {
     });
 
     const startSlideX = () => {
+      if (this.scrollToBusy) this.abortScrollTo();
       this.readScrollElement.classList.add('read-body-scroll-slide-x');
+      if (this.scrollActive) this.onScrollDone();
     };
     const stopSlideX = () => {
       this.readScrollElement.classList.remove('read-body-scroll-slide-x');
@@ -199,12 +201,12 @@ export default class ScrollTextPage extends TextPage {
           resetSpeech: speech.speaking && !speech.spokenInPage(),
           resetRender: false,
         });
-        this.scrollActive = false;
       }, this.scrollDoneTimeout);
     });
   }
   onScrollDone(config) {
     this.updatePage(config);
+    this.scrollActive = false;
   }
   onScrollToEnd() {
     if (!this.scrollToBusy) return;
@@ -375,18 +377,26 @@ export default class ScrollTextPage extends TextPage {
     return this.trunks.flatMap(trunk => trunk.paragraphs);
   }
   getParagraphByCursor(cursor) {
-    const paragraphs = this.getParagraphs();
-    if (!paragraphs.length) return null;
-    let low = 0, high = paragraphs.length - 1;
-    if (cursor < paragraphs[low].start) return null;
-    if (cursor > paragraphs[high].end) return null;
-    while (true) {
-      const mid = Math.floor((low + high) / 2);
-      const paragraph = paragraphs[mid];
-      if (cursor > paragraph.end) low = mid + 1;
-      else if (cursor < paragraph.start) high = mid - 1;
-      else return paragraph;
-    }
+    /**
+     * @template {TrunkInfo|ParagraphInfo} T
+     * @param {T[]} items
+     * @returns {T}
+     */
+    const findByCursor = items => {
+      let low = 0, high = items.length - 1;
+      if (!items.length) return null;
+      if (cursor < items[low].start) return null;
+      if (cursor > items[high].end) return null;
+      while (true) {
+        const mid = Math.floor((low + high) / 2);
+        const item = items[mid];
+        if (cursor > item.end) low = mid + 1;
+        else if (cursor < item.start) high = mid - 1;
+        else return item;
+      }
+    };
+    const trunk = findByCursor(this.trunks);
+    return trunk && findByCursor(trunk.paragraphs);
   }
   clearPage() {
     this.trunks.splice(0).forEach(trunk => trunk.element.remove());
@@ -485,10 +495,22 @@ export default class ScrollTextPage extends TextPage {
   }
   getScrollPosition(reference, useBefore) {
     // We cannot use document.elementFromPoint as certain position may belongs to margin of some paragraph
-    const paragraphs = this.getParagraphs();
-    if (!paragraphs || !paragraphs.length) {
+    const trunks = this.trunks;
+    /** @type {TrunkInfo} */
+    const trunk = trunks.reduce(({ choose, offset }, trunk) => {
+      if (useBefore && offset <= reference) {
+        return { choose: trunk, offset: offset + trunk.height };
+      }
+      offset += trunk.height;
+      if (!useBefore && offset >= reference) {
+        return { choose: choose ?? trunk, offset };
+      }
+      return { choose, offset };
+    }, { choose: null, offset: 0 }).choose;
+    if (!trunk?.paragraphs?.length) {
       return null;
     }
+    const paragraphs = trunk.paragraphs;
     const scrollTop = reference;
     let low = 0, high = paragraphs.length - 1;
     while (low <= high) {
@@ -707,7 +729,9 @@ export default class ScrollTextPage extends TextPage {
       this.updatePageMeta();
     };
     if (window.requestIdleCallback) {
-      window.requestIdleCallback(callback, { timeout: this.updateMetaTimeout });
+      setTimeout(() => {
+        window.requestIdleCallback(callback, { timeout: this.updateMetaTimeout / 2 });
+      }, this.updateMetaTimeout / 2);
     } else {
       setTimeout(callback, this.updateMetaTimeout);
     }

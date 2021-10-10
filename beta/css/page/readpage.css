@@ -120,6 +120,10 @@
   visibility: hidden;
 }
 
+.read-index-slide {
+  outline: var(--border-color) solid 1px;
+}
+
 .index-tab-group {
   position: absolute;
   bottom: 0;
