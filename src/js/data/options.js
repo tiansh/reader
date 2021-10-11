@@ -276,7 +276,6 @@ const options = [{
       { value: 'scroll', text: i18n.getMessage('configModeScroll') },
     ],
     default: 'flip',
-    description: 'Description',
   })],
 }, {
   title: i18n.getMessage('configThemeGroupTitle'),
