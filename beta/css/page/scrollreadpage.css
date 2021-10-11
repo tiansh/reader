@@ -49,8 +49,13 @@
   overflow-wrap: break-word;
   z-index: 2;
   scrollbar-width: none;
+  clip-path: inset(var(--page-margin-y) var(--page-margin-x) calc(var(--page-margin-y) + 20px)); /* As some stupid browsers does not support *-box values */
   clip-path: content-box;
   will-change: scroll-position;
+}
+/* Chrome doesn't support scrollbar-width yet */
+.read-page-scroll .read-body-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .read-page-scroll .read-body-scroll.read-body-scroll-slide-x {
@@ -95,10 +100,12 @@
   z-index: 2;
 }
 .read-page-scroll .read-body-trunk-first {
-  margin-top: 50px;
+  padding-top: 50px;
+  padding-top: max(calc(50px - var(--page-margin-y)), 0px);
 }
 .read-page-scroll .read-body-trunk-last {
-  margin-bottom: 60px;
+  padding-bottom: 60px;
+  padding-bottom: max(calc(60px - var(--page-margin-y)), 0px);
 }
 
 .read-page-scroll .read-meta {
