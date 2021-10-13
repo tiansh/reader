@@ -129,6 +129,10 @@
   transform: translateZ(0);
 }
 
+.read-index:not(.read-index-slide):not(.read-sub-page-current) .item-list {
+  display: none;
+}
+
 .read-index-slide {
   outline: var(--border-color) solid 1px;
 }
