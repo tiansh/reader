@@ -15,6 +15,7 @@ import ReadPage from '../readpage.js';
 import i18n from '../../../i18n/i18n.js';
 import template from '../../../ui/util/template.js';
 import dom from '../../../ui/util/dom.js';
+import IndexSubPage from './indexsubpage.js';
 
 export default class IndexPage extends ReadSubPage {
   /**
@@ -43,7 +44,7 @@ export default class IndexPage extends ReadSubPage {
     this.subPages = [this.contentsPage, this.bookmarkPage, this.searchPage];
     this.subPageMap = { contents: this.contentsPage, bookmark: this.bookmarkPage, search: this.searchPage };
 
-    this.currentActiveIndex = 0;
+    this.currentSubPageIndex = 0;
 
     this.subPages.forEach(page => page.onFirstActivate());
 
@@ -53,11 +54,11 @@ export default class IndexPage extends ReadSubPage {
     this.tabGroup.addEventListener('keydown', event => {
       let targetPage = null;
       if (event.code === 'ArrowRight') {
-        targetPage = this.subPages[this.currentActiveIndex + 1];
+        targetPage = this.subPages[this.currentSubPageIndex + 1];
       } else if (event.code === 'ArrowLeft') {
-        targetPage = this.subPages[this.currentActiveIndex - 1];
+        targetPage = this.subPages[this.currentSubPageIndex - 1];
       }
-      if (targetPage) this.showPage(targetPage);
+      if (targetPage) this.setCurrentSubPage(targetPage);
     });
 
   }
@@ -81,32 +82,44 @@ export default class IndexPage extends ReadSubPage {
       this.container.style.setProperty('--slide-offset', `${offset}px`);
       this.container.classList.add('read-index-slide');
     } else {
-      this.container.style.setProperty('--slide-offset', `0px`);
-      this.container.classList.remove('read-index-slide');
       if (action === 'show' && !isCurrent) {
         window.requestAnimationFrame(() => {
+          this.container.style.setProperty('--slide-offset', `0px`);
+          this.container.classList.remove('read-index-slide');
           this.show();
         });
-      } else if (action === 'hide') {
-        this.hide();
+      } else {
+        this.container.style.setProperty('--slide-offset', `0px`);
+        this.container.classList.remove('read-index-slide');
+        if (action === 'hide') {
+          this.hide();
+        }
       }
     }
   }
-  showPage(targetPage) {
+  /**
+   * @param {IndexSubPage} targetPage
+   */
+  setCurrentSubPage(targetPage) {
     this.subPages.forEach(page => {
-      if (page !== targetPage) page.hide();
+      if (page !== targetPage) page.unsetCurrent();
     });
-    targetPage.show();
+    targetPage.setCurrent();
+    const pageIndex = targetPage.pageIndex;
+    this.container.style.setProperty('--tab-index-current', pageIndex);
+    this.tabGroup.style.setProperty('--active-index', pageIndex);
+    this.currentSubPageIndex = pageIndex;
   }
   show(/** @type {'contents'|'bookmark'|'search'|null} */page = null) {
     const actived = this.isCurrent;
     super.show();
-    if (page) this.showPage(this.subPageMap[page]);
-    else this.showPage(this.subPages[this.currentActiveIndex]);
+    if (page) this.setCurrentSubPage(this.subPageMap[page]);
+    else this.setCurrentSubPage(this.subPages[this.currentSubPageIndex]);
     dom.enableKeyboardFocus(this.container);
     if (this.isCurrent !== actived) {
       this.readPage.updateIndexRender();
     }
+    if (this.subPages) this.subPages.forEach(page => { page.show(); });
   }
   hide() {
     const actived = this.isCurrent;
@@ -115,8 +128,9 @@ export default class IndexPage extends ReadSubPage {
     if (this.isCurrent !== actived) {
       this.readPage.updateIndexRender();
     }
+    if (this.subpages) this.subPages.forEach(page => { page.hide(); });
   }
-  isSubPageActive(/** @type {'contents'|'bookmark'|'search'} */page = null) {
+  isSubPageCurrent(/** @type {'contents'|'bookmark'|'search'} */page = null) {
     return this.subPageMap[page]?.isShow;
   }
   cursorChange(cursor, config) {

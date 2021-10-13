@@ -25,6 +25,7 @@ export default class IndexSubPage extends ReadSubPage {
    */
   constructor(container, tabItem, index, indexPage, readPage) {
     super(container, readPage);
+    this.isCurrent = false;
     this.isShow = false;
     this.tabItem = tabItem;
     this.pageIndex = index;
@@ -32,19 +33,32 @@ export default class IndexSubPage extends ReadSubPage {
     this.tabGroup = this.tabItem.closest('.tab-group');
     this.pageButtonAction = this.pageButtonAction.bind(this);
   }
+  updateListRender() {
+    if (!this.itemList) return;
+    if (this.isCurrent && this.isShow) {
+      this.updateCurrentHighlight();
+      dom.enableKeyboardFocus(this.container);
+    } else {
+      dom.disableKeyboardFocus(this.container);
+    }
+  }
+  setCurrent() {
+    this.isCurrent = true;
+    this.container.removeAttribute('aria-hidden');
+    this.updateListRender();
+  }
+  unsetCurrent() {
+    this.isCurrent = false;
+    this.container.setAttribute('aria-hidden', 'true');
+    this.updateListRender();
+  }
   show() {
     this.isShow = true;
-    this.updateCurrentHighlight();
-    this.indexPage.container.style.setProperty('--tab-index-current', this.pageIndex);
-    this.tabGroup.style.setProperty('--active-index', this.pageIndex);
-    this.indexPage.currentActiveIndex = this.pageIndex;
-    this.container.removeAttribute('aria-hidden');
-    dom.enableKeyboardFocus(this.container);
+    this.updateListRender();
   }
   hide() {
     this.isShow = false;
-    this.container.setAttribute('aria-hidden', 'true');
-    dom.disableKeyboardFocus(this.container);
+    this.updateListRender();
   }
   /** @returns {HTMLButtonElement} */
   createPageButton() { }
@@ -59,7 +73,7 @@ export default class IndexSubPage extends ReadSubPage {
     headerRef.get('right').appendChild(this.pageButton);
 
     this.tabItem.addEventListener('click', event => {
-      this.indexPage.showPage(this);
+      this.indexPage.setCurrentSubPage(this);
     });
     this.backButton.addEventListener('click', event => {
       this.indexPage.hide();
@@ -88,7 +102,6 @@ export default class IndexSubPage extends ReadSubPage {
 
     this.pageButton.addEventListener('click', this.pageButtonAction);
 
-    this.updateCurrentHighlight();
   }
   onInactivate() {
     this.itemList.dispatch();

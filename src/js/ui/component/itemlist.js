@@ -219,8 +219,7 @@ export default class ItemList {
     this.renderList();
   }
   setList(list) {
-    this.clearList();
-    this.list.push(...list);
+    this.list.splice(0, this.list.length, ...list);
     this.renderList();
   }
   appendList(list) {
@@ -235,7 +234,8 @@ export default class ItemList {
     if (index < this.list.length) {
       this.list.splice(index, 1, item);
       this.render(this.elements.get(index), item, index);
-    } else {
+    } else if (index === this.list.length) {
+      this.list.push(item);
       const li = this.renderItem(item, index);
       this.listElement.appendChild(li);
     }

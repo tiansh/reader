@@ -55,13 +55,13 @@ export default class IndexSearchPage extends IndexSubPage {
     super.onActivate();
     this.searchInput.value = '';
   }
-  show() {
-    super.show();
+  setCurrent() {
+    super.setCurrent();
     const cursorOnTab = this.indexPage.tabGroup === document.activeElement;
     const emptySearch = this.itemList.isListEmpty();
     if (emptySearch && !cursorOnTab) {
       setTimeout(() => { // wait for css transition end
-        if (this.isShow) this.searchInput.focus();
+        if (this.isCurrent) this.searchInput.focus();
       }, 210);
     }
   }

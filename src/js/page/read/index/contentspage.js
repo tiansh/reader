@@ -197,8 +197,8 @@ export default class IndexContentsPage extends IndexSubPage {
     super.onInactivate();
     this.templatePage.hide();
   }
-  show() {
-    super.show();
+  setCurrent() {
+    super.setCurrent();
     // Always make current item of table of contents on the top of page
     // So it would be easier for anyone who want to skip to next section
     const index = this.getCurrentHighlightIndex();
@@ -206,8 +206,8 @@ export default class IndexContentsPage extends IndexSubPage {
       this.itemList.scrollIntoView(index, { block: 'start' });
     }
   }
-  hide() {
-    super.hide();
+  unsetCurrent() {
+    super.unsetCurrent();
     if (this.templatePage) this.templatePage.hide();
   }
   createPageButton() {
