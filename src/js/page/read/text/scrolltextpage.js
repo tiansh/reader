@@ -567,15 +567,13 @@ export default class ScrollTextPage extends TextPage {
     return textBufferHeight;
   }
   updatePagePrev() {
-    const startTime = performance.now();
     const body = this.readBodyElement;
     const trunks = this.trunks;
-    const currentTrunkIndex = this.currentTrunkIndex;
     const textBufferHeight = this.getTextBufferHeight();
     let heightChange = 0, anythingChanged = false;
 
     // 3A. Let's render previous paragraphs
-    let prevHeight = trunks.slice(0, currentTrunkIndex).reduce((height, trunk) => height + trunk.height, 0);
+    let prevHeight = trunks.slice(0, this.currentTrunkIndex).reduce((height, trunk) => height + trunk.height, 0);
     const minimumHeight = textBufferHeight * (this.scrollActive ? 2 : 4);
     const targetHeight = textBufferHeight * 4;
     if (prevHeight < minimumHeight) do {
@@ -585,6 +583,7 @@ export default class ScrollTextPage extends TextPage {
       prevHeight += trunk.height;
       heightChange += trunk.height;
       anythingChanged = true;
+      ++this.currentTrunkIndex;
       // Render too many trunks during scrolling will harm scroll performance
       // and cause unfriendly behavior. So we only render single trunk during
       // scrolling.
@@ -599,6 +598,7 @@ export default class ScrollTextPage extends TextPage {
       heightChange -= trunk.height;
       body.removeChild(trunk.element);
       anythingChanged = true;
+      --this.currentTrunkIndex;
     }
 
     return anythingChanged ? heightChange : null;
@@ -627,13 +627,11 @@ export default class ScrollTextPage extends TextPage {
     if (!textNode) {
       return paragraph.element.offsetTop;
     } else {
-      const rect = this.getTextRect(textNode, Math.min(start, paragraph.end - 1) - paragraph.start);
+      const rect = this.getTextRect(textNode, Math.min(cursor, paragraph.end - 1) - paragraph.start);
       return rect.top - trunk.element.getBoundingClientRect().top;
     }
   }
   updatePageNext() {
-    const startTime = performance.now();
-
     const body = this.readBodyElement;
     const content = this.readPage.getContent();
     const trunks = this.trunks;
@@ -715,7 +713,8 @@ export default class ScrollTextPage extends TextPage {
   updatePageRender() {
     const oldScrollTop = this.updatePageCurrent();
     const prevChange = this.updatePagePrev();
-    const nextChange = this.updatePageNext();
+    // Skip build next trunk if prev got changed in this animation frame for better performance
+    const nextChange = prevChange == null || !this.scrollActive ? this.updatePageNext() : null;
     if (prevChange != null || nextChange != null) {
       if (this.lastHighlightStart != null) this.resetHighlightChars();
     }
