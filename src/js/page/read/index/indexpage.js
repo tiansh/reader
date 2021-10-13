@@ -45,10 +45,12 @@ export default class IndexPage extends ReadSubPage {
     this.subPageMap = { contents: this.contentsPage, bookmark: this.bookmarkPage, search: this.searchPage };
 
     this.currentSubPageIndex = 0;
-
     this.subPages.forEach(page => page.onFirstActivate());
-
     this.tabGroupContainer = this.container.querySelector('.index-tab-group');
+
+    this.container.addEventListener('scroll', event => {
+      this.container.scrollLeft = 0;
+    });
 
     this.tabGroup = this.container.querySelector('.tab-group');
     this.tabGroup.addEventListener('keydown', event => {
