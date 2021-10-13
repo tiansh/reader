@@ -164,18 +164,15 @@
 
 .read-page-flip .read-index {
   top: calc(calc(var(--window-height) * -1) + var(--slide-offset));
-  bottom: auto;
+  bottom: calc(100vh - var(--slide-offset));
 }
 
 .read-page-flip .read-index.read-sub-page-current {
   top: 0;
+  bottom: 0;
 }
 
 .read-page-flip .read-index:not(.read-index-slide) {
-  transition: top ease-out 0.1s, height ease-out 0.1s;
-}
-
-.read-page-flip .read-index.read-sub-page-current:not(.read-index-slide) {
-  transition: top ease-out 0.1s;
+  transition: top ease-out 0.1s, bottom ease-out 0.1s;
 }
 

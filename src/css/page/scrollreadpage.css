@@ -157,18 +157,15 @@
 
 .read-page-scroll .read-index {
   left: calc(calc(var(--window-width) * -1) + var(--slide-offset));
-  right: auto;
+  right: calc(100vw - var(--slide-offset));
 }
 
 .read-page-scroll .read-index.read-sub-page-current {
   left: 0;
+  right: 0;
 }
 
 .read-page-scroll .read-index:not(.read-index-slide) {
-  transition: left ease-out 0.1s, width ease-out 0.1s;
-}
-
-.read-page-scroll .read-index.read-sub-page-current:not(.read-index-slide) {
-  transition: left ease-out 0.1s;
+  transition: left ease-out 0.1s, right ease-out 0.1s;
 }
 

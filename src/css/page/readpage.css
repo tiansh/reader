@@ -18,8 +18,6 @@
 .read-text {
   z-index: 2;
   background: var(--default-background);
-  overflow: hidden;
-  contain: strict;
 }
 
 .dark-theme .read-text-page {
@@ -111,13 +109,24 @@
   background: var(--default-background);
   overflow: hidden;
   --tab-index-current: 0;
-  --read-index-slide-x: 0px;
   z-index: 9;
-  position: relative;
-}
-
-.read-index:not(.read-sub-page-current):not(.read-index-slide) {
-  visibility: hidden;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  /*
+   * Fix a weird bug on On iOS Web App
+   * 1. Switch to Scroll reading mode;
+   * 2. Open some text file, and slide right to open Index Page;
+   * 3. Repeat rotating you iPhone until title bar is rendered on the top of system status bar (?);
+   *     - I believe this is another bug for Safari. But let's ignore it and continue here.
+   * 4. Touch the system status bar, and webpage will be resized to normal size;
+   * 5. Without following line, text in text page will be rendered in the front (?);
+   *     - This only effect rendering. While these texts are not interactable anyway.
+   * I cannot understand how this bug is triggered, nor why this line would fix it.
+   * So if you have any better ideas, please open an issue or send a pull request here.
+   */
+  transform: translateZ(0);
 }
 
 .read-index-slide {
@@ -126,6 +135,7 @@
 
 .index-tab-group {
   position: absolute;
+  z-index: 1;
   bottom: 0;
   width: 100%;
   padding: 5px 0;
@@ -134,10 +144,11 @@
 
 .index-tab-panel {
   position: absolute;
+  z-index: 1;
   top: 0;
   bottom: 56px;
   width: 100%;
-  left: calc(calc(calc(var(--tab-index) - var(--tab-index-current)) * 100%) + var(--read-index-slide-x));
+  left: calc(calc(var(--tab-index) - var(--tab-index-current)) * 100%);
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: none;
@@ -235,6 +246,10 @@ button.tab-item:focus {
   right: 0;
   display: flex;
   flex-direction: column;
+  overflow-y: hidden;
+}
+
+.read-index.read-sub-page-current .index-list {
   overflow-y: auto;
 }
 
