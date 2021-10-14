@@ -204,8 +204,8 @@ export default class ScrollTextPage extends TextPage {
     });
   }
   onScrollDone(config) {
-    this.updatePage(config);
     this.scrollActive = false;
+    this.updatePage(config);
   }
   onScrollToEnd() {
     if (!this.scrollToBusy) return;
@@ -305,6 +305,19 @@ export default class ScrollTextPage extends TextPage {
       event.stopPropagation();
     }
   }
+  /**
+   * @param {MouseEvent} event
+   */
+  mouseEvents(event) {
+    if (this.useMouseClickPaging && event.buttons === 8) {
+      this.pageUp({ resetSpeech: true, resetRender: false });
+    } else if (this.useMouseClickPaging && event.buttons === 16) {
+      this.pageDown({ resetSpeech: true, resetRender: false });
+    } else {
+      return;
+    }
+    event.preventDefault();
+  }
   pageUp(config) {
     if (this.pageBusy) {
       this.pagePending = { direction: 'up', config };
@@ -367,8 +380,7 @@ export default class ScrollTextPage extends TextPage {
   setScrollTop(scrollTop) {
     const container = this.readScrollElement;
     const target = scrollTop;
-    if (container.scrollTop !== target) {
-      this.lastScrollTopBefore = container.scrollTop;
+    if (Math.abs(container.scrollTop - target) > 0.5) {
       container.scrollTop = target;
     }
     this.lastScrollTop = container.scrollTop;
@@ -428,16 +440,21 @@ export default class ScrollTextPage extends TextPage {
   /**
    * @param {number} start
    * @param {number} end
-   * @param {HTMLElement} container
+   * @param {'first'|'last'} position
    * @returns {TrunkInfo}
    */
-  renderTrunk(start, end, container) {
-    const element = document.createElement('div');
-    element.classList.add('read-body-trunk', 'read-body-trunk-processing');
-    const trunk = { element, paragraphs: [], start, end };
-
+  renderTrunk(start, end, position) {
     const content = this.readPage.getContent();
     const readIndex = this.readPage.readIndex;
+
+    const element = document.createElement('div');
+    const trunk = { element, paragraphs: [], start, end };
+
+    element.classList.add('trunk', 'trunk-processing');
+    element.dataset.start = start;
+    element.dataset.end = end;
+    if (start === 0) element.classList.add('trunk-first');
+    if (end === content.length) element.classList.add('trunk-last');
 
     let contentsIndex = readIndex.getIndexOfContentsByCursor(start);
     if (contentsIndex === 0) contentsIndex = 1;
@@ -451,32 +468,38 @@ export default class ScrollTextPage extends TextPage {
       this.renderParagraph(content.slice(prev, pos), trunk, { start: prev, end: pos, heading });
       contentsIndex += heading;
     }
-    if (start === 0) element.classList.add('read-body-trunk-first');
-    if (end === content.length) element.classList.add('read-body-trunk-last');
 
-    container.insertBefore(element, container.lastChild);
-    trunk.height = element.clientHeight;
+    const body = this.readBodyElement;
+    const reference = position === 'first' ? body.firstChild : body.lastChild;
+    body.insertBefore(element, reference);
+    const rect = element.getBoundingClientRect();
+    trunk.height = rect.height;
     element.style.height = trunk.height + 'px';
-    element.classList.remove('read-body-trunk-processing');
+    element.classList.remove('trunk-processing');
 
     return trunk;
   }
-  renderTrunkStartsWith(start) {
+  /**
+   * @param {number} start
+   * @param {'first'|'last'} position
+   */
+  renderTrunkStartsWith(start, position) {
     const content = this.readPage.getContent();
-    const body = this.readBodyElement;
     let end = content.indexOf('\n', start + this.step());
     if (end === -1) end = content.length;
-    const trunk = this.renderTrunk(start, end, body);
+    const trunk = this.renderTrunk(start, end, position);
     this.trunks.push(trunk);
     return trunk;
   }
-  renderTrunkEndsWith(end) {
+  /**
+   * @param {number} start
+   * @param {'first'|'last'} position
+   */
+  renderTrunkEndsWith(end, position) {
     const content = this.readPage.getContent();
-    const body = this.readBodyElement;
     const start = content.lastIndexOf('\n', end - 1 - this.step()) + 1;
-    const trunk = this.renderTrunk(start, end, body);
+    const trunk = this.renderTrunk(start, end, position);
     this.trunks.unshift(trunk);
-    body.insertBefore(trunk.element, body.firstChild);
     return trunk;
   }
   getTextRect(textNode, index) {
@@ -567,24 +590,23 @@ export default class ScrollTextPage extends TextPage {
     return textBufferHeight;
   }
   updatePagePrev() {
-    const startTime = performance.now();
     const body = this.readBodyElement;
     const trunks = this.trunks;
-    const currentTrunkIndex = this.currentTrunkIndex;
     const textBufferHeight = this.getTextBufferHeight();
     let heightChange = 0, anythingChanged = false;
 
     // 3A. Let's render previous paragraphs
-    let prevHeight = trunks.slice(0, currentTrunkIndex).reduce((height, trunk) => height + trunk.height, 0);
+    let prevHeight = trunks.slice(0, this.currentTrunkIndex).reduce((height, trunk) => height + trunk.height, 0);
     const minimumHeight = textBufferHeight * (this.scrollActive ? 2 : 4);
     const targetHeight = textBufferHeight * 4;
     if (prevHeight < minimumHeight) do {
       const end = trunks[0].start - 1;
       if (end === -1) break;
-      const trunk = this.renderTrunkEndsWith(end);
+      const trunk = this.renderTrunkEndsWith(end, 'first');
       prevHeight += trunk.height;
       heightChange += trunk.height;
       anythingChanged = true;
+      ++this.currentTrunkIndex;
       // Render too many trunks during scrolling will harm scroll performance
       // and cause unfriendly behavior. So we only render single trunk during
       // scrolling.
@@ -599,6 +621,7 @@ export default class ScrollTextPage extends TextPage {
       heightChange -= trunk.height;
       body.removeChild(trunk.element);
       anythingChanged = true;
+      --this.currentTrunkIndex;
     }
 
     return anythingChanged ? heightChange : null;
@@ -620,20 +643,18 @@ export default class ScrollTextPage extends TextPage {
     const cursor = this.readPage.getRawCursor() ?? 0;
     this.currentRenderCursor = cursor;
     const start = content.lastIndexOf('\n', cursor - 1) + 1;
-    const trunk = this.renderTrunkStartsWith(start);
+    const trunk = this.renderTrunkStartsWith(start, 'first');
     this.currentTrunkIndex = 0;
     const paragraph = trunk.paragraphs[0];
     const textNode = paragraph.element.firstChild;
     if (!textNode) {
       return paragraph.element.offsetTop;
     } else {
-      const rect = this.getTextRect(textNode, Math.min(start, paragraph.end - 1) - paragraph.start);
+      const rect = this.getTextRect(textNode, Math.min(cursor, paragraph.end - 1) - paragraph.start);
       return rect.top - trunk.element.getBoundingClientRect().top;
     }
   }
   updatePageNext() {
-    const startTime = performance.now();
-
     const body = this.readBodyElement;
     const content = this.readPage.getContent();
     const trunks = this.trunks;
@@ -648,7 +669,7 @@ export default class ScrollTextPage extends TextPage {
     if (nextHeight < minimumHeight) do {
       const start = trunks[trunks.length - 1].end + 1;
       if (start >= content.length) break;
-      const trunk = this.renderTrunkStartsWith(start);
+      const trunk = this.renderTrunkStartsWith(start, 'last');
       nextHeight += trunk.height;
       heightChange += trunk.height;
       anythingChanged = true;
@@ -715,25 +736,30 @@ export default class ScrollTextPage extends TextPage {
   updatePageRender() {
     const oldScrollTop = this.updatePageCurrent();
     const prevChange = this.updatePagePrev();
-    const nextChange = this.updatePageNext();
+    // Skip build next trunk if prev got changed in this animation frame for better performance
+    const nextChange = prevChange == null || !this.scrollActive ? this.updatePageNext() : null;
     if (prevChange != null || nextChange != null) {
       if (this.lastHighlightStart != null) this.resetHighlightChars();
     }
     const newScrollTop = oldScrollTop + (prevChange ?? 0);
     this.setScrollTop(newScrollTop);
 
-    if (this.updatePageMetaScheduled) return;
-    this.updatePageMetaScheduled = true;
-    const callback = () => {
+    const updatePageMeta = () => {
       this.updatePageMetaScheduled = false;
       this.updatePageMeta();
     };
-    if (window.requestIdleCallback) {
-      setTimeout(() => {
-        window.requestIdleCallback(callback, { timeout: this.updateMetaTimeout / 2 });
-      }, this.updateMetaTimeout / 2);
+    if (this.scrollActive) {
+      if (this.updatePageMetaScheduled) return;
+      this.updatePageMetaScheduled = true;
+      if (window.requestIdleCallback) {
+        setTimeout(() => {
+          window.requestIdleCallback(updatePageMeta, { timeout: this.updateMetaTimeout / 2 });
+        }, this.updateMetaTimeout / 2);
+      } else {
+        setTimeout(updatePageMeta, this.updateMetaTimeout);
+      }
     } else {
-      setTimeout(callback, this.updateMetaTimeout);
+      updatePageMeta();
     }
   }
   async updatePage(config) {

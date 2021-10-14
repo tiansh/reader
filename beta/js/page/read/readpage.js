@@ -183,7 +183,7 @@ export default class ReadPage extends Page {
     this.indexPage.slideShow(action, offset);
   }
   toggleIndexPage(page) {
-    if (this.isIndexActive() && this.indexPage.isSubPageActive(page)) {
+    if (this.isIndexActive() && this.indexPage.isSubPageCurrent(page)) {
       this.indexPage.hide();
     } else {
       this.indexPage.show(page);
