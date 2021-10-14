@@ -46,13 +46,13 @@ export default class TextPage {
   async onInactivate() {
     this.isCurrent = false;
 
-    this.removeContainer(this.container);
-    this.container = null;
-    this.stepCache = null;
-
     document.removeEventListener('keydown', this.keyboardEvents);
     document.removeEventListener('wheel', this.wheelEvents);
     this.container.removeEventListener('mousedown', this.mouseEvents);
+
+    this.removeContainer(this.container);
+    this.container = null;
+    this.stepCache = null;
 
     onResize.removeListener(this.onResize);
   }
