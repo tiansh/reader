@@ -305,6 +305,19 @@ export default class ScrollTextPage extends TextPage {
       event.stopPropagation();
     }
   }
+  /**
+   * @param {MouseEvent} event
+   */
+  mouseEvents(event) {
+    if (this.useMouseClickPaging && event.buttons === 8) {
+      this.pageUp({ resetSpeech: true, resetRender: false });
+    } else if (this.useMouseClickPaging && event.buttons === 16) {
+      this.pageDown({ resetSpeech: true, resetRender: false });
+    } else {
+      return;
+    }
+    event.preventDefault();
+  }
   pageUp(config) {
     if (this.pageBusy) {
       this.pagePending = { direction: 'up', config };

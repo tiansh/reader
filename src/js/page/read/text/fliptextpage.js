@@ -209,6 +209,19 @@ export default class FlipTextPage extends TextPage {
     this.wheelBusy = true;
   }
   /**
+   * @param {MouseEvent} event
+   */
+  mouseEvents(event) {
+    if (this.useMouseClickPaging && event.buttons === 8) {
+      this.prevPage({ resetSpeech: true, resetRender: false });
+    } else if (this.useMouseClickPaging && event.buttons === 16) {
+      this.nextPage({ resetSpeech: true, resetRender: false });
+    } else {
+      return;
+    }
+    event.preventDefault();
+  }
+  /**
    * @param {'move'|'left'|'right'|'cancel'} action
    * @param {number} offset
    */

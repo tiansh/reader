@@ -128,6 +128,8 @@ screen_width_two_column_index=1260
 text_buffer_factor=1
 ; （仅滚动模式）文本区域的最大宽度
 scroll_max_text_width=800
+; 允许使用鼠标第四键第五键翻页（使用 Chrome 安装后可用）
+mouse_paging=false
 ; 添加自定义 CSS
 custom_css=
 

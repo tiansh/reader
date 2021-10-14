@@ -21,6 +21,7 @@ export default class TextPage {
     this.isCurrent = false;
     this.keyboardEvents = this.keyboardEvents.bind(this);
     this.wheelEvents = this.wheelEvents.bind(this);
+    this.mouseEvents = this.mouseEvents.bind(this);
     this.onResize = this.onResize.bind(this);
   }
   async onActivate({ id }) {
@@ -30,8 +31,12 @@ export default class TextPage {
     await this.updateStyleConfig();
     this.readPage.container.prepend(this.container);
 
+    // EXPERT_CONFIG Use 4th / 5th button for paging
+    this.useMouseClickPaging = await config.expert('appearance.mouse_paging', 'boolean', false);
+
     document.addEventListener('keydown', this.keyboardEvents);
     document.addEventListener('wheel', this.wheelEvents);
+    this.container.addEventListener('mousedown', this.mouseEvents);
 
     onResize.addListener(this.onResize);
   }
@@ -47,6 +52,7 @@ export default class TextPage {
 
     document.removeEventListener('keydown', this.keyboardEvents);
     document.removeEventListener('wheel', this.wheelEvents);
+    this.container.removeEventListener('mousedown', this.mouseEvents);
 
     onResize.removeListener(this.onResize);
   }
@@ -78,6 +84,7 @@ export default class TextPage {
   forceUpdate() { }
   keyboardEvents(event) { }
   wheelEvents(event) { }
+  mouseEvents(event) { }
   clearHighlight() { }
   highlightChars(start, length) { return false; }
   cursorChange(cursor, config) { }
