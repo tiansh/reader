@@ -94,16 +94,16 @@
   font-weight: bold;
 }
 
-.read-page-scroll .read-body-trunk {
+.read-page-scroll .trunk {
   display: flow-root;
   position: relative;
   z-index: 2;
 }
-.read-page-scroll .read-body-trunk-first {
+.read-page-scroll .trunk-first {
   padding-top: 50px;
   padding-top: max(calc(50px - var(--page-margin-y)), 0px);
 }
-.read-page-scroll .read-body-trunk-last {
+.read-page-scroll .trunk-last {
   padding-bottom: 60px;
   padding-bottom: max(calc(60px - var(--page-margin-y)), 0px);
 }
