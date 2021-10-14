@@ -17,23 +17,11 @@
   position: absolute;
   width: 100%;
   height: var(--window-height);
-  -webkit-user-select: auto;
-  user-select: auto;
   overflow: hidden;
   overflow-wrap: break-word;
   contain: layout;
   will-change: scroll-position;
   --text-max-width: 100%;
-}
-
-.read-page-scroll .read-text-page::after {
-  content: " ";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1;
 }
 
 .read-page-scroll .read-body-scroll {
@@ -49,9 +37,23 @@
   overflow-wrap: break-word;
   z-index: 2;
   scrollbar-width: none;
-  clip-path: inset(var(--page-margin-y) var(--page-margin-x) calc(var(--page-margin-y) + 20px)); /* As some stupid browsers does not support *-box values */
-  clip-path: content-box;
   will-change: scroll-position;
+  -webkit-mask: linear-gradient(to bottom,
+    transparent 0px,
+    transparent var(--page-margin-y),
+    black var(--page-margin-y),
+    black calc(100% - calc(var(--page-margin-y) + 20px)),
+    transparent calc(100% - calc(var(--page-margin-y) + 20px)),
+    transparent 100%
+  );
+  mask: linear-gradient(to bottom,
+    transparent 0px,
+    transparent var(--page-margin-y),
+    black var(--page-margin-y),
+    black calc(100% - calc(var(--page-margin-y) + 20px)),
+    transparent calc(100% - calc(var(--page-margin-y) + 20px)),
+    transparent 100%
+  );
 }
 /* Chrome doesn't support scrollbar-width yet */
 .read-page-scroll .read-body-scroll::-webkit-scrollbar {
@@ -67,11 +69,12 @@
   box-sizing: border-box;
   margin: calc(-1 * var(--page-margin-y)) calc(-1 * var(--page-margin-x)) calc(-1 * calc(var(--page-margin-y) + 20px));
   padding: var(--page-margin-y) var(--page-margin-x) calc(var(--page-margin-y) + 20px);
-  clip-path: content-box;
   line-height: 1.3;
   white-space: pre-wrap;
   text-align: justify;
   text-justify: auto;
+  -webkit-user-select: auto;
+  user-select: auto;
 }
 
 .read-page-scroll .read-body-scroll-to {
@@ -120,7 +123,9 @@
   color: #808080;
   font-size: 12px;
   line-height: 12px;
-  z-index: 2;
+  z-index: 1;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .read-page-scroll .read-title {
