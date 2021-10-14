@@ -731,18 +731,22 @@ export default class ScrollTextPage extends TextPage {
     const newScrollTop = oldScrollTop + (prevChange ?? 0);
     this.setScrollTop(newScrollTop);
 
-    if (this.updatePageMetaScheduled) return;
-    this.updatePageMetaScheduled = true;
-    const callback = () => {
+    const updatePageMeta = () => {
       this.updatePageMetaScheduled = false;
       this.updatePageMeta();
     };
-    if (window.requestIdleCallback) {
-      setTimeout(() => {
-        window.requestIdleCallback(callback, { timeout: this.updateMetaTimeout / 2 });
-      }, this.updateMetaTimeout / 2);
+    if (this.scrollActive) {
+      if (this.updatePageMetaScheduled) return;
+      this.updatePageMetaScheduled = true;
+      if (window.requestIdleCallback) {
+        setTimeout(() => {
+          window.requestIdleCallback(updatePageMeta, { timeout: this.updateMetaTimeout / 2 });
+        }, this.updateMetaTimeout / 2);
+      } else {
+        setTimeout(updatePageMeta, this.updateMetaTimeout);
+      }
     } else {
-      setTimeout(callback, this.updateMetaTimeout);
+      updatePageMeta();
     }
   }
   async updatePage(config) {
