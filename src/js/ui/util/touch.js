@@ -215,11 +215,11 @@ export class TouchMoveListener {
     };
 
     this.element.addEventListener('mousedown', mouseDownHandler);
-    this.element.addEventListener('touchstart', touchStartHandler);
+    this.element.addEventListener('touchstart', touchStartHandler, { passive: true });
     const dispatch = () => {
       this.element.removeEventListener('mousedown', mouseDownHandler);
       removeGlobalMouseHandlers();
-      this.element.removeEventListener('touchstart', touchStartHandler);
+      this.element.removeEventListener('touchstart', touchStartHandler, { passive: true });
       removeGlobalTouchHandlers();
     };
 
