@@ -72,6 +72,9 @@
 
 .read-control-cover {
   z-index: 8;
+  opacity: 0;
+  -webkit-appearance: none;
+  appearance: none;
   display: none;
 }
 
@@ -371,7 +374,7 @@ button.contents-history-clear {
   display: flex;
 }
 
-..read-highlight {
+.read-highlight {
   display: none;
 }
 

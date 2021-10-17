@@ -39,6 +39,10 @@ export default {
   readSearchTooMany: '已找到 {0} 个结果，点击以继续查找',
   readPagePrevious: '上一页',
   readPageNext: '下一页',
+  readPageScrollUp: '向上翻',
+  readPageScrollDown: '向下翻',
+  readControlClose: '隐藏按钮',
+  readAutoScrollStop: '停止滚动',
 
   configWithDetail: '详情',
   configModeGroupTitle: '模式',

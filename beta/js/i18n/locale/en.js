@@ -39,6 +39,10 @@ export default {
   readSearchTooMany: '{0} results found; Find More',
   readPagePrevious: 'Previous Page',
   readPageNext: 'Next Page',
+  readPageScrollUp: 'Scroll Up',
+  readPageScrollDown: 'Scroll Down',
+  readControlClose: 'Hide buttons',
+  readAutoScrollStop: 'Stop auto scroll',
 
   configWithDetail: 'Detail',
   configModeGroupTitle: 'Mode',

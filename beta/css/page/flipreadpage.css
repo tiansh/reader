@@ -153,8 +153,8 @@
   position: absolute;
 }
 
-.read-page-flip .read-text-page-buttons #read_page_prev,
-.read-page-flip .read-text-page-buttons #read_page_next {
+.read-page-flip .read-text-page-buttons .read_page_prev,
+.read-page-flip .read-text-page-buttons .read_page_next {
   position: absolute;
   top: -2px;
   width: 1px;
