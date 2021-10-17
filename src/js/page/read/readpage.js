@@ -190,7 +190,7 @@ export default class ReadPage extends Page {
     }
   }
   isControlActive() {
-    return this.controlPage.isCurrent;
+    return this.controlPage.isShow;
   }
   showControlPage(focus) {
     if (focus) {
@@ -199,8 +199,11 @@ export default class ReadPage extends Page {
       this.controlPage.show();
     }
   }
+  hideControlPage() {
+    this.controlPage.hide();
+  }
   toggleControlPage() {
-    if (this.controlPage.isCurrent) this.controlPage.hide();
+    if (this.controlPage.isShow) this.controlPage.hide();
     else this.controlPage.show();
   }
   isJumpActive() {
@@ -250,7 +253,7 @@ export default class ReadPage extends Page {
   getContent() { return this.content; }
   getMeta() { return this.meta; }
   getLang() { return this.langTag; }
-  isSpeaking() { return this.speech.speaking; }
+  isSpeaking() { return this.speech.isWorking(); }
   getBookmarks() { return this.index.bookmarks; }
   getContents() { return this.index.content; }
 }

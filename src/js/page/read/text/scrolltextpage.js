@@ -36,6 +36,8 @@ export default class ScrollTextPage extends TextPage {
    */
   constructor(readPage) {
     super(readPage);
+
+    this.autoScrollOnVisibilityChange = this.autoScrollOnVisibilityChange.bind(this);
   }
   async onActivate({ id }) {
     await super.onActivate({ id });
@@ -47,7 +49,11 @@ export default class ScrollTextPage extends TextPage {
     this.minimumBufferHeight = 500;
     this.scrollDoneTimeout = 500;
     this.scrollToTimeout = 500;
-    this.updateMetaTimeout = 200;
+    this.updateMetaTimeout = 250;
+    this.doubleTapTimeout = 400;
+    this.readSpeedBase = 20.0;
+    this.readSpeedFactorMin = 0.1;
+    this.readSpeedFactorMax = 20;
 
     if (this.maxTextWidth) {
       const container = this.readScrollElement.parentNode;
@@ -81,6 +87,9 @@ export default class ScrollTextPage extends TextPage {
     this.currentScrollPosition = null;
     this.scrollActive = null;
     this.scrollToBusy = null;
+
+    this.autoScrollStop();
+    this.autoScrollSpeedFactor = null;
   }
   createContainer() {
     const container = template.create('read_text_scroll');
@@ -89,6 +98,7 @@ export default class ScrollTextPage extends TextPage {
     this.titleElement = container.get('title');
     this.progressElement = container.get('progress');
     this.highlightContainer = container.get('highlight');
+    this.autoScrollCover = container.get('cover');
 
     this.readScrollElement.addEventListener('scroll', event => {
       this.onScroll();
@@ -148,20 +158,32 @@ export default class ScrollTextPage extends TextPage {
       this.readPage.slideIndexPage('cancel');
     });
     listener.onTouch(({ touch, grid }) => {
+      if (this.autoScrollBusy()) return;
+      this.touchCount = (this.touchCount ?? 0) + 1;
       if (grid.y === 0) {
         this.pageUp({ resetSpeech: true, resetRender: false });
       } else if (grid.y === 2) {
         this.pageDown({ resetSpeech: true, resetRender: false });
       } else if (grid.y === 1) {
         this.readPage.showControlPage();
+        this.justShowControlPage = true;
+        setTimeout(() => { this.justShowControlPage = false; }, this.doubleTapTimeout);
       }
     });
 
     this.readScrollElement.addEventListener('contextmenu', event => {
       if (this.isAnythingSelected()) return;
+      if (this.autoScrollRunning) return;
       event.preventDefault();
       this.readPage.toggleControlPage();
     }, false);
+
+    this.readScrollElement.addEventListener('dblclick', event => {
+      const posY = event.clientY / this.readScrollElement.clientHeight;
+      if (Math.floor(posY * 3) !== 1) return;
+      this.readPage.hideControlPage();
+      this.autoScrollStart();
+    });
 
     this.readBodyElement.addEventListener('transitionend', () => {
       // Add another raf makes transition looks better on iOS
@@ -169,6 +191,43 @@ export default class ScrollTextPage extends TextPage {
       window.requestAnimationFrame(() => {
         this.onScrollToEnd();
       });
+    });
+
+    const coverListener = new TouchGestureListener(this.autoScrollCover, { clickGridY: 3 });
+    coverListener.onStart(() => {
+      if (!this.autoScrollRunning) return;
+      this.autoScrollSpeedFactorOld = this.autoScrollSpeedFactor;
+    });
+    coverListener.onMoveY(offset => {
+      if (!this.autoScrollRunning) return;
+      const [screenWidth, screenHeight] = onResize.currentSize();
+      const smallMove = Math.abs(offset) > coverListener.minDistanceY;
+      const factor = smallMove ? (1 / 16) ** (offset / screenHeight) : 1;
+      const speedFactor = this.autoScrollSpeedFactorOld * factor;
+      this.autoScrollUpdate({ speedFactor });
+    });
+    coverListener.onEnd(() => {
+      if (!this.autoScrollRunning) return;
+      this.autoScrollSpeedFactorOld = null;
+    });
+    coverListener.onTouch(({ grid }) => {
+      if (!this.autoScrollRunning) return;
+      if (grid.y === 0) {
+        this.autoScrollStop({ paging: true });
+        this.pageUp({ resetSpeech: true, resetRender: false });
+      } else if (grid.y === 1) {
+        this.autoScrollStop();
+      } else {
+        this.autoScrollStop({ paging: true });
+        this.pageDown({ resetSpeech: true, resetRender: false });
+      }
+    });
+    this.autoScrollCover.addEventListener('wheel', event => {
+      if (!this.autoScrollRunning) return;
+      const [screenWidth, screenHeight] = onResize.currentSize();
+      const factor = 2 ** (event.deltaY / screenHeight);
+      const speedFactor = this.autoScrollSpeedFactor * factor;
+      this.autoScrollUpdate({ speedFactor });
     });
 
     return container.get('root');
@@ -192,7 +251,7 @@ export default class ScrollTextPage extends TextPage {
     this.onScrollScheduled = true;
     window.requestAnimationFrame(() => {
       this.onScrollScheduled = false;
-      this.updatePageRender();
+      this.updatePage({ resetSpeech: false, resetRender: false, debug: true });
       setTimeout(() => {
         if (thisScrollEvent !== this.lastScrollEvent) return;
         const speech = this.readPage.speech;
@@ -213,10 +272,11 @@ export default class ScrollTextPage extends TextPage {
     const body = this.readBodyElement;
     container.classList.remove('read-body-scroll-to');
     body.style.top = '';
+    const currentScrollTo = this.scrollToBusy;
     requestAnimationFrame(() => {
-      this.scrollToBusy = null;
       if (this.pageBusy) this.pageDone();
       this.onScrollDone(this.scrollToConfig);
+      if (currentScrollTo === this.scrollToBusy) this.scrollToBusy = null;
     });
   }
   abortScrollTo() {
@@ -228,6 +288,7 @@ export default class ScrollTextPage extends TextPage {
     this.onScrollToEnd();
   }
   scrollTo(scrollTop, config) {
+    if (this.autoScrollRunning) return false;
     const container = this.readScrollElement;
     const body = this.readBodyElement;
 
@@ -286,18 +347,39 @@ export default class ScrollTextPage extends TextPage {
       if (['PageUp', 'PageDown'].includes(event.code)) {
         // wrap in raf so it may have correct transition effect
         window.requestAnimationFrame(() => {
-          if (event.code === 'PageUp') {
-            this.pageUp({ resetSpeech: true, resetRender: false });
-          } else {
-            this.pageDown({ resetSpeech: true, resetRender: false });
+          if (this.autoScrollRunning) {
+            this.autoScrollStop({ paging: true });
+            if (event.code === 'PageUp') {
+              this.pageUp({ resetSpeech: true, resetRender: false });
+            } else {
+              this.pageDown({ resetSpeech: true, resetRender: false });
+            }
+          } else if (!this.autoScrollBusy()) {
+            if (event.code === 'PageUp') {
+              this.pageUp({ resetSpeech: true, resetRender: false });
+            } else {
+              this.pageDown({ resetSpeech: true, resetRender: false });
+            }
           }
         });
       } else if (['ArrowLeft'].includes(event.code)) {
-        this.readPage.showControlPage();
+        if (!this.autoScrollRunning && !this.autoScrollPaging) {
+          this.readPage.showControlPage();
+        }
       } else if (['ArrowRight'].includes(event.code)) {
-        this.readPage.slideIndexPage('show');
+        if (!this.autoScrollRunning && !this.autoScrollPaging) {
+          this.readPage.slideIndexPage('show');
+        }
+      } else if (['ArrowUp', 'ArrowDown'].includes(event.code)) {
+        if (this.autoScrollRunning) {
+          const pow = event.code === 'ArrowUp' ? -1 : 1;
+          const speedFactor = this.autoScrollSpeedFactor * 1.1 ** pow;
+          this.autoScrollUpdate({ speedFactor });
+        }
       } else if (['Home', 'End'].includes(event.code)) {
         // do nothing
+      } else if (['Escape'].includes(event.code) && this.autoScrollBusy()) {
+        this.autoScrollStop();
       } else {
         return;
       }
@@ -370,6 +452,11 @@ export default class ScrollTextPage extends TextPage {
       }
     }
     this.pagePending = null;
+    if (!this.pageBusy) {
+      if (this.autoScrollPaging) {
+        this.autoScrollStart();
+      }
+    }
   }
   pageTo(scrollTop, config, action) {
     this.pageBusy = action;
@@ -743,14 +830,24 @@ export default class ScrollTextPage extends TextPage {
     }
     const newScrollTop = oldScrollTop + (prevChange ?? 0);
     this.setScrollTop(newScrollTop);
+    if (prevChange && this.autoScrollRunning) this.autoScrollUpdate({ scrollDelta: prevChange });
+  }
+  async updatePage(config) {
+    this.updatePageRender();
 
+    const currentRun = {};
     const updatePageMeta = () => {
+      if (this.updatePageMetaScheduled !== currentRun) return;
       this.updatePageMetaScheduled = false;
       this.updatePageMeta();
+      const cursor = this.currentRenderCursor;
+      if ((this.readPage.getRawCursor() ?? 0) !== cursor) {
+        this.readPage.setCursor(cursor, config);
+      }
     };
     if (this.scrollActive) {
       if (this.updatePageMetaScheduled) return;
-      this.updatePageMetaScheduled = true;
+      this.updatePageMetaScheduled = currentRun;
       if (window.requestIdleCallback) {
         setTimeout(() => {
           window.requestIdleCallback(updatePageMeta, { timeout: this.updateMetaTimeout / 2 });
@@ -759,14 +856,8 @@ export default class ScrollTextPage extends TextPage {
         setTimeout(updatePageMeta, this.updateMetaTimeout);
       }
     } else {
+      this.updatePageMetaScheduled = currentRun;
       updatePageMeta();
-    }
-  }
-  async updatePage(config) {
-    this.updatePageRender();
-    const cursor = this.currentRenderCursor;
-    if ((this.readPage.getRawCursor() ?? 0) !== cursor) {
-      this.readPage.setCursor(cursor, config);
     }
   }
   clearHighlight() {
@@ -781,7 +872,7 @@ export default class ScrollTextPage extends TextPage {
       }
     }
     const resetAndRetry = pageDown => {
-      if (this.scrollActive) return null;
+      if (this.scrollActive || this.scrollToBusy) return null;
       if (pageDown) this.pageDown({ resetSpeech: false, resetRender: false });
       else this.readPage.setCursor(start, { resetSpeech: false, resetRender: true });
       return this.highlightChars(start, length, depth + 1);
@@ -852,9 +943,7 @@ export default class ScrollTextPage extends TextPage {
     return true;
   }
   cursorChange(cursor, config) {
-    if (this.currentRenderCursor === cursor) {
-      return;
-    }
+    if (this.currentRenderCursor === cursor) return;
     const paragraph = this.getParagraphByCursor(cursor);
     if (!paragraph || config.resetRender) {
       this.resetPage(config);
@@ -867,10 +956,12 @@ export default class ScrollTextPage extends TextPage {
     }
   }
   resetPage(config) {
+    this.autoScrollUpdate({ reset: true });
     this.clearPage();
     this.clearHighlight();
     this.currentRenderCursor = null;
     this.updatePage(config);
+    this.autoScrollUpdate({ reset: true });
   }
   onResize() {
     super.onResize();
@@ -878,6 +969,123 @@ export default class ScrollTextPage extends TextPage {
   }
   step() {
     return super.step() * 2;
+  }
+  hide() {
+    super.hide();
+    if (this.justShowControlPage) {
+      this.justShowControlPage = false;
+      this.autoScrollStart();
+    }
+  }
+  autoScrollStart() {
+    if (this.readPage.isSpeaking()) return;
+    if (this.autoScrollRunning) return;
+    this.autoScrollPaging = false;
+    const currentAutoScroll = this.autoScrollRunning = {};
+    this.readPage.controlPage.disable();
+    this.container.classList.add('read-page-auto-scroll');
+    const rAF = callback => {
+      if (currentAutoScroll === this.autoScrollRunning) {
+        window.requestAnimationFrame(callback);
+      }
+    };
+    new Promise((resolve, reject) => {
+      const historyTime = [];
+      (function checkFrameTick(count) {
+        if (count === 0) resolve();
+        rAF(() => {
+          const now = performance.now();
+          if (historyTime.includes(now)) reject();
+          else {
+            historyTime.push(now);
+            checkFrameTick(count - 1);
+          }
+        });
+      }(5));
+    }).then(() => {
+      if (currentAutoScroll !== this.autoScrollRunning) return;
+      window.getSelection()?.empty();
+      this.autoScrollUpdate();
+      this.autoScrollTick();
+    }).catch(() => {
+      // Some browsers may reduce the precision of `performance.now` to avoid fingerprinting.
+      // For example, Firefox provides `privacy.resistFingerprinting` in its `about:config`.
+      // As the result, we may not update our scroll position correctly in such condition.
+      // So we give up providing this functionality if any two frames have same timestamp.
+      this.autoScrollStop();
+    });
+    document.addEventListener('visibilitychange', this.autoScrollOnVisibilityChange);
+  }
+  autoScrollStop({ paging } = {}) {
+    if (this.autoScrollRunning == null) return;
+    this.autoScrollRunning = null;
+    window.cancelAnimationFrame(this.autoScrollHandle);
+    this.autoScrollStartTime = null;
+    this.autoScrollStartPosition = null;
+    this.autoScrollSpeed = null;
+    this.autoScrollHandle = null;
+    this.autoScrollSpeedFactorOld = null;
+    document.removeEventListener('visibilitychange', this.autoScrollOnVisibilityChange);
+    if (!paging) {
+      this.readPage.controlPage.enable();
+      this.container.classList.remove('read-page-auto-scroll');
+      this.autoScrollPaging = false;
+    } else {
+      this.autoScrollPaging = true;
+    }
+  }
+  autoScrollDistance(now) {
+    if (this.autoScrollPaused) return 0;
+    const time = now ?? performance.now();
+    const timePast = time - this.autoScrollStartTime;
+    return timePast * this.autoScrollSpeed * this.autoScrollSpeedFactor / 1000;
+  }
+  autoScrollUpdate({ scrollDelta = 0, speedFactor = null, paused = null, reset = false, time = null } = {}) {
+    const now = performance.now();
+    if (this.autoScrollStartTime == null || reset) {
+      this.autoScrollStartPosition = this.lastScrollTop + scrollDelta;
+    } else {
+      this.autoScrollStartPosition += this.autoScrollDistance(time ?? now) + scrollDelta;
+    }
+    this.autoScrollStartTime = now;
+    if (this.autoScrollSpeedFactor == null || speedFactor != null) {
+      this.autoScrollSpeedFactor = Math.max(Math.min(speedFactor ?? 1, this.readSpeedFactorMax), this.readSpeedFactorMin);
+    }
+    if (this.autoScrollSpeed == null || reset) {
+      const width = this.readScrollElement.clientWidth - this.textRenderArea.left - this.textRenderArea.right;
+      const fontSize = Number(this.configs.font_size);
+      const lineHeight = Number(this.configs.line_height);
+      this.autoScrollSpeed = fontSize ** 2 * lineHeight * this.readSpeedBase / width;
+    }
+    if (paused != null) {
+      this.autoScrollPaused = paused;
+    }
+  }
+  autoScrollTick(isNextTick) {
+    if (this.readPage.isSpeaking()) this.autoScrollStop();
+    const now = performance.now();
+    if (isNextTick && now - this.autoScrollLastTick > 1000) {
+      this.autoScrollUpdate({ now });
+    }
+    this.autoScrollHandle = window.requestAnimationFrame(() => {
+      const distance = this.autoScrollDistance(now);
+      this.readScrollElement.scrollTop = this.autoScrollStartPosition + distance;
+      this.autoScrollTick(true);
+    });
+  }
+  autoScrollPause() {
+    this.autoScrollUpdate({ paused: true });
+  }
+  autoScrollResume() {
+    this.autoScrollUpdate({ paused: false });
+  }
+  autoScrollOnVisibilityChange() {
+    if (!this.autoScrollRunning) return;
+    if (document.hidden) this.autoScrollPause();
+    else this.autoScrollResume();
+  }
+  autoScrollBusy() {
+    return this.autoScrollRunning || this.autoScrollPaging;
   }
 }
 

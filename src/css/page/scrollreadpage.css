@@ -60,6 +60,10 @@
   display: none;
 }
 
+.read-page-scroll .read-text-hidden .read-body-scroll {
+  overflow: hidden;
+}
+
 .read-page-scroll .read-body-scroll.read-body-scroll-slide-x {
   overflow: hidden;
 }
@@ -160,9 +164,19 @@
   position: absolute;
 }
 
+.read-page-scroll .read-control .read-control-cover {
+  display: block;
+  width: 0;
+  right: auto;
+}
+.read-page-scroll .read-control.read-control-active .read-control-cover {
+  width: 100vw;
+  transition: width step-end 0.4s;
+}
+
 .read-page-scroll .read-index {
-  left: calc(calc(var(--window-width) * -1) + var(--slide-offset));
-  right: calc(100vw - var(--slide-offset));
+  left: calc(var(--slide-offset) - var(--window-width));
+  right: calc(var(--window-width) - var(--slide-offset));
 }
 
 .read-page-scroll .read-index.read-sub-page-current {
@@ -172,5 +186,28 @@
 
 .read-page-scroll .read-index:not(.read-index-slide) {
   transition: left ease-out 0.1s, right ease-out 0.1s;
+}
+
+.read-page-scroll .read-page-auto-scroll .read-body-scroll {
+  overflow: hidden;
+}
+.read-page-scroll .read-text-auto-scroll-cover {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0;
+  margin: 0;
+  height: 100vh;
+  width: 100vw;
+  z-index: 10;
+  opacity: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.read-page-scroll .read-page-auto-scroll .read-text-auto-scroll-cover {
+  display: block;
 }
 
