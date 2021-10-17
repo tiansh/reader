@@ -16,18 +16,25 @@ import { TouchGestureListener } from '../../../ui/util/touch.js';
 
 /**
  * @typedef {Object} ParagraphInfo
- * @property {HTMLParagraphElement} element
- * @property {number} start
- * @property {number} end
- * @property {TrunkInfo} trunk
+ * @property {HTMLParagraphElement} element    paragraph element
+ * @property {number} start                    start cursor of paragraph
+ * @property {number} end                      end cursor of paragraph
+ * @property {TrunkInfo} trunk                 the trunk paragraph belongs to
+ * @property {number} height                   height in pixel
+ * @property {number} offsetTop                offsetTop relative to trunk
+ * @property {ParagraphInfo} prev              previous praagraph
+ * @property {ParagraphInfo} next              next paragraph
  */
 /**
  * @typedef {Object} TrunkInfo
- * @property {HTMLDivElement} element
- * @property {ParagraphInfo[]} paragraphs
- * @property {number} start
- * @property {number} end
- * @property {number} height
+ * @property {HTMLDivElement} element    trunk element
+ * @property {ParagraphInfo[]}           paragraphs    paragraphs of this trunk
+ * @property {number} start              start cursor of trunk
+ * @property {number} end                end cursor of trunk
+ * @property {number} height             height in pixel
+ * @property {number} offsetTop          offsetTop relative to scroll body
+ * @property {TrunkInfo} prev            previous trunk
+ * @property {TrunkInfo} next            next trunk
  */
 
 export default class ScrollTextPage extends TextPage {
@@ -106,6 +113,7 @@ export default class ScrollTextPage extends TextPage {
 
     /** @type {TrunkInfo[]} */
     this.trunks = [];
+    console.log(this.trunks);
     /** @type {ParagraphInfo[]} */
     this.activeParagraphs = [];
 
@@ -228,7 +236,7 @@ export default class ScrollTextPage extends TextPage {
       const factor = 2 ** (event.deltaY / screenHeight);
       const speedFactor = this.autoScrollSpeedFactor * factor;
       this.autoScrollUpdate({ speedFactor });
-    });
+    }, { passive: true });
 
     return container.get('root');
   }
@@ -519,10 +527,21 @@ export default class ScrollTextPage extends TextPage {
       paragraph.classList.add('text-heading');
     }
     paragraph.setAttribute('aria-hidden', 'true');
-    const info = { start, end, element: paragraph, trunk };
     trunk.element.appendChild(paragraph);
+    const info = { start, end, element: paragraph, trunk, prev: null, next: null };
+    if (trunk.paragraphs.length) {
+      info.prev = trunk.paragraphs[trunk.paragraphs.length - 1];
+      trunk.paragraphs[trunk.paragraphs.length - 1].next = info;
+    }
     trunk.paragraphs.push(info);
     return info;
+  }
+  updateTrunkOffsetTop() {
+    let offsetTop = 0;
+    this.trunks.forEach(trunk => {
+      trunk.offsetTop = offsetTop;
+      offsetTop += trunk.height;
+    });
   }
   /**
    * @param {number} start
@@ -535,6 +554,7 @@ export default class ScrollTextPage extends TextPage {
     const readIndex = this.readPage.readIndex;
 
     const element = document.createElement('div');
+    /** @type {TrunkInfo} */
     const trunk = { element, paragraphs: [], start, end };
 
     element.classList.add('trunk', 'trunk-processing');
@@ -560,10 +580,66 @@ export default class ScrollTextPage extends TextPage {
     const reference = position === 'first' ? body.firstChild : body.lastChild;
     body.insertBefore(element, reference);
     const rect = element.getBoundingClientRect();
-    trunk.height = rect.height;
+    trunk.height = Math.round(rect.height * 1000) / 1000;
+    trunk.paragraphs.forEach(paragraph => {
+      const paragraphRect = paragraph.element.getBoundingClientRect();
+      paragraph.height = Math.round(paragraphRect.height * 1000) / 1000;
+      paragraph.offsetTop = Math.round((paragraphRect.top - rect.top) * 1000) / 1000;
+    });
     element.style.height = trunk.height + 'px';
     element.classList.remove('trunk-processing');
 
+    if (position === 'first') {
+      if (this.trunks.length) {
+        const oldFirst = this.trunks[0];
+        trunk.next = oldFirst;
+        oldFirst.prev = trunk;
+        const oldFirstParagraph = oldFirst.paragraphs[0];
+        const firstLastParagraph = trunk.paragraphs[trunk.paragraphs.length - 1];
+        firstLastParagraph.next = oldFirstParagraph;
+        oldFirstParagraph.prev = firstLastParagraph;
+      }
+      this.trunks.unshift(trunk);
+      this.updateTrunkOffsetTop();
+    } else {
+      if (this.trunks.length) {
+        const oldLast = this.trunks[this.trunks.length - 1];
+        trunk.prev = oldLast;
+        oldLast.next = trunk;
+        const oldLastParagraph = oldLast.paragraphs[oldLast.paragraphs.length - 1];
+        const lastFirstParagraph = trunk.paragraphs[0];
+        oldLastParagraph.next = lastFirstParagraph;
+        lastFirstParagraph.prev = oldLastParagraph;
+      }
+      this.trunks.push(trunk);
+    }
+
+    return trunk;
+  }
+  /**
+   * @param {'first'|'last'} position
+   */
+  removeTrunk(position) {
+    if (this.trunks.length === 0) return null;
+    const trunk = position === 'first' ? this.trunks.shift() : this.trunks.pop();
+    trunk.element.remove();
+    if (trunk.next) {
+      const next = trunk.next;
+      trunk.next = null;
+      next.prev = null;
+      trunk.paragraphs[trunk.paragraphs.length - 1].next = null;
+      next.paragraphs[0].prev = null;
+    }
+    if (trunk.prev) {
+      const prev = trunk.prev;
+      trunk.prev = null;
+      prev.next = null;
+      trunk.paragraphs[0].prev = null;
+      prev.paragraphs[prev.paragraphs.length - 1].next = null;
+    }
+    if (position === 'first') {
+      this.updateTrunkOffsetTop();
+    }
     return trunk;
   }
   /**
@@ -575,7 +651,6 @@ export default class ScrollTextPage extends TextPage {
     let end = content.indexOf('\n', start + this.step());
     if (end === -1) end = content.length;
     const trunk = this.renderTrunk(start, end, position);
-    this.trunks.push(trunk);
     return trunk;
   }
   /**
@@ -586,7 +661,6 @@ export default class ScrollTextPage extends TextPage {
     const content = this.readPage.getContent();
     const start = content.lastIndexOf('\n', end - 1 - this.step()) + 1;
     const trunk = this.renderTrunk(start, end, position);
-    this.trunks.unshift(trunk);
     return trunk;
   }
   getTextRect(textNode, index) {
@@ -703,10 +777,9 @@ export default class ScrollTextPage extends TextPage {
     const maximumHeight = textBufferHeight * (this.scrollActive ? 12 : 8);
     const reduceHeight = textBufferHeight * 6;
     if (prevHeight > maximumHeight) while (prevHeight - trunks[0].height > reduceHeight) {
-      const trunk = trunks.shift();
+      const trunk = this.removeTrunk('first');
       prevHeight -= trunk.height;
       heightChange -= trunk.height;
-      body.removeChild(trunk.element);
       anythingChanged = true;
       --this.currentTrunkIndex;
     }
@@ -766,7 +839,7 @@ export default class ScrollTextPage extends TextPage {
     const maximumHeight = textBufferHeight * (this.scrollActive ? 16 : 12);
     const reduceHeight = textBufferHeight * 12;
     if (nextHeight > maximumHeight) while (nextHeight - trunks[trunks.length - 1].height > reduceHeight) {
-      const trunk = trunks.pop();
+      const trunk = this.removeTrunk('last');
       nextHeight -= trunk.height;
       heightChange -= trunk.height;
       body.removeChild(trunk.element);
@@ -799,12 +872,13 @@ export default class ScrollTextPage extends TextPage {
     const endPosition = this.getScrollPosition(bottom, true);
     const paragraphs = this.trunks.flatMap(trunk => trunk.paragraphs);
     if (startPosition && endPosition) {
-      const firstIndex = Math.max(0, paragraphs.indexOf(startPosition.paragraph) - 1);
-      const lastIndex = Math.min(paragraphs.length - 1, paragraphs.indexOf(endPosition.paragraph) + 1);
-      const length = lastIndex - firstIndex + 1;
-      if (this.activeParagraphs[0] === startPosition.paragraph && this.activeParagraphs.length === length) return;
+      const firstParagraph = startPosition.paragraph.prev ?? startPosition.paragraph;
+      const lastParagraph = endPosition.paragraph.next ?? endPosition.paragraph;
       const oldActiveParagraphs = this.activeParagraphs;
-      const newActiveParagraphs = paragraphs.slice(firstIndex, lastIndex + 1);
+      const newActiveParagraphs = this.activeParagraphs = [];
+      for (let current = firstParagraph; current !== lastParagraph.next; current = current.next) {
+        newActiveParagraphs.push(current);
+      }
       oldActiveParagraphs.forEach(p => {
         if (!newActiveParagraphs.includes(p)) {
           p.element.setAttribute('aria-hidden', 'true');
@@ -956,12 +1030,12 @@ export default class ScrollTextPage extends TextPage {
     }
   }
   resetPage(config) {
-    this.autoScrollUpdate({ reset: true });
+    if (this.autoScrollBusy()) this.autoScrollUpdate({ reset: true });
     this.clearPage();
     this.clearHighlight();
     this.currentRenderCursor = null;
     this.updatePage(config);
-    this.autoScrollUpdate({ reset: true });
+    if (this.autoScrollBusy()) this.autoScrollUpdate({ reset: true });
   }
   onResize() {
     super.onResize();
@@ -1088,4 +1162,8 @@ export default class ScrollTextPage extends TextPage {
     return this.autoScrollRunning || this.autoScrollPaging;
   }
 }
+
+window.addEventListener('error', event => {
+  alert('error' + event.error);
+});
 
