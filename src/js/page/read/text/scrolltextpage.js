@@ -600,7 +600,6 @@ export default class ScrollTextPage extends TextPage {
         oldFirstParagraph.prev = firstLastParagraph;
       }
       this.trunks.unshift(trunk);
-      this.updateTrunkOffsetTop();
     } else {
       if (this.trunks.length) {
         const oldLast = this.trunks[this.trunks.length - 1];
@@ -613,6 +612,7 @@ export default class ScrollTextPage extends TextPage {
       }
       this.trunks.push(trunk);
     }
+    this.updateTrunkOffsetTop();
 
     return trunk;
   }
@@ -673,21 +673,14 @@ export default class ScrollTextPage extends TextPage {
   getScrollPosition(reference, useBefore) {
     // We cannot use document.elementFromPoint as certain position may belongs to margin of some paragraph
     const trunks = this.trunks;
-    /** @type {number} */
-    const trunkIndex = trunks.reduce(({ choose, offset }, trunk, index) => {
-      if (useBefore && offset <= reference) {
-        return { choose: index, offset: offset + trunk.height };
-      }
-      offset += trunk.height;
-      if (!useBefore && offset >= reference) {
-        return { choose: choose ?? index, offset };
-      }
-      return { choose, offset };
-    }, { choose: null, offset: this.textRenderArea.top }).choose;
-    const trunk = trunks[trunkIndex];
-    if (!trunk?.paragraphs?.length) {
-      return null;
-    }
+    const trunk = trunks.reduce((choose, trunk) => {
+      const offset = trunk.offsetTop + this.textRenderArea.top;
+      if (useBefore && offset <= reference) return trunk;
+      else if (choose) return choose;
+      else if (!useBefore && offset + trunk.height >= reference) return trunk;
+      else return null;
+    }, null);
+    if (!trunk?.paragraphs?.length) return null;
     const paragraphs = trunk.paragraphs;
     const scrollTop = reference;
     let low = 0, high = paragraphs.length - 1;
@@ -695,8 +688,8 @@ export default class ScrollTextPage extends TextPage {
       const mid = Math.floor((low + high) / 2);
       const paragraph = paragraphs[mid];
       const element = paragraph.element;
-      const paragraphTop = element.offsetTop + element.offsetParent.offsetTop;
-      if (paragraphTop + element.clientHeight > scrollTop) {
+      const paragraphTop = paragraph.offsetTop + paragraph.trunk.offsetTop;
+      if (paragraphTop + paragraph.height > scrollTop) {
         high = mid - 1;
       } else {
         low = mid + 1;
@@ -705,7 +698,7 @@ export default class ScrollTextPage extends TextPage {
     const paragraphIndex = Math.min(low, paragraphs.length - 1);
     const current = paragraphs[paragraphIndex];
     const element = current.element;
-    const currentTop = element.offsetTop + element.offsetParent.offsetTop;
+    const currentTop = current.offsetTop + current.trunk.offsetTop;
     const textNode = element.firstChild;
     const length = textNode ? textNode.textContent.length : 0;
     let textLow = 0, textHigh = length - 1;
@@ -719,26 +712,23 @@ export default class ScrollTextPage extends TextPage {
     const cursorOffset = useBefore ? textHigh === -1 ? -2 : textHigh : textLow === length ? textLow + 1 : textLow;
     const cursor = current.start + cursorOffset;
     let paragraph = current;
-    if (cursor < current.start) {
-      if (paragraphIndex > 0) paragraph = paragraphs[paragraphIndex - 1];
-      else paragraph = trunks[trunkIndex - 1].paragraphs.slice(-1)[0]; // As Array#at is not supported yet
-    } else if (cursor > current.end) {
-      if (paragraphIndex < paragraphs.length - 1) paragraph = paragraphs[paragraphIndex + 1];
-      else paragraph = trunks[trunkIndex + 1].paragraphs[0];
-    }
+    if (cursor < current.start) paragraph = paragraph.prev;
+    else if (cursor > current.end) paragraph = paragraph.next;
     if (!paragraph) return null;
     const offset = cursor - paragraph.start;
 
     return { paragraph, cursor, offset };
   }
   getPageStartPosition() {
-    const top = this.textRenderArea.top - this.readBodyElement.getBoundingClientRect().top;
+    const bodyRect = this.readBodyElement.getBoundingClientRect();
+    const top = this.textRenderArea.top - bodyRect.top;
     // -2 for floating point errors
     return this.getScrollPosition(top - 2, false);
   }
   getPageEndPosition() {
     const [screenWidth, screenHeight] = onResize.currentSize();
-    const bottom = screenHeight - this.readBodyElement.getBoundingClientRect().top - this.textRenderArea.bottom;
+    const bodyRect = this.readBodyElement.getBoundingClientRect();
+    const bottom = screenHeight - bodyRect.top - this.textRenderArea.bottom;
     return this.getScrollPosition(bottom, true);
   }
   getRenderCursor() {
@@ -751,13 +741,12 @@ export default class ScrollTextPage extends TextPage {
     return textBufferHeight;
   }
   updatePagePrev() {
-    const body = this.readBodyElement;
     const trunks = this.trunks;
     const textBufferHeight = this.getTextBufferHeight();
     let heightChange = 0, anythingChanged = false;
 
     // 3A. Let's render previous paragraphs
-    let prevHeight = trunks.slice(0, this.currentTrunkIndex).reduce((height, trunk) => height + trunk.height, 0);
+    let prevHeight = this.currentTrunk.offsetTop;
     const minimumHeight = textBufferHeight * (this.scrollActive ? 2 : 4);
     const targetHeight = textBufferHeight * 4;
     if (prevHeight < minimumHeight) do {
@@ -767,7 +756,6 @@ export default class ScrollTextPage extends TextPage {
       prevHeight += trunk.height;
       heightChange += trunk.height;
       anythingChanged = true;
-      ++this.currentTrunkIndex;
       // Render too many trunks during scrolling will harm scroll performance
       // and cause unfriendly behavior. So we only render single trunk during
       // scrolling.
@@ -781,19 +769,17 @@ export default class ScrollTextPage extends TextPage {
       prevHeight -= trunk.height;
       heightChange -= trunk.height;
       anythingChanged = true;
-      --this.currentTrunkIndex;
     }
 
     return anythingChanged ? heightChange : null;
   }
   updatePageCurrent() {
     const content = this.readPage.getContent();
-    const trunks = this.trunks;
 
     const position = this.getPageStartPosition();
     if (position) {
       const paragraph = position.paragraph;
-      this.currentTrunkIndex = trunks.indexOf(paragraph.trunk);
+      this.currentTrunk = paragraph.trunk;
       this.currentRenderCursor = position.cursor;
       return this.readScrollElement.scrollTop;
     }
@@ -804,11 +790,11 @@ export default class ScrollTextPage extends TextPage {
     this.currentRenderCursor = cursor;
     const start = content.lastIndexOf('\n', cursor - 1) + 1;
     const trunk = this.renderTrunkStartsWith(start, 'first');
-    this.currentTrunkIndex = 0;
+    this.currentTrunk = trunk;
     const paragraph = trunk.paragraphs[0];
     const textNode = paragraph.element.firstChild;
     if (!textNode) {
-      return paragraph.element.offsetTop;
+      return paragraph.offsetTop;
     } else {
       const rect = this.getTextRect(textNode, Math.min(cursor, paragraph.end - 1) - paragraph.start);
       return rect.top - trunk.element.getBoundingClientRect().top;
@@ -818,12 +804,12 @@ export default class ScrollTextPage extends TextPage {
     const body = this.readBodyElement;
     const content = this.readPage.getContent();
     const trunks = this.trunks;
-    const currentTrunkIndex = this.currentTrunkIndex;
     const textBufferHeight = this.getTextBufferHeight();
     let heightChange = 0, anythingChanged = false;
 
     // 2A. Let's render following paragraphs
-    let nextHeight = trunks.slice(currentTrunkIndex + 1).reduce((height, trunk) => height + trunk.height, 0);
+    const lastTrunk = trunks[trunks.length - 1];
+    let nextHeight = lastTrunk.offsetTop + lastTrunk.height - (this.currentTrunk.offsetTop + this.currentTrunk.height);
     const minimumHeight = textBufferHeight * (this.scrollActive ? 6 : 10);
     const targetHeight = textBufferHeight * 10;
     if (nextHeight < minimumHeight) do {
@@ -870,7 +856,6 @@ export default class ScrollTextPage extends TextPage {
     const startPosition = this.getScrollPosition(top - 2, false);
     const bottom = screenHeight * 1.5 - this.readBodyElement.getBoundingClientRect().top - this.textRenderArea.bottom;
     const endPosition = this.getScrollPosition(bottom, true);
-    const paragraphs = this.trunks.flatMap(trunk => trunk.paragraphs);
     if (startPosition && endPosition) {
       const firstParagraph = startPosition.paragraph.prev ?? startPosition.paragraph;
       const lastParagraph = endPosition.paragraph.next ?? endPosition.paragraph;
