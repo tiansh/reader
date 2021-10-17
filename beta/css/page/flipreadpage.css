@@ -176,3 +176,7 @@
   transition: top ease-out 0.1s, bottom ease-out 0.1s;
 }
 
+.read-page-flip.read-page-wide .read-index .header-left button {
+  transform: rotate(90deg);
+}
+

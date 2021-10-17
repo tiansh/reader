@@ -28,7 +28,7 @@ export default class JumpPage extends ReadSubPage {
     this.coverElement = this.container.querySelector('.read-jump-cover');
     this.coverElement.addEventListener('touchstart', event => {
       this.hide();
-    });
+    }, { passive: true });
     this.coverElement.addEventListener('mousedown', event => {
       if (event.button === 0) this.hide();
     });

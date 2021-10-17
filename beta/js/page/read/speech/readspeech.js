@@ -383,5 +383,8 @@ export default class ReadSpeech {
       navigator.mediaSession.setPositionState();
     }
   }
+  isWorking() {
+    return Boolean(this.speaking || this.stopping || this.lastReset);
+  }
 }
 

@@ -44,8 +44,6 @@
   font-family: var(--read-font-family);
 }
 
-
-
 .read-control {
   opacity: 0;
   transition: opacity linear 0.1s;
@@ -571,10 +569,6 @@ button.contents-history-clear {
 .read-page-wide .read-index {
   width: calc(var(--index-width) - 1px);
   border-right: 1px solid var(--border-color);
-}
-
-.read-page-wide .read-index .header-left button {
-  transform: rotate(90deg);
 }
 
 .read-page-wide.read-show-index .read-layer {

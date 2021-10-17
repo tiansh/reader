@@ -71,11 +71,13 @@ export default class ControlPage extends ReadSubPage {
       this.readPage.gotoList();
     });
     this.coverElement.addEventListener('touchstart', event => {
-      this.hide();
-      event.stopPropagation();
+      event.preventDefault();
+      window.requestAnimationFrame(() => { this.hide(); });
     });
     this.coverElement.addEventListener('mousedown', event => {
-      if (event.button === 0) this.hide();
+      if (event.button === 0) {
+        window.requestAnimationFrame(() => { this.hide(); });
+      }
     });
 
     const speechContainer = this.speechButton.closest('.icon-line-item');
@@ -113,10 +115,12 @@ export default class ControlPage extends ReadSubPage {
       this.hasFocus = false;
       document.documentElement.focus();
     }
+    this.readPage.textPage?.show();
   }
   show() {
     this.isShow = true;
     this.container.classList.add('read-control-active');
+    this.readPage.textPage?.hide();
   }
   disable() {
     this.isEnabled = false;
