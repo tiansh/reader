@@ -13,6 +13,7 @@ import TextPage from './textpage.js';
 import ReadPage from '../readpage.js';
 import template from '../../../ui/util/template.js';
 import { TouchGestureListener } from '../../../ui/util/touch.js';
+import i18n from '../../../i18n/i18n.js';
 
 /**
  * @typedef {Object} ParagraphInfo
@@ -106,6 +107,8 @@ export default class ScrollTextPage extends TextPage {
     this.progressElement = container.get('progress');
     this.highlightContainer = container.get('highlight');
     this.autoScrollCover = container.get('cover');
+
+    this.autoScrollCover.setAttribute('aria-label', i18n.getMessage('readAutoScrollStop'));
 
     this.readScrollElement.addEventListener('scroll', event => {
       this.onScroll();
@@ -237,6 +240,19 @@ export default class ScrollTextPage extends TextPage {
       const speedFactor = this.autoScrollSpeedFactor * factor;
       this.autoScrollUpdate({ speedFactor });
     }, { passive: true });
+
+    /** @type {HTMLButtonElement} */
+    this.prevButton = container.get('prev');
+    this.prevButton.title = i18n.getMessage('readPageScrollUp');
+    this.prevButton.addEventListener('click', () => {
+      this.pageUp({ resetSpeech: true, resetRender: false });
+    });
+    /** @type {HTMLButtonElement} */
+    this.nextButton = container.get('next');
+    this.nextButton.title = i18n.getMessage('readPageScrollDown');
+    this.nextButton.addEventListener('click', () => {
+      this.pageDown({ resetSpeech: true, resetRender: false });
+    });
 
     return container.get('root');
   }
@@ -1147,8 +1163,4 @@ export default class ScrollTextPage extends TextPage {
     return this.autoScrollRunning || this.autoScrollPaging;
   }
 }
-
-window.addEventListener('error', event => {
-  alert('error' + event.error);
-});
 

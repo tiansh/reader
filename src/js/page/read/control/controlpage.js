@@ -33,6 +33,7 @@ export default class ControlPage extends ReadSubPage {
     this.hide();
 
     this.coverElement = this.container.querySelector('.read-control-cover');
+    this.coverElement.setAttribute('aria-label', i18n.getMessage('readControlClose'));
 
     const iconLine = this.container.querySelector('.icon-line');
     const genButton = (type, title) => {
@@ -75,6 +76,7 @@ export default class ControlPage extends ReadSubPage {
       window.requestAnimationFrame(() => { this.hide(); });
     }, { passive: true });
     this.coverElement.addEventListener('mousedown', event => {
+      this.coverElement.blur();
       if (event.button === 0) {
         window.requestAnimationFrame(() => { this.hide(); });
       }
