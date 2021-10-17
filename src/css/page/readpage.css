@@ -371,7 +371,7 @@ button.contents-history-clear {
   display: flex;
 }
 
-..read-highlight {
+.read-highlight {
   display: none;
 }
 
