@@ -690,22 +690,21 @@ export default class ScrollTextPage extends TextPage {
   }
   getScrollPosition(reference, useBefore) {
     // We cannot use document.elementFromPoint as certain position may belongs to margin of some paragraph
+    const scrollTop = reference - this.textRenderArea.top;
     const trunks = this.trunks;
     const trunk = trunks.reduce((choose, trunk) => {
-      const offset = trunk.offsetTop + this.textRenderArea.top;
-      if (useBefore && offset <= reference) return trunk;
+      const offset = trunk.offsetTop;
+      if (useBefore && offset <= scrollTop) return trunk;
       else if (choose) return choose;
-      else if (!useBefore && offset + trunk.height >= reference) return trunk;
+      else if (!useBefore && offset + trunk.height >= scrollTop) return trunk;
       else return null;
     }, null);
     if (!trunk?.paragraphs?.length) return null;
     const paragraphs = trunk.paragraphs;
-    const scrollTop = reference;
     let low = 0, high = paragraphs.length - 1;
     while (low <= high) {
       const mid = Math.floor((low + high) / 2);
       const paragraph = paragraphs[mid];
-      const element = paragraph.element;
       const paragraphTop = paragraph.offsetTop + paragraph.trunk.offsetTop;
       if (paragraphTop + paragraph.height > scrollTop) {
         high = mid - 1;
@@ -919,9 +918,14 @@ export default class ScrollTextPage extends TextPage {
       if (this.updatePageMetaScheduled !== currentRun) return;
       this.updatePageMetaScheduled = false;
       this.updatePageMeta();
-      const cursor = this.currentRenderCursor;
-      if ((this.readPage.getRawCursor() ?? 0) !== cursor) {
-        this.readPage.setCursor(cursor, config);
+      // If scroll is user triggered, we only update cursor when scroll is finished
+      // otherwise, the last update may be ignored due to current cursor equals to previous one
+      // If scroll is running automatically, we update it regularly
+      if (!this.scrollActive || this.autoScrollBusy()) {
+        const cursor = this.currentRenderCursor;
+        if ((this.readPage.getRawCursor() ?? 0) !== cursor) {
+          this.readPage.setCursor(cursor, config);
+        }
       }
     };
     if (this.scrollActive) {
