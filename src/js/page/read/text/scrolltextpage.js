@@ -478,7 +478,9 @@ export default class ScrollTextPage extends TextPage {
     this.pagePending = null;
     if (!this.pageBusy) {
       if (this.autoScrollPaging) {
-        this.autoScrollStart();
+        window.requestAnimationFrame(() => {
+          this.autoScrollStart();
+        });
       }
     }
   }
@@ -905,7 +907,9 @@ export default class ScrollTextPage extends TextPage {
     }
     const newScrollTop = oldScrollTop + (prevChange ?? 0);
     this.setScrollTop(newScrollTop);
-    if (prevChange && this.autoScrollRunning) this.autoScrollUpdate({ scrollDelta: prevChange });
+    if (prevChange && this.autoScrollBusy()) {
+      this.autoScrollUpdate({ scrollDelta: prevChange });
+    }
   }
   async updatePage(config) {
     this.updatePageRender();
@@ -1031,7 +1035,7 @@ export default class ScrollTextPage extends TextPage {
     }
   }
   resetPage(config) {
-    if (this.autoScrollBusy()) this.autoScrollUpdate({ reset: true });
+    if (this.autoScrollBusy()) this.autoScrollUpdate({ });
     this.clearPage();
     this.clearHighlight();
     this.currentRenderCursor = null;
@@ -1080,8 +1084,10 @@ export default class ScrollTextPage extends TextPage {
     }).then(() => {
       if (currentAutoScroll !== this.autoScrollRunning) return;
       window.getSelection()?.empty();
-      this.autoScrollUpdate();
+      document.addEventListener('visibilitychange', this.autoScrollOnVisibilityChange);
+      this.autoScrollUpdate({ reset: true });
       this.autoScrollTick();
+      if (document.hidden) this.autoScrollPause();
     }).catch(() => {
       // Some browsers may reduce the precision of `performance.now` to avoid fingerprinting.
       // For example, Firefox provides `privacy.resistFingerprinting` in its `about:config`.
@@ -1089,17 +1095,19 @@ export default class ScrollTextPage extends TextPage {
       // So we give up providing this functionality if any two frames have same timestamp.
       this.autoScrollStop();
     });
-    document.addEventListener('visibilitychange', this.autoScrollOnVisibilityChange);
   }
   autoScrollStop({ paging } = {}) {
     if (this.autoScrollRunning == null) return;
-    this.autoScrollRunning = null;
-    window.cancelAnimationFrame(this.autoScrollHandle);
+    if (this.autoScrollHandle != null) {
+      window.cancelAnimationFrame(this.autoScrollHandle);
+    }
     this.autoScrollStartTime = null;
     this.autoScrollStartPosition = null;
     this.autoScrollSpeed = null;
     this.autoScrollHandle = null;
     this.autoScrollSpeedFactorOld = null;
+    this.autoScrollPaused = null;
+    this.autoScrollRunning = null;
     document.removeEventListener('visibilitychange', this.autoScrollOnVisibilityChange);
     if (!paging) {
       this.readPage.controlPage.enable();
