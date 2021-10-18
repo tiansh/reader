@@ -23,7 +23,6 @@
   right: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-width: none;
   overscroll-behavior: none;
   -webkit-user-select: none;
   user-select: none;
