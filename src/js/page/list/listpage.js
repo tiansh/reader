@@ -77,10 +77,10 @@ export default class ListPage extends Page {
           const raw_title = text.parseFilename(item.name);
           const title = await text.preprocess(raw_title);
           await file.add({ title, content });
-          this.importTip.style.display = 'none';
         } catch (e) {
           alert(i18n.getMessage('listImportFail'));
         }
+        this.importTip.style.display = 'none';
       }
       this.fileButton.value = null;
       this.updateList();

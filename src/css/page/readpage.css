@@ -160,6 +160,9 @@
   overscroll-behavior: none;
   transition: left ease 0.2s;
 }
+.index-tab-panel::-webkit-scrollbar {
+  display: none;
+}
 
 #read_index_contents {
   --tab-index: 0;
