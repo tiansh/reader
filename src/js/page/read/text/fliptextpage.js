@@ -752,19 +752,20 @@ export default class FlipTextPage extends TextPage {
     const endPos = Math.min(startPos + length, contentLength);
     range.setStart(node, startPos);
     range.setEnd(node, endPos);
-    const rects = Array.from(range.getClientRects());
     const highlight = container.querySelector('.read-highlight');
     const containerRect = container.getBoundingClientRect();
+    const rects = Array.from(range.getClientRects()).filter(rect => rect.width * rect.height);
+    const lineHeight = Number.parseFloat(window.getComputedStyle(range.startContainer.parentNode).lineHeight);
+    const [pageWidth, pageHeight] = onResize.currentSize();
     const highlightSpanList = rects.map(rect => {
-      const [pageWidth, pageHeight] = onResize.currentSize();
       if (rect.top > pageHeight) return null;
       if (rect.left > pageWidth) return null;
+      const height = Math.min(rect.height, lineHeight - 1);
       const span = document.createElement('span');
       span.style.left = (rect.left - containerRect.left) + 'px';
       span.style.width = rect.width + 'px';
-      const top = rect.top - containerRect.top;
-      span.style.top = top + 'px';
-      span.style.height = rect.height + 'px';
+      span.style.top = ((rect.top + rect.bottom - height) / 2 - containerRect.top) + 'px';
+      span.style.height = height + 'px';
       highlight.appendChild(span);
       return span;
     });
@@ -797,3 +798,5 @@ export default class FlipTextPage extends TextPage {
     this.resetPage({ resetSpeech: false, resetRender: true });
   }
 }
+
+
