@@ -159,6 +159,7 @@
   scrollbar-width: none;
   overscroll-behavior: none;
   transition: left ease 0.2s;
+  contain: strict;
 }
 .index-tab-panel::-webkit-scrollbar {
   display: none;
@@ -255,6 +256,7 @@ button.tab-item:focus {
   display: flex;
   flex-direction: column;
   overflow-y: hidden;
+  contain: strict;
 }
 
 .read-index.read-sub-page-current .index-list {
