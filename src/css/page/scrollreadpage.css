@@ -105,6 +105,7 @@
   display: flow-root;
   position: relative;
   z-index: 2;
+  box-sizing: border-box;
 }
 .read-page-scroll .trunk-first {
   padding-top: 50px;
@@ -165,15 +166,15 @@
 }
 
 .read-page-scroll .read-control .read-control-cover {
-  display: block;
-  visibility: hidden;
   width: 0;
   right: auto;
 }
 .read-page-scroll .read-control.read-control-active .read-control-cover {
-  visibility: visible;
   width: 100vw;
   transition: width step-end 0.4s;
+}
+.read-page-scroll .read-control.read-control-active-init .read-control-cover {
+  width: 0;
 }
 
 .read-page-scroll .read-index {

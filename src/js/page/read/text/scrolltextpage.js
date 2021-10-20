@@ -280,7 +280,7 @@ export default class ScrollTextPage extends TextPage {
         if (thisScrollEvent !== this.lastScrollEvent) return;
         const speech = this.readPage.speech;
         this.onScrollDone({
-          resetSpeech: speech.speaking && !speech.spokenInPage(),
+          resetSpeech: speech.isWorking() && !speech.spokenInPage(),
           resetRender: false,
         });
       }, this.scrollDoneTimeout);
@@ -426,9 +426,22 @@ export default class ScrollTextPage extends TextPage {
     }
     event.preventDefault();
   }
+  isScrollReachTop() {
+    const { scrollTop } = this.readScrollElement;
+    return scrollTop === 0;
+  }
+  isScrollReachBottom() {
+    const { scrollTop, scrollHeight, clientHeight } = this.readScrollElement;
+    return scrollTop >= scrollHeight - clientHeight - 1;
+  }
   pageUp(config) {
     if (this.pageBusy) {
       this.pagePending = { direction: 'up', config };
+      return;
+    }
+    const autoRunning = this.scrollToBusy || this.readPage.speech.isWorking() || this.autoScrollBusy();
+    if (this.isScrollReachTop() && !autoRunning) {
+      this.readPage.showControlPage();
       return;
     }
     const startPosition = this.getPageStartPosition();
@@ -437,12 +450,18 @@ export default class ScrollTextPage extends TextPage {
     const target = this.getTextPosition(paragraph, startPosition.offset, 'bottom');
     const [screenWidth, screenHeight] = onResize.currentSize();
     const distance = screenHeight - this.textRenderArea.bottom - target;
-    const scrollTo = this.readScrollElement.scrollTop - distance;
+    const scrollTop = this.readScrollElement.scrollTop;
+    const scrollTo = scrollTop - distance;
     this.pageTo(scrollTo, config, 'up');
   }
   pageDown(config) {
     if (this.pageBusy) {
       this.pagePending = { direction: 'down', config };
+      return;
+    }
+    const autoRunning = this.scrollToBusy || this.readPage.speech.isWorking() || this.autoScrollBusy();
+    if (this.isScrollReachBottom() && !autoRunning) {
+      this.readPage.showControlPage();
       return;
     }
     this.lastPageDown = performance.now();
@@ -452,7 +471,8 @@ export default class ScrollTextPage extends TextPage {
     const offset = Math.min(endPosition.offset, paragraph.last - paragraph.start - 1);
     const target = this.getTextPosition(paragraph, offset, 'top');
     const distance = this.textRenderArea.top - target;
-    const scrollTo = this.readScrollElement.scrollTop - distance;
+    const scrollTop = this.readScrollElement.scrollTop;
+    const scrollTo = scrollTop - distance;
     this.pageTo(scrollTo, config, 'down');
   }
   pageDone() {
@@ -664,7 +684,7 @@ export default class ScrollTextPage extends TextPage {
   renderTrunkStartsWith(start, position) {
     const content = this.readPage.getContent();
     let end = content.indexOf('\n', start + this.step());
-    if (end === -1) end = content.length;
+    if (end === -1) end = content.length; else ++end;
     const trunk = this.renderTrunk(start, end, position);
     return trunk;
   }
@@ -1070,7 +1090,7 @@ export default class ScrollTextPage extends TextPage {
     if (this.autoScrollRunning) return;
     this.autoScrollPaging = false;
     const currentAutoScroll = this.autoScrollRunning = {};
-    this.readPage.controlPage.disable();
+    this.readPage.disableControlPage();
     this.container.classList.add('read-page-auto-scroll');
     const rAF = callback => {
       if (currentAutoScroll === this.autoScrollRunning) {
@@ -1119,7 +1139,7 @@ export default class ScrollTextPage extends TextPage {
     this.autoScrollRunning = null;
     document.removeEventListener('visibilitychange', this.autoScrollOnVisibilityChange);
     if (!paging) {
-      this.readPage.controlPage.enable();
+      this.readPage.enableControlPage();
       this.container.classList.remove('read-page-auto-scroll');
       this.autoScrollPaging = false;
     } else {
@@ -1158,6 +1178,11 @@ export default class ScrollTextPage extends TextPage {
     const now = performance.now();
     if (isNextTick && now - this.autoScrollLastTick > 1000) {
       this.autoScrollUpdate({ now });
+    }
+    if (this.isScrollReachBottom()) {
+      this.autoScrollStop();
+      this.readPage.showControlPage();
+      return;
     }
     this.autoScrollHandle = window.requestAnimationFrame(() => {
       const distance = this.autoScrollDistance(now);
