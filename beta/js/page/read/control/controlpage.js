@@ -74,9 +74,8 @@ export default class ControlPage extends ReadSubPage {
     this.coverElement.addEventListener('touchstart', event => {
       event.preventDefault();
       window.requestAnimationFrame(() => { this.hide(); });
-    }, { passive: true });
+    }, { passive: false });
     this.coverElement.addEventListener('mousedown', event => {
-      this.coverElement.blur();
       if (event.button === 0) {
         window.requestAnimationFrame(() => { this.hide(); });
       }
@@ -121,8 +120,11 @@ export default class ControlPage extends ReadSubPage {
   }
   show() {
     this.isShow = true;
-    this.container.classList.add('read-control-active');
+    this.container.classList.add('read-control-active', 'read-control-active-init');
     this.readPage.textPage?.hide();
+    window.requestAnimationFrame(() => {
+      this.container.classList.remove('read-control-active-init');
+    });
   }
   disable() {
     this.isEnabled = false;

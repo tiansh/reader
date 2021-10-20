@@ -192,6 +192,13 @@ export default class ReadPage extends Page {
   isControlActive() {
     return this.controlPage.isShow;
   }
+  disableControlPage() {
+    this.controlPage.hide();
+    this.controlPage.disable();
+  }
+  enableControlPage() {
+    this.controlPage.enable();
+  }
   showControlPage(focus) {
     if (focus) {
       this.controlPage.focus();

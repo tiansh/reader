@@ -61,16 +61,16 @@ defined by the Mozilla Public License, v. 2.0.
     </div>
   </div>
 </div>
-<div id="list_sort_menu" class="list-sort-menu">
+<div id="list_sort_menu" class="list-sort-menu" role="dialog" aria-modal="true">
   <div class="backdrop"></div>
-  <div class="list-sort-options screen-option" role="menu">
-    <div class="screen-option-group" role="group">
-      <button type="button" role="menuitem" class="screen-option-item" data-option="dateread" data-option-default><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateRead"></span></div></button>
-      <button type="button" role="menuitem" class="screen-option-item" data-option="dateadd"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateAdd"></span></div></button>
-      <button type="button" role="menuitem" class="screen-option-item" data-option="title"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByTitle"></span></div></button>
+  <div class="list-sort-options screen-option">
+    <div class="screen-option-group">
+      <button type="button" class="screen-option-item" data-option="dateread" data-option-default><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateRead"></span></div></button>
+      <button type="button" class="screen-option-item" data-option="dateadd"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateAdd"></span></div></button>
+      <button type="button" class="screen-option-item" data-option="title"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByTitle"></span></div></button>
     </div>
-    <div class="screen-option-group" role="group">
-      <button type="button" role="menuitem" class="screen-option-item"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortCancel"></span></div></button>
+    <div class="screen-option-group">
+      <button type="button" class="screen-option-item"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortCancel"></span></div></button>
     </div>
   </div>
 </div>
@@ -142,7 +142,7 @@ defined by the Mozilla Public License, v. 2.0.
   </div>
   <div id="config_page_font" class="config-option-page config-page">
     <div role="main" class="config-page-content scroll">
-      <input id="select_font_file" type="file" />
+      <input id="select_font_file" type="file" accept="font/ttf,font/otf,font/woff,font/woff2" />
       <div class="font-select-section"></div>
       <div class="config-option-select-list"></div>
     </div>
