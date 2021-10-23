@@ -343,13 +343,16 @@ export default class ScrollTextPage extends TextPage {
     body.style.top = scrollDistance + 'px';
     container.classList.add('read-body-scroll-to');
     window.requestAnimationFrame(() => {
+      // Firefox may randomly forget transition.
+      // And this non-functional line fixes this issue.
+      window.getComputedStyle(body).transitionProperty;
+      if (currentScrollTo !== this.scrollToBusy) return;
       body.style.top = '0';
-    });
-    setTimeout(() => {
-      if (currentScrollTo === this.scrollToBusy) {
+      setTimeout(() => {
+        if (currentScrollTo !== this.scrollToBusy) return;
         this.abortScrollTo();
-      }
-    }, this.scrollToTimeout);
+      }, this.scrollToTimeout);
+    });
     return true;
   }
   removeContainer(container) {
