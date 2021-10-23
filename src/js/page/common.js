@@ -50,6 +50,27 @@ document.body.addEventListener('touchmove', function (event) {
   event.preventDefault();
 }, { passive: false, useCapture: false });
 
+; (function () {
+  let oldClientY = null;
+  document.addEventListener('touchstart', function (event) {
+    oldClientY = event.touches.item(0).clientY;
+  }, { passive: true });
+  document.addEventListener('touchmove', function (event) {
+    const touch = event.touches.item(0);
+    const clientY = touch.clientY;
+    const element = document.elementFromPoint(touch.screenX, touch.screenY);
+    const scrollElement = element.closest('.scroll');
+    if (scrollElement) {
+      const scrollTop = scrollElement.scrollTop;
+      const maxScrollTop = scrollElement.scrollHeight - scrollElement.clientHeight;
+      if (scrollTop <= 0 && clientY > oldClientY || scrollTop >= maxScrollTop && clientY < oldClientY) {
+        event.preventDefault();
+      }
+    }
+    oldClientY = clientY;
+  }, { passive: false });
+}());
+
 Array.from(document.querySelectorAll('[data-i18n]')).forEach(element => {
   element.textContent = i18n.getMessage(element.dataset.i18n, ...element.children);
 });
