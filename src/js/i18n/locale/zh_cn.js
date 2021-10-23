@@ -20,7 +20,6 @@ export default {
   listSortByTitle: '按标题',
   listSortCancel: '取消',
   listImportTip: '正在读取文本……',
-  listImportFail: '读取文本时发生错误\n文本可能使用了不支持的字符编码',
   listNotYetRead: '新',
   listSearchPlaceholder: '搜索',
   listEmptySearchTip: '找不到搜索的文件',
@@ -123,4 +122,7 @@ export default {
   colorHueRange: '色相',
   colorSaturationRange: '饱和度',
   colorValueRange: '明度',
+
+  listImportFail: '读取文本时发生错误\n文本可能使用了不支持的字符编码',
+  storageOpenFail: '无法访问设备的存储\ntReader 需要访问存储以正常工作\n这可能是因为您启用了浏览器的无痕（隐私）模式或您的浏览器版本不受支持',
 };

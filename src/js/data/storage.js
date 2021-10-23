@@ -7,6 +7,8 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
+import i18n from '../i18n/i18n.js';
+
 const storage = {};
 
 export default storage;
@@ -56,10 +58,15 @@ const dbPromise = (function () {
       db.createObjectStore('config');
       db.createObjectStore('list', { keyPath: 'id', autoIncrement: true });
     });
+    dbOpen.addEventListener('error', event => {
+      alert(i18n.getMessage('storageOpenFail'));
+      resolve(null);
+    });
   });
 }());
 
 dbPromise.then(db => {
+  if (!db) return;
   window.addEventListener('beforeunload', () => {
     db.close();
   });
@@ -76,6 +83,7 @@ storage.files = files;
 files.add = function (meta, content) {
   return new Promise(async (resolve, reject) => {
     const db = await dbPromise;
+    if (!db) reject();
     const transaction = db.transaction(['content', 'list', 'index'], 'readwrite');
     const addFile = transaction.objectStore('list').add(meta);
     addFile.addEventListener('success', event => {
@@ -99,6 +107,7 @@ files.add = function (meta, content) {
 files.remove = function (id) {
   return new Promise(async (resolve, reject) => {
     const db = await dbPromise;
+    if (!db) reject();
     const transaction = db.transaction(['content', 'list', 'index'], 'readwrite');
     const deleteFile = transaction.objectStore('list').delete(id);
     deleteFile.addEventListener('success', event => {
@@ -124,6 +133,7 @@ const common = function (type, actionType) {
   return async function (...param) {
     return new Promise(async (resolve, reject) => {
       const db = await dbPromise;
+      if (!db) reject();
       const transaction = db.transaction([type], mode);
       const store = transaction.objectStore(type);
       const request = action(store, ...param);
