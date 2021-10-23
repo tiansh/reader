@@ -30,7 +30,7 @@
   left: 0;
   right: 0;
   margin: 0 auto;
-  padding: var(--page-margin-y) 0 calc(var(--page-margin-y) + 20px);
+  padding: 0;
   overflow: hidden scroll;
   overflow-wrap: break-word;
   z-index: 2;
@@ -69,7 +69,7 @@
 .read-page-scroll .read-body {
   position: relative;
   box-sizing: border-box;
-  margin: calc(-1 * var(--page-margin-y)) 0 calc(-1 * calc(var(--page-margin-y) + 20px));
+  margin: 0;
   padding: var(--page-margin-y) var(--page-margin-x) calc(var(--page-margin-y) + 20px);
   padding: var(--page-margin-y) max(var(--page-margin-x), calc(calc(100% - var(--text-max-width)) / 2)) calc(var(--page-margin-y) + 20px);
   line-height: 1.3;
