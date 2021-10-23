@@ -20,7 +20,7 @@
   overflow: hidden;
   overflow-wrap: break-word;
   contain: layout;
-  --text-max-width: 100%;
+  --text-max-width: 800px;
 }
 
 .read-page-scroll .read-body-scroll {
@@ -30,8 +30,7 @@
   left: 0;
   right: 0;
   margin: 0 auto;
-  max-width: var(--text-max-width);
-  padding: var(--page-margin-y) var(--page-margin-x) calc(var(--page-margin-y) + 20px);
+  padding: var(--page-margin-y) 0 calc(var(--page-margin-y) + 20px);
   overflow: hidden scroll;
   overflow-wrap: break-word;
   z-index: 2;
@@ -70,8 +69,9 @@
 .read-page-scroll .read-body {
   position: relative;
   box-sizing: border-box;
-  margin: calc(-1 * var(--page-margin-y)) calc(-1 * var(--page-margin-x)) calc(-1 * calc(var(--page-margin-y) + 20px));
+  margin: calc(-1 * var(--page-margin-y)) 0 calc(-1 * calc(var(--page-margin-y) + 20px));
   padding: var(--page-margin-y) var(--page-margin-x) calc(var(--page-margin-y) + 20px);
+  padding: var(--page-margin-y) max(var(--page-margin-x), calc(calc(100% - var(--text-max-width)) / 2)) calc(var(--page-margin-y) + 20px);
   line-height: 1.3;
   white-space: pre-wrap;
   text-align: justify;
@@ -120,8 +120,9 @@
   position: absolute;
   bottom: var(--page-margin-y);
   left: var(--page-margin-x);
+  left: max(var(--page-margin-x), calc(calc(100% - var(--text-max-width)) / 2));
   right: var(--page-margin-x);
-  max-width: var(--text-max-width);
+  right: max(var(--page-margin-x), calc(calc(100% - var(--text-max-width)) / 2));
   margin: 0 auto;
   height: 12px;
   display: flex;

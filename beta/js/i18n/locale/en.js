@@ -20,7 +20,6 @@ export default {
   listSortByTitle: 'Title',
   listSortCancel: 'Cancel',
   listImportTip: 'Reading text file...',
-  listImportFail: 'Something wrong when reading text file. Maybe the encoding is not supported.',
   listNotYetRead: 'NEW',
   listSearchPlaceholder: 'Search',
   listEmptySearchTip: 'Cannot find files match searching',
@@ -124,4 +123,6 @@ export default {
   colorSaturationRange: 'Saturation',
   colorValueRange: 'Value',
 
+  listImportFail: 'Something wrong when reading text file. Maybe the encoding is not supported.',
+  storageOpenFail: 'Cannot access device storage.\ntReader cannot work correctly without storage access.\nThis may due to incognito / private mode of browser or unsupported browser version.',
 };

@@ -68,22 +68,18 @@ export default class ScrollTextPage extends TextPage {
       const container = this.readScrollElement.parentNode;
       container.style.setProperty('--text-max-width', this.maxTextWidth + 'px');
     }
-    const outerRect = this.readScrollElement.getBoundingClientRect();
-    const outerStyle = window.getComputedStyle(this.readScrollElement);
-    const value = prop => Number.parseInt(outerStyle.getPropertyValue(prop), 10);
-    this.textRenderArea = {
-      top: outerRect.top + value('padding-top'),
-      bottom: outerRect.top + value('padding-bottom'),
-      left: outerRect.top + value('padding-left'),
-      right: outerRect.top + value('padding-right'),
-    };
 
+    this.initialized = false;
     window.requestAnimationFrame(() => {
+      this.updatePaddingArea();
       this.updatePage({ resetSpeech: true, resetRender: true });
+      this.initialized = true;
     });
   }
   async onInactivate() {
     await super.onInactivate();
+
+    this.initialized = false;
 
     this.trunks = null;
     this.activeParagraphs = null;
@@ -99,6 +95,7 @@ export default class ScrollTextPage extends TextPage {
 
     this.autoScrollStop();
     this.autoScrollSpeedFactor = null;
+    this.textAreaOffset = null;
   }
   createContainer() {
     const container = template.create('read_text_scroll');
@@ -256,6 +253,19 @@ export default class ScrollTextPage extends TextPage {
 
     return container.get('root');
   }
+  updatePaddingArea() {
+    const outerRect = this.readScrollElement.getBoundingClientRect();
+    const outerStyle = window.getComputedStyle(this.readScrollElement);
+    const innerStyle = window.getComputedStyle(this.readBodyElement);
+    const getValue = (style, prop) => Number.parseInt(style.getPropertyValue(prop), 10);
+    const value = prop => getValue(outerStyle, prop) + getValue(innerStyle, prop);
+    this.textAreaOffset = {
+      top: outerRect.top + value('padding-top'),
+      bottom: outerRect.top + value('padding-bottom'),
+      left: outerRect.top + value('padding-left'),
+      right: outerRect.top + value('padding-right'),
+    };
+  }
   // During momentum scrolling on iOS, updating `scrollTop` may be ignored due to some data hazard.
   // I have tried ~2 weeks to make it somehow looks like working.
   fixIosScrollReset() {
@@ -351,7 +361,7 @@ export default class ScrollTextPage extends TextPage {
     this.trunks = null;
     this.activeParagraphs = null;
     this.currentScrollPosition = null;
-    this.textRenderArea = null;
+    this.textAreaOffset = null;
   }
   isAnythingSelected() {
     const selection = document.getSelection();
@@ -449,7 +459,7 @@ export default class ScrollTextPage extends TextPage {
     const paragraph = startPosition.paragraph;
     const target = this.getTextPosition(paragraph, startPosition.offset, 'bottom');
     const [screenWidth, screenHeight] = onResize.currentSize();
-    const distance = screenHeight - this.textRenderArea.bottom - target;
+    const distance = screenHeight - this.textAreaOffset.bottom - target;
     const scrollTop = this.readScrollElement.scrollTop;
     const scrollTo = scrollTop - distance;
     this.pageTo(scrollTo, config, 'up');
@@ -470,7 +480,7 @@ export default class ScrollTextPage extends TextPage {
     const paragraph = endPosition.paragraph;
     const offset = Math.min(endPosition.offset, paragraph.last - paragraph.start - 1);
     const target = this.getTextPosition(paragraph, offset, 'top');
-    const distance = this.textRenderArea.top - target;
+    const distance = this.textAreaOffset.top - target;
     const scrollTop = this.readScrollElement.scrollTop;
     const scrollTo = scrollTop - distance;
     this.pageTo(scrollTo, config, 'down');
@@ -723,7 +733,7 @@ export default class ScrollTextPage extends TextPage {
    */
   getScrollPosition(reference, useBefore) {
     // We cannot use document.elementFromPoint as certain position may belongs to margin of some paragraph
-    const scrollTop = reference - this.textRenderArea.top;
+    const scrollTop = reference - this.textAreaOffset.top;
     /**
      * @template {TrunkInfo|ParagraphInfo} T
      * @param {T[]} items
@@ -771,14 +781,14 @@ export default class ScrollTextPage extends TextPage {
   }
   getPageStartPosition() {
     const bodyRect = this.readBodyElement.getBoundingClientRect();
-    const top = this.textRenderArea.top - bodyRect.top;
+    const top = this.textAreaOffset.top - bodyRect.top;
     // -2 for floating point errors
     return this.getScrollPosition(top - 2, false);
   }
   getPageEndPosition() {
     const [screenWidth, screenHeight] = onResize.currentSize();
     const bodyRect = this.readBodyElement.getBoundingClientRect();
-    const bottom = screenHeight - this.textRenderArea.bottom - bodyRect.top;
+    const bottom = screenHeight - this.textAreaOffset.bottom - bodyRect.top;
     return this.getScrollPosition(bottom, true);
   }
   getRenderCursor() {
@@ -894,9 +904,9 @@ export default class ScrollTextPage extends TextPage {
   }
   updatePageActiveParagraphs() {
     const [screenWidth, screenHeight] = onResize.currentSize();
-    const top = Math.max(0, this.textRenderArea.top - this.readBodyElement.getBoundingClientRect().top - screenHeight / 2);
+    const top = Math.max(0, this.textAreaOffset.top - this.readBodyElement.getBoundingClientRect().top - screenHeight / 2);
     const startPosition = this.getScrollPosition(top - 2, false);
-    const bottom = screenHeight * 1.5 - this.readBodyElement.getBoundingClientRect().top - this.textRenderArea.bottom;
+    const bottom = screenHeight * 1.5 - this.readBodyElement.getBoundingClientRect().top - this.textAreaOffset.bottom;
     const endPosition = this.getScrollPosition(bottom, true);
     if (startPosition && endPosition) {
       const firstParagraph = startPosition.paragraph.prev ?? startPosition.paragraph;
@@ -1022,10 +1032,10 @@ export default class ScrollTextPage extends TextPage {
       // bottom is used here instead of top is expected behavior
       // Otherwise, some floating point errors may casue the page scroll up
       // when first line of text is highlighted
-      if (firstRect.bottom < this.textRenderArea.top) {
+      if (firstRect.bottom < this.textAreaOffset.top) {
         return resetAndRetry(false);
-      } else if (firstRect.bottom > screenHeight - this.textRenderArea.bottom) {
-        const distance = firstRect.bottom - (screenHeight - this.textRenderArea.bottom);
+      } else if (firstRect.bottom > screenHeight - this.textAreaOffset.bottom) {
+        const distance = firstRect.bottom - (screenHeight - this.textAreaOffset.bottom);
         if (distance > screenHeight / 2) {
           return resetAndRetry(false);
         } else {
@@ -1058,7 +1068,7 @@ export default class ScrollTextPage extends TextPage {
     if (!paragraph || config.resetRender) {
       this.resetPage(config);
     } else {
-      const top = this.getTextPosition(paragraph, cursor - paragraph.start, 'top') - this.textRenderArea.top;
+      const top = this.getTextPosition(paragraph, cursor - paragraph.start, 'top') - this.textAreaOffset.top;
       const scrollTop = this.readScrollElement.scrollTop;
       this.scrollTo(scrollTop + top, config);
     }
@@ -1073,6 +1083,7 @@ export default class ScrollTextPage extends TextPage {
   }
   onResize() {
     super.onResize();
+    this.updatePaddingArea();
     this.resetPage({ resetSpeech: false, resetRender: true });
   }
   step() {
@@ -1164,7 +1175,7 @@ export default class ScrollTextPage extends TextPage {
       this.autoScrollSpeedFactor = Math.max(Math.min(speedFactor ?? 1, this.readSpeedFactorMax), this.readSpeedFactorMin);
     }
     if (this.autoScrollSpeed == null || reset) {
-      const width = this.readScrollElement.clientWidth - this.textRenderArea.left - this.textRenderArea.right;
+      const width = this.readScrollElement.clientWidth - this.textAreaOffset.left - this.textAreaOffset.right;
       const fontSize = Number(this.configs.font_size);
       const lineHeight = Number(this.configs.line_height);
       this.autoScrollSpeed = fontSize ** 2 * lineHeight * this.readSpeedBase / width;
