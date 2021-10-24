@@ -520,7 +520,7 @@ export default class ScrollTextPage extends TextPage {
   setScrollTop(scrollTop) {
     const container = this.readScrollElement;
     const target = scrollTop;
-    if (Math.abs(container.scrollTop - target) > 0.5) {
+    if (container.scrollTop !== target) {
       container.scrollTop = target;
     }
     this.lastScrollTop = container.scrollTop;
