@@ -125,6 +125,7 @@ export default {
   colorSaturationRange: 'Saturation',
   colorValueRange: 'Value',
 
+  readFontFail: 'Cannot open font file. The file format may not be supported by your browser.',
   listImportFail: 'Something wrong when reading text file. Maybe the encoding is not supported.',
   storageOpenFail: 'Cannot access device storage.\ntReader cannot work correctly without storage access.\nThis may due to incognito / private mode of browser or unsupported browser version.',
 };

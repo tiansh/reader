@@ -257,7 +257,11 @@ class FontConfigOptionPage extends SelectConfigOptionPage {
       reader.addEventListener('load', async event => {
         const content = reader.result;
         const name = file.name.replace(/^(.*)\.[^.]*$/, '$1');
-        await this.addFont({ name, content });
+        if (await this.isValidFont(content)) {
+          await this.addFont({ name, content });
+        } else {
+          alert(i18n.getMessage('readFontFail'));
+        }
         this.selectFontButton.value = '';
       });
       reader.readAsDataURL(file);
@@ -276,6 +280,18 @@ class FontConfigOptionPage extends SelectConfigOptionPage {
   }
   async getValue() {
     return (await super.getValue()) || 0;
+  }
+  async isValidFont(font) {
+    const style = document.head.appendChild(document.createElement('style'));
+    style.textContent = `@font-face { font-family: "CustomFontTest"; src: url("${font}"); }`;
+    try {
+      await document.fonts.load('18px CustomFontTest');
+      return true;
+    } catch (e) {
+      return false;
+    } finally {
+      style.remove();
+    }
   }
   async addFont(font) {
     let fonts = await this.fontList();
