@@ -76,6 +76,10 @@
   -webkit-appearance: none;
   appearance: none;
   display: none;
+  padding: 0;
+  border: 0 none;
+  width: 100vw;
+  height: 100vh;
 }
 
 .read-control.read-control-active {
