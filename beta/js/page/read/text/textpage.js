@@ -132,7 +132,11 @@ export default class TextPage {
     this.customStyle.textContent = `:root {\n${style}\n}`;
 
     this.configs = configs;
-    await document.fonts.load(`${configs.font_size}px CustomFont`);
+    try {
+      await document.fonts.load(`${configs.font_size}px CustomFont`);
+    } catch (e) {
+      // ignore
+    }
   }
   ignoreSpaces(cursor) {
     if (this.ignoreSpacesMemorizeStart === cursor) {

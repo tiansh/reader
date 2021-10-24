@@ -98,6 +98,8 @@ export default {
     return rate + '×';
   },
   configHelpGroupTitle: '帮助',
+  configHelpTopic: '帮助',
+  configHelpFilename: 'zh_cn.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: '关于',
   configExpertGroupTitle: '高级',
@@ -123,6 +125,7 @@ export default {
   colorSaturationRange: '饱和度',
   colorValueRange: '明度',
 
+  readFontFail: '无法打开字体文件\n您的浏览器可能不支持该字体文件类型',
   listImportFail: '读取文本时发生错误\n文本可能使用了不支持的字符编码',
   storageOpenFail: '无法访问设备的存储\ntReader 需要访问存储以正常工作\n这可能是因为您启用了浏览器的无痕（隐私）模式或您的浏览器版本不受支持',
 };
