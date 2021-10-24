@@ -31,6 +31,7 @@
 .config-group {
   margin: 35px 0;
   background: var(--config-item-background);
+  overflow: hidden;
 }
 
 .config-title {
@@ -118,8 +119,6 @@
 
 .config-option-select-list {
   line-height: 50px;
-  margin-top: 35px;
-  background: var(--config-item-background);
 }
 
 .select-font-button-inner {
@@ -140,11 +139,6 @@
   bottom: 85px;
   width: 0;
   z-index: -1;
-}
-
-.font-select-section {
-  background: var(--config-item-background);
-  margin: 35px 0;
 }
 
 .config-page-close-slide {
@@ -270,3 +264,31 @@
   font-size: 16px;
   color: var(--list-comment-color);
 }
+
+@media screen and (min-width: 800px) {
+
+  .config-page-content {
+    padding-left: calc(calc(100vw - 800px) / 2);
+    padding-right: calc(calc(100vw - 800px) / 2);
+  }
+
+  .config-page-content .config-group {
+    border-radius: 5px;
+  }
+
+  .config-page-content .list-item-empty:first-child + .list-item,
+  .config-page-content .list-item:first-child {
+    border-top-color: transparent;
+  }
+
+  .config-page-content .list-item:last-child {
+    border-bottom-color: transparent;
+  }
+
+  .config-option-text,
+  .config-option-expert {
+    border-width: 1px;
+    border-radius: 5px;
+  }
+}
+
