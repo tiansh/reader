@@ -571,7 +571,6 @@ export default class ScrollTextPage extends TextPage {
       paragraph.setAttribute('aria-level', '3');
       paragraph.classList.add('text-heading');
     }
-    paragraph.setAttribute('aria-hidden', 'true');
     trunk.element.appendChild(paragraph);
     const info = { start, end, last, element: paragraph, trunk, prev: null, next: null };
     if (trunk.paragraphs.length) {
@@ -902,36 +901,6 @@ export default class ScrollTextPage extends TextPage {
     }
     if (this.progressElement.textContent !== progressText) {
       this.progressElement.textContent = progressText;
-    }
-    this.updatePageActiveParagraphs();
-  }
-  updatePageActiveParagraphs() {
-    const [screenWidth, screenHeight] = onResize.currentSize();
-    const top = Math.max(0, this.textAreaOffset.top - this.readBodyElement.getBoundingClientRect().top - screenHeight / 2);
-    const startPosition = this.getScrollPosition(top - 2, false);
-    const bottom = screenHeight * 1.5 - this.readBodyElement.getBoundingClientRect().top - this.textAreaOffset.bottom;
-    const endPosition = this.getScrollPosition(bottom, true);
-    if (startPosition && endPosition) {
-      const firstParagraph = startPosition.paragraph.prev ?? startPosition.paragraph;
-      const lastParagraph = endPosition.paragraph.next ?? endPosition.paragraph;
-      const oldActiveParagraphs = this.activeParagraphs;
-      const newActiveParagraphs = this.activeParagraphs = [];
-      for (let current = firstParagraph; current !== lastParagraph.next; current = current.next) {
-        newActiveParagraphs.push(current);
-      }
-      oldActiveParagraphs.forEach(p => {
-        if (!newActiveParagraphs.includes(p)) {
-          p.element.setAttribute('aria-hidden', 'true');
-        }
-      });
-      newActiveParagraphs.forEach(p => {
-        if (!oldActiveParagraphs.includes(p)) {
-          p.element.setAttribute('aria-hidden', 'false');
-        }
-      });
-    } else {
-      this.activeParagraphs.forEach(p => { p.element.setAttribute('aria-hidden', 'true'); });
-      this.activeParagraphs = [];
     }
   }
   updatePageRender() {
