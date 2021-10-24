@@ -98,6 +98,8 @@ export default {
     return rate + '×';
   },
   configHelpGroupTitle: 'Help',
+  configHelpTopic: 'Help',
+  configHelpFilename: 'en.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: 'About',
   configExpertGroupTitle: 'Expert',

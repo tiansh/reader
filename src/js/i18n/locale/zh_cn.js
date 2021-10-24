@@ -98,6 +98,8 @@ export default {
     return rate + '×';
   },
   configHelpGroupTitle: '帮助',
+  configHelpTopic: '帮助',
+  configHelpFilename: 'zh_cn.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: '关于',
   configExpertGroupTitle: '高级',

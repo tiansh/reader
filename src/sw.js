@@ -10,6 +10,10 @@
 const version = /* VERSION */"20211001"/* VERSION */; // eslint-disable-line quotes
 
 const resourceList = [
+  './help/about.html',
+  './help/credits.html',
+  './help/en.html',
+  './help/zh_cn.html',
   './css/common/input.css',
   './css/common/main.css',
   './css/icons/icons.css',
@@ -69,7 +73,6 @@ const resourceList = [
   './icon/maskable.png',
   './icon/monochrome.png',
   './manifest.webmanifest',
-  './credits.html',
   './',
 ];
 
