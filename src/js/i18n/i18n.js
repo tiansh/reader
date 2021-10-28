@@ -11,8 +11,8 @@ import en from './locale/en.js';
 import zh_CN from './locale/zh_cn.js';
 
 const locales = [
-  { name: /^en/, lang: 'en', locale: en },
-  { name: /^zh-(?!.*TW|HK|MO|Hant)/, lang: 'zh-CN', locale: zh_CN },
+  { name: /^en\b/i, lang: 'en', locale: en },
+  { name: /^zh\b(?:-(?!.*TW|HK|MO|Hant)|.*-Hans|$)/i, lang: 'zh-CN', locale: zh_CN },
 ];
 
 /** @type {en} */
@@ -24,7 +24,7 @@ const prefer = (function () {
   document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.lang = prefer.lang;
   });
-  return prefer.locale;
+  return Object.assign({}, en, prefer.locale);
 }());
 
 const i18n = {};
