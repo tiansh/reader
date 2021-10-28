@@ -7,6 +7,8 @@
  */
 
 .light-theme {
+  color-scheme: light;
+
   --default-background: #fff;
   --default-color: #000;
   --active-color: #c1752b;

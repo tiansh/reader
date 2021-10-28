@@ -254,7 +254,12 @@ export default class ScrollTextPage extends TextPage {
     return container.get('root');
   }
   updatePaddingArea() {
-    const outerRect = this.readScrollElement.getBoundingClientRect();
+    // `outerRect` should be `this.readScrollElement.getBoundingClientRect()`
+    // But this function may report wrong values when
+    // user rotate device on iOS from landscape to portrait
+    // and Safari try to buggily render content over the system status bar
+    // As we try to define its top to 0 in my CSS, we hardcode 0 here to prevent such issues.
+    const outerRect = { top: 0 };
     const outerStyle = window.getComputedStyle(this.readScrollElement);
     const innerStyle = window.getComputedStyle(this.readBodyElement);
     const getValue = (style, prop) => Number.parseInt(style.getPropertyValue(prop), 10);

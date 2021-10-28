@@ -7,6 +7,8 @@
  */
 
 .dark-theme {
+  color-scheme: dark;
+
   --default-background: #000;
   --default-color: #fff;
   --active-color: #dcb13d;
