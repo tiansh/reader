@@ -52,7 +52,7 @@ export default class ScrollTextPage extends TextPage {
     await super.onActivate({ id });
 
     // EXPERT_CONFIG How many pages of text rendered off-screen
-    this.textBufferSize = await config.expert('appearance.text_buffer_factor', 'number', 3) || 3;
+    this.textBufferSize = await config.expert('appearance.scroll_buffer_factor', 'number', 3) || 3;
     // EXPERT_CONFIG Width for text
     this.maxTextWidth = await config.expert('appearance.scroll_max_text_width', 'number', 0);
     this.minimumBufferHeight = 500;
@@ -60,7 +60,9 @@ export default class ScrollTextPage extends TextPage {
     this.scrollToTimeout = 500;
     this.updateMetaTimeout = 250;
     this.doubleTapTimeout = 400;
-    this.readSpeedBase = 20.0;
+
+    // EXPERT_CONFIG Scroll speed
+    this.readSpeedBase = await config.expert('appearance.scroll_speed', 'number', 20) || 20;
     this.readSpeedFactorMin = 0.1;
     this.readSpeedFactorMax = 20;
 
@@ -855,12 +857,18 @@ export default class ScrollTextPage extends TextPage {
 
     const cursor = this.readPage.getRawCursor() ?? 0;
     this.currentRenderCursor = cursor;
-    const start = content.lastIndexOf('\n', cursor - 1) + 1;
-    const trunk = this.renderTrunkStartsWith(start, 'first');
-    this.currentTrunk = trunk;
-    const paragraph = trunk.paragraphs[0];
-    const textTop = this.getTextPosition(paragraph, cursor - paragraph.start, 'top');
-    return textTop - trunk.element.getBoundingClientRect().top;
+    if (cursor < content.length) {
+      const start = content.lastIndexOf('\n', cursor - 1) + 1;
+      const trunk = this.renderTrunkStartsWith(start, 'first');
+      this.currentTrunk = trunk;
+      const paragraph = trunk.paragraphs[0];
+      const textTop = this.getTextPosition(paragraph, cursor - paragraph.start, 'top');
+      return textTop - trunk.element.getBoundingClientRect().top;
+    } else {
+      const trunk = this.renderTrunkEndsWith(cursor, 'first');
+      this.currentTrunk = trunk;
+      return trunk.height;
+    }
   }
   updatePageNext() {
     const content = this.readPage.getContent();
