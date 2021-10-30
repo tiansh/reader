@@ -855,12 +855,18 @@ export default class ScrollTextPage extends TextPage {
 
     const cursor = this.readPage.getRawCursor() ?? 0;
     this.currentRenderCursor = cursor;
-    const start = content.lastIndexOf('\n', cursor - 1) + 1;
-    const trunk = this.renderTrunkStartsWith(start, 'first');
-    this.currentTrunk = trunk;
-    const paragraph = trunk.paragraphs[0];
-    const textTop = this.getTextPosition(paragraph, cursor - paragraph.start, 'top');
-    return textTop - trunk.element.getBoundingClientRect().top;
+    if (cursor < content.length) {
+      const start = content.lastIndexOf('\n', cursor - 1) + 1;
+      const trunk = this.renderTrunkStartsWith(start, 'first');
+      this.currentTrunk = trunk;
+      const paragraph = trunk.paragraphs[0];
+      const textTop = this.getTextPosition(paragraph, cursor - paragraph.start, 'top');
+      return textTop - trunk.element.getBoundingClientRect().top;
+    } else {
+      const trunk = this.renderTrunkEndsWith(cursor, 'first');
+      this.currentTrunk = trunk;
+      return trunk.height;
+    }
   }
   updatePageNext() {
     const content = this.readPage.getContent();
