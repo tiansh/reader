@@ -52,7 +52,7 @@ export default class ScrollTextPage extends TextPage {
     await super.onActivate({ id });
 
     // EXPERT_CONFIG How many pages of text rendered off-screen
-    this.textBufferSize = await config.expert('appearance.text_buffer_factor', 'number', 3) || 3;
+    this.textBufferSize = await config.expert('appearance.scroll_buffer_factor', 'number', 3) || 3;
     // EXPERT_CONFIG Width for text
     this.maxTextWidth = await config.expert('appearance.scroll_max_text_width', 'number', 0);
     this.minimumBufferHeight = 500;
@@ -60,7 +60,9 @@ export default class ScrollTextPage extends TextPage {
     this.scrollToTimeout = 500;
     this.updateMetaTimeout = 250;
     this.doubleTapTimeout = 400;
-    this.readSpeedBase = 20.0;
+
+    // EXPERT_CONFIG Scroll speed
+    this.readSpeedBase = await config.expert('appearance.scroll_speed', 'number', 20) || 20;
     this.readSpeedFactorMin = 0.1;
     this.readSpeedFactorMax = 20;
 

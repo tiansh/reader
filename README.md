@@ -125,9 +125,11 @@ screen_width_two_column=960
 ; （仅翻页模式）当屏幕宽度达到如下值时，即便显示了侧边栏目录，仍然使用两栏模式显示
 screen_width_two_column_index=1260
 ; （仅滚动模式）在屏幕外预加载的文本数量，设置更大的数字以加载更多文本
-text_buffer_factor=1
+scroll_buffer_factor=3
 ; （仅滚动模式）文本区域的最大宽度
 scroll_max_text_width=800
+; （仅滚动模式）自动滚动的默认速度，数字越大速度越快
+scroll_speed=20.0
 ; 允许使用鼠标第四键第五键翻页（使用 Chrome 安装后可用）
 mouse_paging=false
 ; 添加自定义 CSS
