@@ -13,12 +13,11 @@ import JumpPage from './jump/jumppage.js';
 import ReadSpeech from './speech/readspeech.js';
 import ControlPage from './control/controlpage.js';
 import FlipTextPage from './text/fliptextpage.js';
-import TextPage from './text/textpage.js';
+import ScrollTextPage from './text/scrolltextpage.js';
 import Page from '../page.js';
 import file from '../../data/file.js';
 import config from '../../data/config.js';
 import onResize from '../../ui/util/onresize.js';
-import i18n from '../../i18n/i18n.js';
 
 export default class ReadPage extends Page {
   constructor() {
@@ -65,6 +64,7 @@ export default class ReadPage extends Page {
    */
   async onActivate({ id }) {
     this.langTag = await config.get('cjk_lang_tag');
+    this.renderStyle = await config.get('view_mode');
 
     // EXPERT_CONFIG when index page show as side bar
     this.screenWidthSideIndex = await config.expert('appearance.screen_width_side_index', 'number', 960);
@@ -85,11 +85,12 @@ export default class ReadPage extends Page {
     await file.setMeta(this.meta);
 
     this.readIndex = new ReadIndex(this);
-    this.renderStyle = 'flip';
     if (this.renderStyle === 'flip') {
-      /** @type {TextPage} */
       this.textPage = new FlipTextPage(this);
       this.container.classList.add('read-page-flip');
+    } else {
+      this.textPage = new ScrollTextPage(this);
+      this.container.classList.add('read-page-scroll');
     }
     await this.textPage.onActivate({ id });
     this.speech.metaLoad(this.meta);
@@ -118,6 +119,7 @@ export default class ReadPage extends Page {
     this.speech.metaUnload();
     this.textPage.onInactivate();
     this.textPage = null;
+    this.container.classList.remove('read-page-scroll', 'read-page-flip');
     this.router.setTitle();
   }
   gotoList() {
@@ -181,14 +183,21 @@ export default class ReadPage extends Page {
     this.indexPage.slideShow(action, offset);
   }
   toggleIndexPage(page) {
-    if (this.isIndexActive() && this.indexPage.isSubPageActive(page)) {
+    if (this.isIndexActive() && this.indexPage.isSubPageCurrent(page)) {
       this.indexPage.hide();
     } else {
       this.indexPage.show(page);
     }
   }
   isControlActive() {
-    return this.controlPage.isCurrent;
+    return this.controlPage.isShow;
+  }
+  disableControlPage() {
+    this.controlPage.hide();
+    this.controlPage.disable();
+  }
+  enableControlPage() {
+    this.controlPage.enable();
   }
   showControlPage(focus) {
     if (focus) {
@@ -197,8 +206,11 @@ export default class ReadPage extends Page {
       this.controlPage.show();
     }
   }
+  hideControlPage() {
+    this.controlPage.hide();
+  }
   toggleControlPage() {
-    if (this.controlPage.isCurrent) this.controlPage.hide();
+    if (this.controlPage.isShow) this.controlPage.hide();
     else this.controlPage.show();
   }
   isJumpActive() {
@@ -231,6 +243,7 @@ export default class ReadPage extends Page {
   /**
    * @typedef {Object} CursorChangeConfig
    * @property {boolean} resetSpeech
+   * @property {boolean} resetRender
    */
   /**
    * @param {number} cursor
@@ -240,14 +253,14 @@ export default class ReadPage extends Page {
     if (this.meta.cursor === cursor) return;
     this.meta.cursor = cursor;
     file.setMeta(this.meta);
-    this.subPages.forEach(page => page.cursorChange(cursor, config));
     this.textPage.cursorChange(cursor, config);
+    this.subPages.forEach(page => page.cursorChange(cursor, config));
     this.speech.cursorChange(cursor, config);
   }
   getContent() { return this.content; }
   getMeta() { return this.meta; }
   getLang() { return this.langTag; }
-  isSpeaking() { return this.speech.speaking; }
+  isSpeaking() { return this.speech.isWorking(); }
   getBookmarks() { return this.index.bookmarks; }
   getContents() { return this.index.content; }
 }

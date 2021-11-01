@@ -19,12 +19,14 @@ const router = new Router({
   config: new ConfigPage(),
 }, '/');
 
-; (async function () {
-  if (navigator.onLine === false) return;
-  if ('serviceWorker' in navigator) {
-    await navigator.serviceWorker.register('./sw.js');
-  }
-}()).catch(() => {
-  // Service Worker may be rejected due to not supported, privacy setting, ect.
+window.addEventListener('load', () => {
+  ; (async function () {
+    if (navigator.onLine === false) return;
+    if ('serviceWorker' in navigator) {
+      await navigator.serviceWorker.register('./sw.js');
+    }
+  }()).catch(() => {
+    // Service Worker may be rejected due to not supported, privacy setting, ect.
+  });
 });
 

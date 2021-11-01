@@ -33,6 +33,7 @@ export default class ControlPage extends ReadSubPage {
     this.hide();
 
     this.coverElement = this.container.querySelector('.read-control-cover');
+    this.coverElement.setAttribute('aria-label', i18n.getMessage('readControlClose'));
 
     const iconLine = this.container.querySelector('.icon-line');
     const genButton = (type, title) => {
@@ -71,12 +72,13 @@ export default class ControlPage extends ReadSubPage {
       this.readPage.gotoList();
     });
     this.coverElement.addEventListener('touchstart', event => {
-      this.hide();
-      event.stopPropagation();
       event.preventDefault();
-    });
+      window.requestAnimationFrame(() => { this.hide(); });
+    }, { passive: false });
     this.coverElement.addEventListener('mousedown', event => {
-      if (event.button === 0) this.hide();
+      if (event.button === 0) {
+        window.requestAnimationFrame(() => { this.hide(); });
+      }
     });
 
     const speechContainer = this.speechButton.closest('.icon-line-item');
@@ -114,10 +116,15 @@ export default class ControlPage extends ReadSubPage {
       this.hasFocus = false;
       document.documentElement.focus();
     }
+    this.readPage.textPage?.show();
   }
   show() {
     this.isShow = true;
-    this.container.classList.add('read-control-active');
+    this.container.classList.add('read-control-active', 'read-control-active-init');
+    this.readPage.textPage?.hide();
+    window.requestAnimationFrame(() => {
+      this.container.classList.remove('read-control-active-init');
+    });
   }
   disable() {
     this.isEnabled = false;

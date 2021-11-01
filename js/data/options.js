@@ -215,12 +215,13 @@ class StubConfigOption extends ConfigOption {
   }
 }
 
-class CreditsConfigOption extends StubConfigOption {
-  get type() { return 'credits'; }
-}
-
-class AboutConfigOption extends StubConfigOption {
-  get type() { return 'about'; }
+class WebpageConfigOption extends StubConfigOption {
+  /** @param {{ url: string }} config */
+  constructor(config) {
+    super(config);
+    this.url = config.url;
+  }
+  get type() { return 'webpage'; }
 }
 
 class ValueConfigOption extends ConfigOption {
@@ -267,6 +268,17 @@ class ExpertConfigOption extends ConfigOption {
  */
 /** @type {(ConfigGroup & { list?: boolean })[]} */
 const options = [{
+  title: i18n.getMessage('configModeGroupTitle'),
+  items: [new SelectConfigOption({
+    name: 'view_mode',
+    title: i18n.getMessage('configMode'),
+    select: [
+      { value: 'flip', text: i18n.getMessage('configModeFlip') },
+      { value: 'scroll', text: i18n.getMessage('configModeScroll') },
+    ],
+    default: 'flip',
+  })],
+}, {
   title: i18n.getMessage('configThemeGroupTitle'),
   items: [new SelectConfigOption({
     name: 'theme',
@@ -385,10 +397,15 @@ const options = [{
   })],
 }, {
   title: i18n.getMessage('configHelpGroupTitle'),
-  items: [new CreditsConfigOption({
+  items: [new WebpageConfigOption({
+    title: i18n.getMessage('configHelpTopic'),
+    url: `./help/${i18n.getMessage('configHelpFilename')}`,
+  }), new WebpageConfigOption({
     title: i18n.getMessage('configHelpCredits'),
-  }), new AboutConfigOption({
+    url: './help/credits.html',
+  }), new WebpageConfigOption({
     title: i18n.getMessage('configHelpAbout'),
+    url: './help/about.html',
   })],
 }, {
   title: i18n.getMessage('configExpertGroupTitle'),

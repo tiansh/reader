@@ -23,12 +23,12 @@ export default class JumpPage extends ReadSubPage {
     this.rangeBar = this.container.querySelector('#jump_range');
     this.rangeInput = new RangeInput(this.rangeBar, { min: 0, max: 1, step: 1 });
     this.rangeInput.onChange(cursor => {
-      this.readPage.setCursor(cursor, { resetSpeech: true });
+      this.readPage.setCursor(cursor, { resetSpeech: true, resetRender: true });
     });
     this.coverElement = this.container.querySelector('.read-jump-cover');
     this.coverElement.addEventListener('touchstart', event => {
       this.hide();
-    });
+    }, { passive: true });
     this.coverElement.addEventListener('mousedown', event => {
       if (event.button === 0) this.hide();
     });

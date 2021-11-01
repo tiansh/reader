@@ -257,7 +257,11 @@ class FontConfigOptionPage extends SelectConfigOptionPage {
       reader.addEventListener('load', async event => {
         const content = reader.result;
         const name = file.name.replace(/^(.*)\.[^.]*$/, '$1');
-        await this.addFont({ name, content });
+        if (await this.isValidFont(content)) {
+          await this.addFont({ name, content });
+        } else {
+          alert(i18n.getMessage('readFontFail'));
+        }
         this.selectFontButton.value = '';
       });
       reader.readAsDataURL(file);
@@ -276,6 +280,18 @@ class FontConfigOptionPage extends SelectConfigOptionPage {
   }
   async getValue() {
     return (await super.getValue()) || 0;
+  }
+  async isValidFont(font) {
+    const style = document.head.appendChild(document.createElement('style'));
+    style.textContent = `@font-face { font-family: "CustomFontTest"; src: url("${font}"); }`;
+    try {
+      await document.fonts.load('18px CustomFontTest');
+      return true;
+    } catch (e) {
+      return false;
+    } finally {
+      style.remove();
+    }
   }
   async addFont(font) {
     let fonts = await this.fontList();
@@ -421,54 +437,43 @@ class TextConfigOptionPage extends ConfigOptionPage {
   }
 }
 
-class CreditsConfigOptionPage extends ConfigOptionPage {
+class WebpageConfigOptionPage extends ConfigOptionPage {
   constructor(container, mainPage) {
     super(container, mainPage);
     this.themeChange = this.themeChange.bind(this);
   }
   getUrl() {
-    return './credits.html#' + theme.getCurrent();
+    return new URL('#' + theme.getCurrent(), new URL(this.configOption.url, document.baseURI));
   }
   onFirstActivate() {
-    super.onFirstActivate();
     this.iframe = this.container.querySelector('iframe');
     this.placeholder = document.createComment('');
-    this.iframe.parentNode.replaceChild(this.placeholder, this.iframe);
+    this.iframeContainer = this.iframe.parentNode;
+    this.iframeContainer.replaceChild(this.placeholder, this.iframe);
+    super.onFirstActivate();
+    this.iframe.addEventListener('load', event => {
+      this.iframe.title = this.iframe.contentDocument.title;
+    });
   }
   show() {
     super.show();
     this.iframe.src = this.getUrl();
     theme.addChangeListener(this.themeChange);
-    this.placeholder.parentNode.replaceChild(this.iframe, this.placeholder);
+    if (this.placeholder.parentNode === this.iframeContainer) {
+      this.iframeContainer.replaceChild(this.iframe, this.placeholder);
+    }
   }
   hide() {
     super.hide();
+    this.iframe.src = 'about:blank';
+    this.iframe.title = null;
     theme.removeChangeListener(this.themeChange);
-    if (this.iframe) {
-      this.iframe.parentNode.replaceChild(this.placeholder, this.iframe);
+    if (this.iframe.parentNode === this.iframeContainer) {
+      this.iframeContainer.replaceChild(this.placeholder, this.iframe);
     }
   }
   themeChange() {
     this.iframe.src = this.getUrl();
-  }
-}
-
-class AboutConfigOptionPage extends ConfigOptionPage {
-  constructor(container, mainPage) {
-    super(container, mainPage);
-  }
-  onFirstActivate() {
-    super.onFirstActivate();
-    this.version = this.container.querySelector('.config-page-version');
-    fetch('./sw.js?version').then(resp => resp.text()).then(text => {
-      try {
-        const versionText = text.match(/\/\*\s*VERSION\s*\*\/".{1,20}"\/\*\s*VERSION\s*\*\//)[0];
-        const version = JSON.parse(versionText.match(/".*"/)[0]);
-        if (typeof version === 'string') this.version.textContent = version;
-      } catch (_ignore) {
-        // ignore
-      }
-    });
   }
 }
 
@@ -522,11 +527,8 @@ export default class ConfigPage extends Page {
     this.textConfigPageElement = document.getElementById('config_page_text');
     this.textConfigPage = new TextConfigOptionPage(this.textConfigPageElement, this);
 
-    this.creditsConfigPageElement = document.getElementById('config_page_credits');
-    this.creditsConfigPage = new CreditsConfigOptionPage(this.creditsConfigPageElement, this);
-
-    this.aboutConfigPageElement = document.getElementById('config_page_about');
-    this.aboutConfigPage = new AboutConfigOptionPage(this.aboutConfigPageElement, this);
+    this.webpageConfigPageElement = document.getElementById('config_page_webpage');
+    this.webpageConfigPage = new WebpageConfigOptionPage(this.webpageConfigPageElement, this);
 
     this.expertConfigPageElement = document.getElementById('config_page_expert');
     this.expertConfigPage = new ExpertConfigOptionPage(this.expertConfigPageElement, this);
@@ -537,8 +539,7 @@ export default class ConfigPage extends Page {
       this.fontConfigPage,
       this.voiceConfigPage,
       this.textConfigPage,
-      this.creditsConfigPage,
-      this.aboutConfigPage,
+      this.webpageConfigPage,
       this.expertConfigPage,
     ];
     /** @type {ConfigOptionPage} */
@@ -579,8 +580,7 @@ export default class ConfigPage extends Page {
       if (item.type === 'font') subPage = this.fontConfigPage;
       if (item.type === 'voice') subPage = this.voiceConfigPage;
       if (item.type === 'text') subPage = this.textConfigPage;
-      if (item.type === 'credits') subPage = this.creditsConfigPage;
-      if (item.type === 'about') subPage = this.aboutConfigPage;
+      if (item.type === 'webpage') subPage = this.webpageConfigPage;
       if (item.type === 'expert') subPage = this.expertConfigPage;
       if (this.activeSubConfigPage) {
         this.activeSubConfigPage.cleanUp();

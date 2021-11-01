@@ -77,10 +77,10 @@ export default class ListPage extends Page {
           const raw_title = text.parseFilename(item.name);
           const title = await text.preprocess(raw_title);
           await file.add({ title, content });
-          this.importTip.style.display = 'none';
         } catch (e) {
           alert(i18n.getMessage('listImportFail'));
         }
+        this.importTip.style.display = 'none';
       }
       this.fileButton.value = null;
       this.updateList();
@@ -219,12 +219,19 @@ export default class ListPage extends Page {
     if (document.activeElement === this.sortButton) {
       this.sortMenu.querySelector('button').focus();
     }
+    this.sortMenuActiveElementBefore = document.activeElement;
+    if (document.activeElement.matches('button')) {
+      const buttons = this.sortMenu.querySelectorAll('.screen-option-item');
+      Array.from(buttons).pop().focus();
+    }
   }
   hideSortMenu() {
     this.sortMenu.style.display = 'none';
     this.element.setAttribute('aria-hidden', 'false');
     dom.enableKeyboardFocus(this.element);
     document.removeEventListener('keydown', this.sortMenuKeyboardHandler);
+    this.sortMenuActiveElementBefore.focus();
+    this.sortMenuActiveElementBefore = null;
   }
 }
 

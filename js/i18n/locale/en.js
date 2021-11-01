@@ -20,7 +20,6 @@ export default {
   listSortByTitle: 'Title',
   listSortCancel: 'Cancel',
   listImportTip: 'Reading text file...',
-  listImportFail: 'Something wrong when reading text file. Maybe the encoding is not supported.',
   listNotYetRead: 'NEW',
   listSearchPlaceholder: 'Search',
   listEmptySearchTip: 'Cannot find files match searching',
@@ -39,8 +38,16 @@ export default {
   readSearchTooMany: '{0} results found; Find More',
   readPagePrevious: 'Previous Page',
   readPageNext: 'Next Page',
+  readPageScrollUp: 'Scroll Up',
+  readPageScrollDown: 'Scroll Down',
+  readControlClose: 'Hide buttons',
+  readAutoScrollStop: 'Stop auto scroll',
 
   configWithDetail: 'Detail',
+  configModeGroupTitle: 'Mode',
+  configMode: 'View Mode',
+  configModeFlip: 'Flip',
+  configModeScroll: 'Scroll',
   configThemeGroupTitle: 'Theme',
   configTheme: 'Theme',
   configThemeAuto: 'Auto',
@@ -91,6 +98,8 @@ export default {
     return rate + '×';
   },
   configHelpGroupTitle: 'Help',
+  configHelpTopic: 'Help',
+  configHelpFilename: 'en.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: 'About',
   configExpertGroupTitle: 'Expert',
@@ -116,4 +125,7 @@ export default {
   colorSaturationRange: 'Saturation',
   colorValueRange: 'Value',
 
+  readFontFail: 'Cannot open font file. The file format may not be supported by your browser.',
+  listImportFail: 'Something wrong when reading text file. Maybe the encoding is not supported.',
+  storageOpenFail: 'Cannot access device storage.\ntReader cannot work correctly without storage access.\nThis may due to incognito / private mode of browser or unsupported browser version.',
 };

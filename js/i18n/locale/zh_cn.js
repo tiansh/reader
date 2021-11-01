@@ -20,7 +20,6 @@ export default {
   listSortByTitle: '按标题',
   listSortCancel: '取消',
   listImportTip: '正在读取文本……',
-  listImportFail: '读取文本时发生错误\n文本可能使用了不支持的字符编码',
   listNotYetRead: '新',
   listSearchPlaceholder: '搜索',
   listEmptySearchTip: '找不到搜索的文件',
@@ -39,8 +38,16 @@ export default {
   readSearchTooMany: '已找到 {0} 个结果，点击以继续查找',
   readPagePrevious: '上一页',
   readPageNext: '下一页',
+  readPageScrollUp: '向上翻',
+  readPageScrollDown: '向下翻',
+  readControlClose: '隐藏按钮',
+  readAutoScrollStop: '停止滚动',
 
   configWithDetail: '详情',
+  configModeGroupTitle: '模式',
+  configMode: '阅读模式',
+  configModeFlip: '翻页',
+  configModeScroll: '滚动',
   configThemeGroupTitle: '主题',
   configTheme: '主题',
   configThemeAuto: '自动',
@@ -91,6 +98,8 @@ export default {
     return rate + '×';
   },
   configHelpGroupTitle: '帮助',
+  configHelpTopic: '帮助',
+  configHelpFilename: 'zh_cn.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: '关于',
   configExpertGroupTitle: '高级',
@@ -115,4 +124,8 @@ export default {
   colorHueRange: '色相',
   colorSaturationRange: '饱和度',
   colorValueRange: '明度',
+
+  readFontFail: '无法打开字体文件\n您的浏览器可能不支持该字体文件类型',
+  listImportFail: '读取文本时发生错误\n文本可能使用了不支持的字符编码',
+  storageOpenFail: '无法访问设备的存储\ntReader 需要访问存储以正常工作\n这可能是因为您启用了浏览器的无痕（隐私）模式或您的浏览器版本不受支持',
 };

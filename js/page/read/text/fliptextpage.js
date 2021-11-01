@@ -48,7 +48,7 @@ export default class FlipTextPage extends TextPage {
     this.pages = {};
     this.initPrevCursor();
     window.requestAnimationFrame(() => {
-      this.updatePages({ resetSpeech: true });
+      this.updatePages({ resetSpeech: true, resetRender: false });
     });
   }
   async onInactivate() {
@@ -84,6 +84,7 @@ export default class FlipTextPage extends TextPage {
     const listener = new TouchGestureListener(this.pagesContainer, {
       yRadian: Math.PI / 5,
       minDistanceY: 60,
+      clickGridX: 3,
     });
     const wos = (f, g) => (...p) => {
       if (this.isAnythingSelected()) {
@@ -124,9 +125,16 @@ export default class FlipTextPage extends TextPage {
     }, cancelY));
     listener.onCancelY(cancelY);
 
-    listener.onTouchLeft(wos(() => { this.prevPage({ resetSpeech: true }); }));
-    listener.onTouchRight(wos(() => { this.nextPage({ resetSpeech: true }); }));
-    listener.onTouchMiddle(wos(() => { this.readPage.showControlPage(); }));
+    listener.onTouch(wos(({ grid }) => {
+      const x = grid.x;
+      if (x === 0) {
+        this.prevPage({ resetSpeech: true, resetRender: false });
+      } else if (x === 2) {
+        this.nextPage({ resetSpeech: true, resetRender: false });
+      } else if (x === 1) {
+        this.readPage.showControlPage();
+      }
+    }));
 
     this.pagesContainer.addEventListener('contextmenu', event => {
       if (this.isAnythingSelected()) return;
@@ -137,11 +145,15 @@ export default class FlipTextPage extends TextPage {
     /** @type {HTMLButtonElement} */
     this.prevButton = container.get('prev');
     this.prevButton.title = i18n.getMessage('readPagePrevious');
-    this.prevButton.addEventListener('click', () => { this.prevPage({ resetSpeech: true }); });
+    this.prevButton.addEventListener('click', () => {
+      this.prevPage({ resetSpeech: true, resetRender: false });
+    });
     /** @type {HTMLButtonElement} */
     this.nextButton = container.get('next');
     this.nextButton.title = i18n.getMessage('readPageNext');
-    this.nextButton.addEventListener('click', () => { this.nextPage({ resetSpeech: true }); });
+    this.nextButton.addEventListener('click', () => {
+      this.nextPage({ resetSpeech: true, resetRender: false });
+    });
 
     return container.get('root');
   }
@@ -170,11 +182,11 @@ export default class FlipTextPage extends TextPage {
     const current = this.readPage.activedSubpage();
     if (!current) {
       if (['PageUp', 'ArrowLeft'].includes(event.code)) {
-        this.prevPage({ resetSpeech: true });
+        this.prevPage({ resetSpeech: true, resetRender: false });
       } else if (['PageDown', 'ArrowRight'].includes(event.code)) {
-        this.nextPage({ resetSpeech: true });
+        this.nextPage({ resetSpeech: true, resetRender: false });
       } else if (['ArrowUp'].includes(event.code)) {
-        this.readPage.showControlPage(true);
+        this.readPage.showControlPage();
       } else if (['ArrowDown'].includes(event.code)) {
         this.readPage.slideIndexPage('show');
       }
@@ -191,10 +203,23 @@ export default class FlipTextPage extends TextPage {
     if (this.wheelBusy) return;
     const deltaY = event.deltaY;
     if (!deltaY) return;
-    if (deltaY > 0) this.nextPage({ resetSpeech: true });
-    else if (deltaY < 0) this.prevPage({ resetSpeech: true });
+    if (deltaY > 0) this.nextPage({ resetSpeech: true, resetRender: false });
+    else if (deltaY < 0) this.prevPage({ resetSpeech: true, resetRender: false });
     setTimeout(() => { this.wheelBusy = false; }, 250);
     this.wheelBusy = true;
+  }
+  /**
+   * @param {MouseEvent} event
+   */
+  mouseEvents(event) {
+    if (this.useMouseClickPaging && event.buttons === 8) {
+      this.prevPage({ resetSpeech: true, resetRender: false });
+    } else if (this.useMouseClickPaging && event.buttons === 16) {
+      this.nextPage({ resetSpeech: true, resetRender: false });
+    } else {
+      return;
+    }
+    event.preventDefault();
   }
   /**
    * @param {'move'|'left'|'right'|'cancel'} action
@@ -217,8 +242,8 @@ export default class FlipTextPage extends TextPage {
       this.pagesContainer.classList.remove('read-text-pages-slide');
     }
     window.requestAnimationFrame(() => {
-      if (action === 'left') this.nextPage({ resetSpeech: true });
-      if (action === 'right') this.prevPage({ resetSpeech: true });
+      if (action === 'left') this.nextPage({ resetSpeech: true, resetRender: false });
+      if (action === 'right') this.prevPage({ resetSpeech: true, resetRender: false });
     });
   }
   slideCancel() {
@@ -243,7 +268,6 @@ export default class FlipTextPage extends TextPage {
   }
   resetPage(config) {
     this.slideCancel();
-    this.stepCache = null;
     this.initPrevCursor();
     this.disposePages();
     this.updatePages(config);
@@ -342,14 +366,6 @@ export default class FlipTextPage extends TextPage {
     if (width < this.screenWidthTwoColumnIndex && this.readPage.isSideIndexActive()) return false;
     if (width < height * 1.2) return false;
     return true;
-  }
-  step() {
-    if (this.stepCache) return this.stepCache;
-    const [width, height] = onResize.currentSize();
-    const area = width * height;
-    const textArea = (this.configs?.font_size || 18) ** 2;
-    this.stepCache = Math.floor(area / textArea);
-    return this.stepCache;
   }
   /**
    * @typedef {Object} PageRenderContext
@@ -686,7 +702,7 @@ export default class FlipTextPage extends TextPage {
     if (depth > 3) return null;
 
     if (!this.pages.current) {
-      this.readPage.setCursor(start, { resetSpeech: false });
+      this.readPage.setCursor(start, { resetSpeech: false, resetRender: true });
       return this.highlightChars(start, length, depth + 1);
     }
 
@@ -698,15 +714,15 @@ export default class FlipTextPage extends TextPage {
 
     if (start + length < Math.min(currentPage, prevNext ?? 0)) {
       // Maybe something went wrong
-      this.readPage.setCursor(start, { resetSpeech: false });
+      this.readPage.setCursor(start, { resetSpeech: false, resetRender: false });
       return this.highlightChars(start, length, depth + 1);
     }
 
     if (start >= nextPage) {
       if (start < nextNext) {
-        this.nextPage({ resetSpeech: false });
+        this.nextPage({ resetSpeech: false, resetRender: false });
       } else {
-        this.readPage.setCursor(start, { resetSpeech: false });
+        this.readPage.setCursor(start, { resetSpeech: false, resetRender: false });
       }
       return this.highlightChars(start, length, depth + 1);
     }
@@ -736,26 +752,27 @@ export default class FlipTextPage extends TextPage {
     const endPos = Math.min(startPos + length, contentLength);
     range.setStart(node, startPos);
     range.setEnd(node, endPos);
-    const rects = Array.from(range.getClientRects());
     const highlight = container.querySelector('.read-highlight');
     const containerRect = container.getBoundingClientRect();
+    const rects = Array.from(range.getClientRects()).filter(rect => rect.width * rect.height);
+    const lineHeight = Number.parseFloat(window.getComputedStyle(range.startContainer.parentNode).lineHeight);
+    const [pageWidth, pageHeight] = onResize.currentSize();
     const highlightSpanList = rects.map(rect => {
-      const [pageWidth, pageHeight] = onResize.currentSize();
       if (rect.top > pageHeight) return null;
       if (rect.left > pageWidth) return null;
+      const height = Math.min(rect.height, lineHeight - 1);
       const span = document.createElement('span');
       span.style.left = (rect.left - containerRect.left) + 'px';
       span.style.width = rect.width + 'px';
-      const top = rect.top - containerRect.top;
-      span.style.top = top + 'px';
-      span.style.height = rect.height + 'px';
+      span.style.top = ((rect.top + rect.bottom - height) / 2 - containerRect.top) + 'px';
+      span.style.height = height + 'px';
       highlight.appendChild(span);
       return span;
     });
     return highlightSpanList.filter(x => x != null).length > 0;
   }
   forceUpdate() {
-    this.resetPage({ resetSpeech: true });
+    this.resetPage({ resetSpeech: true, resetRender: true });
   }
   isInPage(cursor) {
     const current = this.pages.current;
@@ -778,6 +795,8 @@ export default class FlipTextPage extends TextPage {
   }
   onResize() {
     super.onResize();
-    this.resetPage({ resetSpeech: false });
+    this.resetPage({ resetSpeech: false, resetRender: true });
   }
 }
+
+

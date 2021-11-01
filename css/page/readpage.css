@@ -18,8 +18,30 @@
 .read-text {
   z-index: 2;
   background: var(--default-background);
-  overflow: hidden;
-  contain: strict;
+}
+
+.dark-theme .read-text-page {
+  color: var(--read-dark-text-color);
+  background: var(--read-dark-background-color);
+}
+
+.light-theme .read-text-page {
+  color: var(--read-light-text-color);
+  background: var(--read-light-background-color);
+}
+
+.read-text-page {
+  font-size: var(--read-font-size);
+  line-height: var(--read-line-height);
+}
+
+.read-text-page p {
+  margin-top: var(--read-paragraph-margin);
+  margin-bottom: 0;
+}
+
+.read-text-page {
+  font-family: var(--read-font-family);
 }
 
 .read-control {
@@ -50,7 +72,14 @@
 
 .read-control-cover {
   z-index: 8;
+  opacity: 0;
+  -webkit-appearance: none;
+  appearance: none;
   display: none;
+  padding: 0;
+  border: 0 none;
+  width: 100vw;
+  height: 100vh;
 }
 
 .read-control.read-control-active {
@@ -84,34 +113,60 @@
   height: var(--window-height);
   background: var(--default-background);
   overflow: hidden;
+  --tab-index-current: 0;
+  z-index: 9;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  /*
+   * Fix a weird bug on On iOS Web App
+   * 1. Switch to Scroll reading mode;
+   * 2. Open some text file, and slide right to open Index Page;
+   * 3. Repeat rotating you iPhone until title bar is rendered on the top of system status bar (?);
+   *     - I believe this is another bug for Safari. But let's ignore it and continue here.
+   * 4. Touch the system status bar, and webpage will be resized to normal size;
+   * 5. Without following line, text in text page will be rendered in the front (?);
+   *     - This only effect rendering. While these texts are not interactable anyway.
+   * I cannot understand how this bug is triggered, nor why this line would fix it.
+   * So if you have any better ideas, please open an issue or send a pull request here.
+   */
+  transform: translateZ(0);
+}
+
+.read-index:not(.read-index-slide):not(.read-sub-page-current) .item-list {
+  display: none;
+}
+
+.read-index-slide {
+  outline: var(--border-color) solid 1px;
 }
 
 .index-tab-group {
   position: absolute;
+  z-index: 1;
   bottom: 0;
   width: 100%;
   padding: 5px 0;
   height: 40px;
 }
 
-.read-index {
-  --tab-index-current: 0;
-  --read-index-slide-x: 0px;
-  z-index: 9;
-  position: relative;
-}
-
 .index-tab-panel {
   position: absolute;
+  z-index: 1;
   top: 0;
   bottom: 56px;
   width: 100%;
-  left: calc(calc(calc(var(--tab-index) - var(--tab-index-current)) * 100%) + var(--read-index-slide-x));
+  left: calc(calc(var(--tab-index) - var(--tab-index-current)) * 100%);
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: none;
   overscroll-behavior: none;
   transition: left ease 0.2s;
+  contain: strict;
+}
+.index-tab-panel::-webkit-scrollbar {
+  display: none;
 }
 
 #read_index_contents {
@@ -204,6 +259,11 @@ button.tab-item:focus {
   right: 0;
   display: flex;
   flex-direction: column;
+  overflow-y: hidden;
+  contain: strict;
+}
+
+.read-index.read-sub-page-current .index-list {
   overflow-y: auto;
 }
 
@@ -212,7 +272,7 @@ button.tab-item:focus {
 }
 
 .index-list .item-list {
-  flex: 1 0  auto;
+  flex: 1 0 auto;
   position: relative;
 }
 
@@ -240,6 +300,14 @@ button.tab-item:focus {
 #contents_list .list-item-selected,
 #bookmark_list .list-item-selected {
   background: var(--list-active-background);
+}
+
+#contents_list .list-item,
+#search_list .list-item {
+  height: 50px;
+}
+#bookmark_list .list-item {
+  height: 70px;
 }
 
 #read_index_contents_config {
@@ -314,6 +382,19 @@ button.contents-history-clear {
   color: var(--list-comment-color);
   display: flex;
 }
+
+.read-highlight {
+  display: none;
+}
+
+.read-speech .read-highlight {
+  display: block;
+}
+
+.read-highlight span {
+  background: var(--highlight-background);
+}
+
 
 .bookmark-contents {
   margin-left: 10px;
@@ -500,10 +581,6 @@ button.contents-history-clear {
 .read-page-wide .read-index {
   width: calc(var(--index-width) - 1px);
   border-right: 1px solid var(--border-color);
-}
-
-.read-page-wide .read-index .header-left button {
-  transform: rotate(90deg);
 }
 
 .read-page-wide.read-show-index .read-layer {

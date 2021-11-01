@@ -7,9 +7,13 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-const version = /* VERSION */"20211001"/* VERSION */; // eslint-disable-line quotes
+const version = /* VERSION */"20211101"/* VERSION */; // eslint-disable-line quotes
 
 const resourceList = [
+  './help/about.html',
+  './help/credits.html',
+  './help/en.html',
+  './help/zh_cn.html',
   './css/common/input.css',
   './css/common/main.css',
   './css/icons/icons.css',
@@ -21,6 +25,7 @@ const resourceList = [
   './css/page/listpage.css',
   './css/page/readpage.css',
   './css/page/flipreadpage.css',
+  './css/page/scrollreadpage.css',
   './css/index.css',
   './css/normalize-8.0.1.css',
   './data/han/s2t.json',
@@ -54,6 +59,7 @@ const resourceList = [
   './js/page/read/jump/jumppage.js',
   './js/page/read/speech/readspeech.js',
   './js/page/read/text/fliptextpage.js',
+  './js/page/read/text/scrolltextpage.js',
   './js/page/read/text/textpage.js',
   './js/page/read/readpage.js',
   './js/page/read/readsubpage.js',
@@ -67,7 +73,6 @@ const resourceList = [
   './icon/maskable.png',
   './icon/monochrome.png',
   './manifest.webmanifest',
-  './credits.html',
   './',
 ];
 
