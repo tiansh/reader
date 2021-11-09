@@ -263,6 +263,10 @@ button.tab-item:focus {
   contain: strict;
 }
 
+.read-index:not(.read-sub-page-current):not(.read-index-slide) {
+  visibility: hidden;
+}
+
 .read-index.read-sub-page-current .index-list {
   overflow-y: auto;
 }
