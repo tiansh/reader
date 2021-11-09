@@ -289,6 +289,7 @@ export default class ScrollTextPage extends TextPage {
     const thisScrollEvent = this.lastScrollEvent = {};
     if (this.scrollToBusy) return;
     if (this.readScrollElement.scrollTop === this.lastScrollTop) return;
+    if (onResize.isCurrentSizeDirty()) return;
     this.scrollActive = true;
     if (this.onScrollScheduled) return;
     this.fixIosScrollReset();

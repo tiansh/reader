@@ -36,22 +36,24 @@ let lastWidth = null;
 /** @type {PageSize[1]} */
 let lastHeight = null;
 
+/** @type {boolean} */
+let scheduled = false;
 const updateSize = (function () {
-  let scheduled = false;
   const adjustSize = function (size) {
     listeners.forEach(listener => { listener(size); });
   };
   return function () {
     if (scheduled) return;
+    const html = document.documentElement;
+    const [width, height] = [html.clientWidth, html.clientHeight];
+    if (width === lastWidth && height === lastHeight) return;
     scheduled = true;
     window.requestAnimationFrame(function () {
       scheduled = false;
-      const html = document.documentElement;
       const [width, height] = [html.clientWidth, html.clientHeight];
-      if (width === lastWidth && height === lastHeight) return;
       [lastWidth, lastHeight] = [width, height];
       adjustSize([width, height]);
-      updateSize();
+      window.requestAnimationFrame(updateSize);
     });
   };
 }());
@@ -65,5 +67,9 @@ document.addEventListener('visibilitychange', updateSize);
 /** @returns {PageSize} */
 onResize.currentSize = function () {
   return [lastWidth, lastHeight];
+};
+
+onResize.isCurrentSizeDirty = function () {
+  return scheduled;
 };
 
