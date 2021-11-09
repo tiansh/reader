@@ -60,6 +60,9 @@ export default class ScrollTextPage extends TextPage {
     this.scrollToTimeout = 500;
     this.updateMetaTimeout = 250;
     this.doubleTapTimeout = 400;
+    // Force to insert a line break if a single paragraph contains more than `maxTrunkLength` characters
+    // This is aimed to ensure that we will never render a large paragraph at once which may crash iOS Safari
+    this.maxTrunkLength = 2 ** 16;
 
     // EXPERT_CONFIG Scroll speed
     this.readSpeedBase = await config.expert('appearance.scroll_speed', 'number', 20) || 20;
@@ -555,6 +558,7 @@ export default class ScrollTextPage extends TextPage {
     return trunk && findByCursor(trunk.paragraphs);
   }
   clearPage() {
+    this.scrollActive = false;
     this.trunks.splice(0).forEach(trunk => trunk.element.remove());
     this.setScrollTop(0);
   }
@@ -566,11 +570,14 @@ export default class ScrollTextPage extends TextPage {
    * @param {number} config.last
    * @param {number} config.end
    * @param {boolean} config.heading
+   * @param {{ start: boolean, end: boolean }} config.trucked
    * @returns {ParagraphInfo}
    */
-  renderParagraph(text, trunk, { start, end, last, heading }) {
+  renderParagraph(text, trunk, { start, end, last, heading, trucked }) {
     const paragraph = document.createElement('p');
     paragraph.classList.add('text');
+    if (trucked.start) paragraph.classList.add('text-trucked-start');
+    if (trucked.end) paragraph.classList.add('text-trucked-end');
     paragraph.textContent = text;
     Object.assign(paragraph.dataset, { start, end });
     if (heading) {
@@ -619,15 +626,17 @@ export default class ScrollTextPage extends TextPage {
     if (contents && contents.cursor < start) ++contentsIndex;
 
     for (let pos = start, prev = start; pos < end; prev = pos) {
-      pos = content.indexOf('\n', pos);
       const heading = readIndex.getContentsByIndex(contentsIndex)?.cursor === prev;
-      if (pos !== -1) {
-        this.renderParagraph(content.slice(prev, pos), trunk, { start: prev, last: pos, end: pos + 1, heading });
-        ++pos;
-      } else {
-        pos = content.length;
-        this.renderParagraph(content.slice(prev, pos), trunk, { start: prev, last: pos, end: pos, heading });
-      }
+      const lb = pos = content.indexOf('\n', pos);
+      if (pos === -1) pos = content.length; else ++pos;
+      if (pos > end) pos = end;
+      const last = pos === lb + 1 ? lb : pos;
+      const text = content.slice(prev, last);
+      const trucked = {
+        start: prev !== 0 && content[prev - 1] !== '\n',
+        end: pos !== content.length && content[pos - 1] !== '\n',
+      };
+      this.renderParagraph(text, trunk, { start: prev, last, end: pos, heading, trucked });
       contentsIndex += heading;
     }
 
@@ -696,14 +705,34 @@ export default class ScrollTextPage extends TextPage {
     }
     return trunk;
   }
+  getTrunkEndPosition(start) {
+    const content = this.readPage.getContent();
+    let end = content.indexOf('\n', start + this.step());
+    if (end === -1) end = content.length; else ++end;
+    const max = Math.max(this.maxTrunkLength, this.step() * 4);
+    if (end - start > max) {
+      end = content.lastIndexOf('\n', start + this.step());
+      if (end <= start) {
+        end = start + Math.floor(max / 2);
+      } else ++end;
+    }
+    return end;
+  }
+  getTrunkStartPosition(end) {
+    const content = this.readPage.getContent();
+    let start = content.lastIndexOf('\n', end - this.step()) + 1;
+    while (true) {
+      const ref = this.getTrunkEndPosition(start);
+      if (ref < end) start = ref;
+      else return start;
+    }
+  }
   /**
    * @param {number} start
    * @param {'first'|'last'} position
    */
   renderTrunkStartsWith(start, position) {
-    const content = this.readPage.getContent();
-    let end = content.indexOf('\n', start + this.step());
-    if (end === -1) end = content.length; else ++end;
+    const end = this.getTrunkEndPosition(start);
     const trunk = this.renderTrunk(start, end, position);
     return trunk;
   }
@@ -712,8 +741,17 @@ export default class ScrollTextPage extends TextPage {
    * @param {'first'|'last'} position
    */
   renderTrunkEndsWith(end, position) {
-    const content = this.readPage.getContent();
-    const start = content.lastIndexOf('\n', end - this.step()) + 1;
+    const start = this.getTrunkStartPosition(end);
+    const trunk = this.renderTrunk(start, end, position);
+    return trunk;
+  }
+  /**
+   * @param {number} cursor
+   * @param {'first'|'last'} position
+   */
+  renderTrunkContains(cursor, position) {
+    const start = this.getTrunkStartPosition(cursor + 1);
+    const end = this.getTrunkEndPosition(start);
     const trunk = this.renderTrunk(start, end, position);
     return trunk;
   }
@@ -858,10 +896,9 @@ export default class ScrollTextPage extends TextPage {
     const cursor = this.readPage.getRawCursor() ?? 0;
     this.currentRenderCursor = cursor;
     if (cursor < content.length) {
-      const start = content.lastIndexOf('\n', cursor - 1) + 1;
-      const trunk = this.renderTrunkStartsWith(start, 'first');
+      const trunk = this.renderTrunkContains(cursor, 'first');
       this.currentTrunk = trunk;
-      const paragraph = trunk.paragraphs[0];
+      const paragraph = trunk.paragraphs.find(paragraph => paragraph.end > cursor);
       const textTop = this.getTextPosition(paragraph, cursor - paragraph.start, 'top');
       return textTop - trunk.element.getBoundingClientRect().top;
     } else {

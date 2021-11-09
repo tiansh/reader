@@ -116,6 +116,13 @@
   padding-bottom: max(calc(60px - var(--page-margin-y)), 0px);
 }
 
+.read-page-scroll p.text-trucked-start {
+  margin-top: 0;
+}
+.read-page-scroll p.text-trucked-end {
+  margin-bottom: 0;
+}
+
 .read-page-scroll .read-meta {
   position: absolute;
   bottom: var(--page-margin-y);
