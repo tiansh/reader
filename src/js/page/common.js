@@ -59,7 +59,7 @@ document.body.addEventListener('touchmove', function (event) {
     const touch = event.touches.item(0);
     const clientY = touch.clientY;
     const element = document.elementFromPoint(touch.screenX, touch.screenY);
-    const scrollElement = element.closest('.scroll');
+    const scrollElement = element?.closest('.scroll');
     if (scrollElement) {
       const scrollTop = scrollElement.scrollTop;
       const maxScrollTop = scrollElement.scrollHeight - scrollElement.clientHeight;
