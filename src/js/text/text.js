@@ -125,7 +125,8 @@ const chineseConvert = async function (text) {
   const setting = await config.get('chinese_convert');
   if (setting === 'disable') return text;
   const convertFile = setting === 's2t' ? './data/han/s2t.json' : './data/han/t2s.json';
-  const table = await fetch(convertFile).then(r => r.json()), root = table[0];
+  /** @type {{ [ch: string]: [string, number] }[]} */
+  const table = await fetch(convertFile).then(r => r.json());
   let output = '';
   let state = 0;
   const hasOwnProperty = Object.prototype.hasOwnProperty;
