@@ -69,21 +69,9 @@ export default class ListPage extends Page {
     this.fileButton.addEventListener('change', async event => {
       const files = this.fileButton.files;
       if (files.length === 1) {
-        try {
-          this.importTip.style.display = 'block';
-          const item = files.item(0);
-          const raw_content = await text.readFile(item);
-          const content = await text.preprocess(raw_content);
-          const raw_title = text.parseFilename(item.name);
-          const title = await text.preprocess(raw_title);
-          await file.add({ title, content });
-        } catch (e) {
-          alert(i18n.getMessage('listImportFail'));
-        }
-        this.importTip.style.display = 'none';
+        await this.importFile(files.item(0));
       }
       this.fileButton.value = null;
-      this.updateList();
     });
     this.configButton.addEventListener('click', event => {
       this.router.go('config');
@@ -91,18 +79,11 @@ export default class ListPage extends Page {
     this.searchInput.addEventListener('focus', event => {
       this.fileListContainer.scrollTop = 0;
     });
-    const updateSearch = () => {
-      const search = this.searchInput.value.trim();
-      this.options.search = search;
-      this.searchClearButton.disabled = !search;
-      this.updateList();
-    };
     this.searchInput.addEventListener('input', event => {
-      updateSearch();
+      this.updateSearch();
     });
     this.searchClearButton.addEventListener('click', event => {
-      this.searchInput.value = '';
-      updateSearch();
+      this.clearSearch();
     });
     this.sortMenuKeyboardHandler = this.sortMenuKeyboardHandler.bind(this);
     this.sortButton.addEventListener('click', event => {
@@ -122,6 +103,21 @@ export default class ListPage extends Page {
       }
       this.hideSortMenu();
     });
+  }
+  async importFile(item) {
+    try {
+      this.importTip.style.display = 'block';
+      const raw_content = await text.readFile(item);
+      const content = await text.preprocess(raw_content);
+      const raw_title = text.parseFilename(item.name);
+      const title = await text.preprocess(raw_title);
+      await file.add({ title, content });
+    } catch (e) {
+      alert(i18n.getMessage('listImportFail'));
+    }
+    this.importTip.style.display = 'none';
+    this.clearSearch();
+    this.updateList();
   }
   scrollToList() {
     this.fileListContainer.scrollTop = 105;
@@ -184,6 +180,16 @@ export default class ListPage extends Page {
       this.fileList.dispatch();
       this.fileList = null;
     }
+  }
+  updateSearch() {
+    const search = this.searchInput.value.trim();
+    this.options.search = search;
+    this.searchClearButton.disabled = !search;
+    return this.updateList();
+  }
+  clearSearch() {
+    this.searchInput.value = '';
+    return this.updateSearch();
   }
   updateSort() {
     const menuItems = [...document.querySelectorAll('.list-sort-menu [data-option]')];

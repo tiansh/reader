@@ -93,12 +93,27 @@ self.addEventListener('install', function (event) {
 });
 
 self.addEventListener('fetch', function (event) {
-  if (event.request.url === new URL('?version', location.href).href) {
-    const versionText = `/* VERSION */${JSON.stringify(version)}/* VERSION */`;
-    const init = { status: 200, headers: { 'Content-Type': 'text/plain' } };
-    event.respondWith(new Response(versionText, init));
-  } else {
-    event.respondWith(caches.match(event.request));
+  const url = new URL(event.request.url);
+  if (event.request.method === 'GET') {
+    if (url.href === new URL('?version', location.href).href) {
+      const versionText = `/* VERSION */${JSON.stringify(version)}/* VERSION */`;
+      const init = { status: 200, headers: { 'Content-Type': 'text/plain' } };
+      event.respondWith(new Response(versionText, init));
+    } else {
+      event.respondWith(caches.match(event.request));
+    }
+    return;
+  } else if (event.request.method === 'POST') {
+    if (url.pathname === '/import') {
+      event.respondWith(Response.redirect(new URL('/#!/', location.href)));
+      event.waitUntil(event.request.formData().then(async formData => {
+        const file = formData.get('text');
+        const client = await self.clients.get(event.resultingClientId);
+        client.postMessage({ action: 'import', file });
+      }));
+      return;
+    }
   }
+  event.respondWith(Response.error());
 });
 

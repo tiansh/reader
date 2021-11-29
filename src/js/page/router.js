@@ -38,7 +38,7 @@ export default class Router {
   }
   go(id, param) {
     const url = this.pages[id].getUrl(param);
-    this.hashTo('#!' + url);
+    return this.hashTo('#!' + url);
   }
   async initial() {
     this.setTitle();
@@ -46,7 +46,8 @@ export default class Router {
     this.hashTo(path);
   }
   /** @returns {Page} */
-  update() {
+  async update() {
+    this.page = null;
     const hash = location.hash;
     if (!hash.startsWith('#!')) return this.goFallback();
     const url = hash.slice(2);
@@ -56,7 +57,8 @@ export default class Router {
     pages.forEach(page => {
       if (page.isActive() && page !== target) page.inactivate();
     });
-    target.activate(target.matchUrl(url));
+    await target.activate(target.matchUrl(url));
+    this.page = target;
     return target;
   }
   goFallback() {
@@ -66,10 +68,11 @@ export default class Router {
   }
   async hashTo(hash) {
     window.history.replaceState(null, null, hash);
-    const page = this.update();
+    const page = await this.update();
     if (page.isPreserve()) {
       await config.set('path', hash);
     }
+    return page;
   }
   setTitle(text, lang) {
     if (!text) {
@@ -79,5 +82,8 @@ export default class Router {
     }
     const title = document.head.querySelector('title');
     title.lang = lang ?? i18n.getMessage('locale');
+  }
+  getCurrentPage() {
+    return this.page;
   }
 }
