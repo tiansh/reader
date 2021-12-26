@@ -83,6 +83,9 @@ export default class ReadPage extends Page {
     }
     await file.setMeta(this.meta);
 
+    await this.speech.init();
+    this.speech.metaLoad(this.meta);
+
     this.readIndex = new ReadIndex(this);
     if (this.renderStyle === 'flip') {
       this.textPage = new FlipTextPage(this);
@@ -92,9 +95,6 @@ export default class ReadPage extends Page {
       this.container.classList.add('read-page-scroll');
     }
     await this.textPage.onActivate({ id });
-
-    await this.speech.init();
-    this.speech.metaLoad(this.meta);
 
     onResize.addListener(this.onResize);
     document.addEventListener('keydown', this.keyboardEvents);
