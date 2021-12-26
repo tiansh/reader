@@ -27,6 +27,19 @@
   "background_color": "black",
   "display": "fullscreen",
   "theme_color": "black",
+  "share_target": {
+    "action": "/import",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "text",
+          "accept": "text/plain"
+        }
+      ]
+    }
+  },
   "screenshots": [
     { "src": "./screenshot/1.png" },
     { "src": "./screenshot/2.png" },

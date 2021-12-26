@@ -25,10 +25,6 @@ export default class ReadSpeech {
 
     this.page = page;
 
-    this.speaking = false;
-    this.spoken = null;
-    this.speakingSsu = null;
-
     this.onStart = this.onStart.bind(this);
     this.onBoundary = this.onBoundary.bind(this);
     this.onEnd = this.onEnd.bind(this);
@@ -37,6 +33,8 @@ export default class ReadSpeech {
 
     /** @type {WeakMap<SpeechSynthesisUtterance, { start: number, end: number }>} */
     this.ssuInfo = new WeakMap();
+
+    this.listenEvents();
   }
   async init() {
     const normalize = (n, defaultValue) => n < 0 ? defaultValue : Math.round(n);
@@ -72,7 +70,9 @@ export default class ReadSpeech {
     // EXPERT_CONFIG Pause reading when webpage is been hidden (user switched to other tabs)
     this.pauseOnHidden = await config.expert('speech.pause_on_hidden', 'boolean', false);
 
-    this.listenEvents();
+    this.speaking = false;
+    this.spoken = null;
+    this.speakingSsu = null;
   }
   listenEvents() {
     this.listenMediaDeviceChange();

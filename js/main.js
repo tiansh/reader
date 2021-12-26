@@ -30,3 +30,13 @@ window.addEventListener('load', () => {
   });
 });
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', async event => {
+    if (event.data.action === 'import') {
+      /** @type {ListPage} */
+      const page = await router.go('list');
+      page.importFile(event.data.file);
+    }
+  });
+}
+

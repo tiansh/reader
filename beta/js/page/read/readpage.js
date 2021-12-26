@@ -48,7 +48,6 @@ export default class ReadPage extends Page {
     this.jumpPage = new JumpPage(this.jumpPageElement, this);
 
     this.speech = new ReadSpeech(this);
-    await this.speech.init();
 
     this.subPages = [this.controlPage, this.indexPage, this.jumpPage];
     this.subPages.forEach(page => { page.onFirstActivate(); });
@@ -93,6 +92,8 @@ export default class ReadPage extends Page {
       this.container.classList.add('read-page-scroll');
     }
     await this.textPage.onActivate({ id });
+
+    await this.speech.init();
     this.speech.metaLoad(this.meta);
 
     onResize.addListener(this.onResize);

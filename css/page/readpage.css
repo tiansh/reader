@@ -115,10 +115,6 @@
   overflow: hidden;
   --tab-index-current: 0;
   z-index: 9;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
   /*
    * Fix a weird bug on On iOS Web App
    * 1. Switch to Scroll reading mode;
@@ -163,7 +159,6 @@
   scrollbar-width: none;
   overscroll-behavior: none;
   transition: left ease 0.2s;
-  contain: strict;
 }
 .index-tab-panel::-webkit-scrollbar {
   display: none;
@@ -263,6 +258,10 @@ button.tab-item:focus {
   contain: strict;
 }
 
+.read-index:not(.read-sub-page-current):not(.read-index-slide) {
+  visibility: hidden;
+}
+
 .read-index.read-sub-page-current .index-list {
   overflow-y: auto;
 }
@@ -311,7 +310,7 @@ button.tab-item:focus {
 }
 
 #read_index_contents_config {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -346,6 +345,10 @@ button.contents-history-clear {
   width: 32px;
   height: 32px;
   color: var(--active-color);
+}
+
+.contents-history-list {
+  margin-bottom: 40px;
 }
 
 .contents-history-item {
