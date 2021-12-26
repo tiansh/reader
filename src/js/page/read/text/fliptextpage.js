@@ -631,7 +631,7 @@ export default class FlipTextPage extends TextPage {
         return low;
       }
       // Find out first paragraph which is overflowed the container
-      const boundary = body.getBoundingClientRect().top + body.scrollHeight - body.clientHeight;
+      let boundary = body.getBoundingClientRect().top + body.scrollHeight - body.clientHeight;
       const paragraphs = Array.from(body.querySelectorAll('p[data-start]'));
       let firstOut = paragraphs.find(p => p.getBoundingClientRect().bottom > boundary);
       if (firstOut === body.firstChild) {
@@ -639,11 +639,12 @@ export default class FlipTextPage extends TextPage {
         firstOut.remove();
         const context = {
           start: this.ignoreSpaces(Math.max(low - step, 0)),
-          end: Number(ref.dataset.start),
+          end: ref ? Number(ref.dataset.start) : end,
           before: ref,
         };
         this.renderContent(body, context);
-        firstOut = ref.previousSibling;
+        firstOut = ref ? ref.previousSibling : body.lastChild;
+        boundary = body.getBoundingClientRect().top + body.scrollHeight - body.clientHeight;
       }
       const firstOutStart = Number(firstOut.dataset.start);
       // Find out first character which is overflowed the container in paragraph
