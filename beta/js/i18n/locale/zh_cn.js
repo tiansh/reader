@@ -43,6 +43,7 @@ export default {
   readControlClose: '隐藏按钮',
   readAutoScrollStop: '停止滚动',
 
+  configPageTitle: '设置',
   configWithDetail: '详情',
   configModeGroupTitle: '模式',
   configMode: '阅读模式',

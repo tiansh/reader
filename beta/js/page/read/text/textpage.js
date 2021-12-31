@@ -59,6 +59,8 @@ export default class TextPage {
   removeContainer(container) {
     container.remove();
   }
+  initUpdatePage() {
+  }
   show() {
     const container = this.container;
     if (container) {

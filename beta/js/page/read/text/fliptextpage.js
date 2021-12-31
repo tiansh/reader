@@ -47,14 +47,15 @@ export default class FlipTextPage extends TextPage {
     /** @type {PageRenderCollection} */
     this.pages = {};
     this.initPrevCursor();
-    window.requestAnimationFrame(() => {
-      this.updatePages({ resetSpeech: true, resetRender: false });
-    });
   }
   async onInactivate() {
     await super.onInactivate();
     this.pages = null;
     this.clearPrevCursor();
+  }
+  initUpdatePage() {
+    super.initUpdatePage();
+    this.updatePages({ resetSpeech: true, resetRender: false });
   }
   clearPrevCursor() {
     this.prevCursorCache = null;

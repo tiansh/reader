@@ -553,6 +553,7 @@ export default class ConfigPage extends Page {
     container.insertBefore(headerRef.get('root'), container.firstChild);
     const back = template.iconButton('back', i18n.getMessage('buttonBack'));
     headerRef.get('left').appendChild(back);
+    headerRef.get('mid').textContent = i18n.getMessage('configPageTitle');
     this.gotoList = this.gotoList.bind(this);
     back.addEventListener('click', () => { this.gotoList(); });
   }
