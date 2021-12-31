@@ -87,7 +87,6 @@ pause_on_hidden=false
 * 隐藏手机顶部的信号与电量信息
 * 后台播放语音朗读
 * 切换应用时隐藏屏幕快照
-* 从其他应用的分享菜单中选择本应用<sup>[\[Chrome\]](https://web.dev/web-share-target/)</sup>
 
 所以如上相关的各种问题就不用再问我了。
 
