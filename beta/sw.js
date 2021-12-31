@@ -37,6 +37,7 @@ const resourceList = [
   './js/i18n/i18n.js',
   './js/i18n/locale/en.js',
   './js/i18n/locale/zh_cn.js',
+  './js/i18n/locale/zh_tw.js',
   './js/ui/component/color.js',
   './js/ui/component/itemlist.js',
   './js/ui/component/range.js',
