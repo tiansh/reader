@@ -346,7 +346,9 @@ const options = [{
     name: 'cjk_lang_tag',
     title: i18n.getMessage('configTextLangTag'),
     label: i18n.getMessage('configTextLangTagTitle'),
-    default: 'und',
+    // We use user language setting on browser as fallback
+    // As this could be the best guess for what text file user may import
+    default: navigator.language || 'und',
     description: i18n.getMessage('configTextLangTagDescription'),
   })],
 }, {
