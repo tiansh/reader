@@ -73,18 +73,9 @@ export default class ScrollTextPage extends TextPage {
       const container = this.readScrollElement.parentNode;
       container.style.setProperty('--text-max-width', this.maxTextWidth + 'px');
     }
-
-    this.initialized = false;
-    window.requestAnimationFrame(() => {
-      this.updatePaddingArea();
-      this.updatePage({ resetSpeech: true, resetRender: true });
-      this.initialized = true;
-    });
   }
   async onInactivate() {
     await super.onInactivate();
-
-    this.initialized = false;
 
     this.trunks = null;
     this.activeParagraphs = null;
@@ -101,6 +92,11 @@ export default class ScrollTextPage extends TextPage {
     this.autoScrollStop();
     this.autoScrollSpeedFactor = null;
     this.textAreaOffset = null;
+  }
+  initUpdatePage() {
+    super.initUpdatePage();
+    this.updatePaddingArea();
+    this.updatePage({ resetSpeech: true, resetRender: true });
   }
   createContainer() {
     const container = template.create('read_text_scroll');

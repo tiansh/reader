@@ -126,6 +126,12 @@ export default class ReadPage extends Page {
   gotoList() {
     this.router.go('list');
   }
+  show() {
+    super.show();
+    // Some text page render requires rendered dom to meansure its element size
+    // So we have to put it after show().
+    this.textPage.initUpdatePage();
+  }
   onResize() {
     this.updateSideIndex();
   }

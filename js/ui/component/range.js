@@ -73,6 +73,8 @@ export default class RangeInput {
 
     this.keyboardHandler = this.keyboardHandler.bind(this);
     this.container.addEventListener('keydown', this.keyboardHandler);
+    this.wheelHandler = this.wheelHandler.bind(this);
+    this.container.addEventListener('wheel', this.wheelHandler);
 
     this.inputHandler = this.inputHandler.bind(this);
     this.input.addEventListener('input', this.inputHandler);
@@ -174,13 +176,23 @@ export default class RangeInput {
     const total = (this.config.max - this.config.min) / this.config.step;
     const move = Math.min(base, total / 50) * ratio * this.config.step;
     const value = this.value + move;
-    const newValue = this.normalizeValue(Object.assign({}, this.config, { value: value }));
+    const newValue = this.normalizeValue(Object.assign({}, this.config, { value }));
     this.updateValue(newValue);
     event.preventDefault();
   }
   inputHandler(event) {
     const newValue = this.normalizeValue(Object.assign({}, this.config, { value: +this.input.value }));
     this.updateValue(newValue);
+  }
+  /** @param {WheelEvent} event */
+  wheelHandler(event) {
+    if (!this.container.contains(document.activeElement)) return;
+    const sign = -Math.sign(event.deltaY);
+    if (Math.abs(sign) !== 1) return;
+    const value = this.value + sign * this.config.step;
+    const newValue = this.normalizeValue(Object.assign({}, this.config, { value }));
+    this.updateValue(newValue);
+    event.stopPropagation();
   }
   dispatch() {
     this.listener.dispatch();

@@ -43,6 +43,7 @@ export default {
   readControlClose: 'Hide buttons',
   readAutoScrollStop: 'Stop auto scroll',
 
+  configPageTitle: 'Settings',
   configWithDetail: 'Detail',
   configModeGroupTitle: 'Mode',
   configMode: 'View Mode',
