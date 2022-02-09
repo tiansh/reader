@@ -1,0 +1,259 @@
+﻿<!doctype html>
+<!--
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.
+This Source Code Form is "Incompatible With Secondary Licenses", as
+defined by the Mozilla Public License, v. 2.0.
+-->
+<html>
+<head>
+<meta charset="utf-8" />
+<title>tReader</title>
+
+<meta name='viewport' content='width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no' />
+<meta name="keywords" content="text, txt, reader, 阅读器, novel, book, 小说, 书" />
+<meta name="description" content="A simple but customizable TXT file reader. Including table of contents, bookmarks, search, and, speech synthesis." />
+
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="application-name" content="tReader">
+<meta name="apple-mobile-web-app-title" content="tReader">
+<meta name="msapplication-starturl" content="./">
+<meta name="theme-color" content="black">
+
+<link rel="icon" href="./icon/icon.ico" sizes="32x32 48x48 512x512 64x64 72x72 96x96 128x128" type="image/x-icon" />
+<link rel="icon" href="./icon/icon.png" sizes="512x512" type="image/png" />
+<link rel="icon" href="./icon/icon.svg" sizes="any" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="./icon/icon.png" sizes="512x512" type="image/png" />
+
+<link rel="stylesheet" href="./css/normalize-8.0.1.css" />
+<link rel="stylesheet" href="./css/index.css" />
+
+<style id="custom_font"></style>
+<style id="custom_style"></style>
+<style id="custom_css"></style>
+</head>
+<body>
+<div class="page" id="list_page">
+  <input id="file" type="file" accept="text/plain" tabindex="-1" aria-hidden="true" />
+  <div id="file_list_container" class="file-list-container scroll" tabindex="-1">
+    <div class="list-action">
+      <div class="list-filter">
+        <div class="search-box">
+          <label><span class="icon icon-search" role="img" aria-hidden="true"></span><input type="search" class="search-input" /></label>
+        </div>
+      </div>
+      <div class="list-sort">
+        <button type="button" class="list-sort">
+          <div class="button-wrap" tabindex="-1">
+            <span class="list-sort-title"><span data-i18n="listSortTitle"></span></span>
+            <span class="list-sort-content"><span></span><span class="icon icon-detail" role="img"></span></span>
+          </div>
+        </button>
+      </div>
+    </div>
+    <div role="main" id="file_list"></div>
+    <div id="import_tip">
+      <div class="tip-cover"></div>
+      <div class="tip-content"><span data-i18n="listImportTip"></span></div>
+    </div>
+  </div>
+</div>
+<div id="list_sort_menu" class="list-sort-menu" role="dialog" aria-modal="true">
+  <div class="backdrop"></div>
+  <div class="list-sort-options screen-option">
+    <div class="screen-option-group">
+      <button type="button" class="screen-option-item" data-option="dateread" data-option-default><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateRead"></span></div></button>
+      <button type="button" class="screen-option-item" data-option="dateadd"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateAdd"></span></div></button>
+      <button type="button" class="screen-option-item" data-option="title"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByTitle"></span></div></button>
+    </div>
+    <div class="screen-option-group">
+      <button type="button" class="screen-option-item"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortCancel"></span></div></button>
+    </div>
+  </div>
+</div>
+<div class="page" id="read_page">
+  <div class="read-layer read-sub-page read-control">
+    <div class="footer-line"><div class="icon-line" role="toolbar"></div></div>
+    <button class="read-control-cover"></button>
+  </div>
+  <div class="read-layer read-sub-page read-index">
+    <div class="index-tab-group">
+      <div class="tab-group" role="tablist" tabindex="0">
+        <div class="tab-group-wrap" tabindex="-1">
+          <button type="button" id="read_index_contents_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_contents" tabindex="-1"></button>
+          <button type="button" id="read_index_bookmark_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_bookmark" tabindex="-1"></button>
+          <button type="button" id="read_index_search_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_search" tabindex="-1"></button>
+        </div>
+      </div>
+    </div>
+    <div id="read_index_contents" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_contents_tab">
+      <div class="index-tab-container">
+        <div id="contents_list" class="index-list scroll" tabindex="-1"></div>
+      </div>
+      <div id="read_index_contents_config" class="">
+        <div class="index-tab-container">
+          <div class="config-option-text">
+            <form action="/"><label><span class="config-option-text-title" data-i18n="readContentsTemplate"></span><input class="config-option-text-input input-with-submit" type="text" enterkeyhint="search"></label></form>
+          </div>
+          <div class="config-option-text-description" data-i18n="readContentsTemplateDescription"></div>
+          <div class="contents-history-title"><span data-i18n="readContentsTemplateHistory"></span></div>
+          <div class="contents-history-list scroll" tabindex="-1"></div>
+        </div>
+      </div>
+    </div>
+    <div id="read_index_bookmark" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_bookmark_tab">
+      <div class="index-tab-container">
+        <div id="bookmark_list" class="index-list scroll" tabindex="-1"></div>
+      </div>
+    </div>
+    <div id="read_index_search" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_search_tab">
+      <div class="index-tab-container">
+        <div class="search-box">
+          <div class="search-box-placehodler" tabindex="-1" aria-hidden="true"></div>
+          <form action="/"><label><span class="icon icon-search" role="img" aria-hidden="true"></span><input type="search" name="search_box" class="search-input" /></label></form>
+        </div>
+        <div id="search_list" class="index-list scroll" tabindex="-1"></div>
+      </div>
+    </div>
+  </div>
+  <div class="read-layer read-sub-page read-jump">
+    <div class="read-jump-cover"></div>
+    <div class="footer-line">
+      <div id="jump_range"></div>
+    </div>
+  </div>
+</div>
+<div class="page" id="config_page">
+  <div class="config-page-main config-page">
+    <div role="main" class="config-page-content scroll" tabindex="-1"></div>
+  </div>
+  <div id="config_page_select" class="config-option-page config-page">
+    <div role="main" class="config-page-content scroll">
+      <div class="config-option-select-list config-group"></div>
+    </div>
+  </div>
+  <div id="config_page_color" class="config-option-page config-page">
+    <div role="main" class="config-page-content scroll">
+      <div class="config-option-color-picker"></div>
+    </div>
+  </div>
+  <div id="config_page_font" class="config-option-page config-page">
+    <div role="main" class="config-page-content scroll">
+      <input id="select_font_file" type="file" accept="font/ttf,font/otf,font/woff,font/woff2" />
+      <div class="font-select-section config-group"></div>
+      <div class="config-option-select-list config-group"></div>
+    </div>
+  </div>
+  <div id="config_page_voice" class="config-option-page config-page">
+    <div role="main" class="config-page-content scroll">
+      <div class="config-option-select-list config-group"></div>
+    </div>
+  </div>
+  <div id="config_page_text" class="config-option-page config-page">
+    <div role="main" class="config-page-content scroll">
+      <div class="config-option-text">
+        <label>
+          <span class="config-option-text-title"></span>
+          <input class="config-option-text-input" type="text" enterkeyhint="done" />
+        </label>
+      </div>
+      <div class="config-option-text-description"></div>
+    </div>
+  </div>
+  <div id="config_page_webpage" class="config-option-page config-page">
+    <div role="main" class="config-page-content">
+      <iframe src="about:blank" class="config-webpage-iframe"></iframe>
+    </div>
+  </div>
+  <div id="config_page_about" class="config-option-page config-page">
+  </div>
+  <div id="config_page_expert" class="config-option-page config-page">
+    <div role="main" class="config-page-content scroll">
+      <div class="config-option-expert">
+        <textarea class="config-option-expert-input scroll" type="text" enterkeyhint="done"></textarea>
+      </div>
+      <div class="config-option-expert-description"></div>
+    </div>
+  </div>
+</div>
+<template id="icon">
+  <span class="icon" role="img"></span>
+</template>
+<template id="icon_button">
+  <button type="button"><div class="button-wrap" tabindex="-1" data-ref="icon"></div></button>
+</template>
+<template id="header">
+  <div class="header-line" role="navigation">
+    <div class="header-left" data-ref="left"></div>
+    <div class="header-mid" data-ref="mid" role="heading" aria-level="2"></div>
+    <div class="header-right" data-ref="right"></div>
+  </div>
+</template>
+<template id="list_remove_action">
+  <div class="list-item-remove">
+    <button type="button" tabindex="-1" data-ref="button">
+      <div class="button-wrap" tabindex="-1"><span class="icon icon-remove" aria-hidden="true" role="img"></span></div>
+    </button>
+  </div>
+</template>
+<template id="file_list_item">
+  <div class="file-item-content">
+    <h2 class="file-title" data-ref="title"></h2>
+    <div class="file-comment">
+      <time class="file-date" data-ref="date"></time>
+      <div class="file-detail" data-ref="detail"></div>
+    </div>
+  </div>
+</template>
+<template id="read_text_flip">
+  <div class="read-layer read-text-flip read-text">
+    <div id="read_text_flip_main" class="read-text-pages" role="main" data-ref="pages"></div>
+    <div class="read-text-page-buttons">
+      <button type="button" class="read-pages-button read_page_next" tabindex="-1" data-ref="next"></button>
+      <button type="button" class="read-pages-button read_page_prev" tabindex="-1" data-ref="prev"></button>
+    </div>
+  </div>
+</template>
+<template id="read_text_flip_page">
+  <div class="read-text-page read-text-page-processing">
+    <article class="read-body" data-ref="body"></article>
+    <article class="read-body read-body-left" data-ref="left"></article>
+    <article class="read-body read-body-right" data-ref="right"></article>
+    <div class="read-meta">
+      <div class="read-title" data-ref="title"></div>
+      <div class="read-progress" data-ref="progress"></div>
+    </div>
+    <div class="read-highlight" data-ref="highlight"></div>
+  </div>
+</template>
+<template id="read_text_scroll">
+  <div class="read-layer read-text-scroll read-text">
+    <div id="read_text_scroll_main" class="read-text-page" role="main" data-ref="page">
+      <div class="read-body-scroll scroll" data-ref="scroll"><article class="read-body" data-ref="body"><div class="read-highlight" data-ref="highlight"></div></article></div>
+      <div class="read-meta" aria-hidden="true">
+        <div class="read-title" data-ref="title"></div>
+        <div class="read-progress" data-ref="progress"></div>
+      </div>
+    </div>
+    <button class="read-text-auto-scroll-cover" data-ref="cover"></button>
+    <div class="read-text-page-buttons">
+      <button type="button" class="read-pages-button read_page_next" tabindex="-1" data-ref="next"></button>
+      <button type="button" class="read-pages-button read_page_prev" tabindex="-1" data-ref="prev"></button>
+    </div>
+  </div>
+</template>
+<template id="bookmark_item">
+  <div class="index-bookmark-item">
+    <div class="bookmark-text" data-ref="text"></div>
+    <div class="bookmark-meta">
+      <div class="bookmark-time" data-ref="time"></div>
+      <div class="bookmark-contents" data-ref="contents"></div>
+    </div>
+  </div>
+</template>
+<script src="./js/main.js" type="module"></script>
+</body>
+</html>

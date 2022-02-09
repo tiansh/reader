@@ -1,0 +1,70 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Help</title>
+  <base target="_blank" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+  <style>
+:root { font-size: 18px; font-family: sans-serif; }
+body { background: white; color: black; display: flow-root; max-width: 800px; margin: 0 auto; padding: 0 15px; }
+body:target { background: black; color: white; }
+kbd,
+code { background: #eee; }
+body:target kbd,
+body:target code { background: #333; }
+kbd { border: 1px solid #aaa; border-radius: 2px; margin: 0 0.5em; padding: 0 0.5em; }
+body:target kbd { border-color: #666;}
+  </style>
+</head>
+<body id="dark">
+  <h2>Installation and updates</h2>
+  <p>Some browsers, including Safari on iOS or new Edge on Windows, may install web apps. Select install (commonly named as "add to the home screen" on mobile) to install it.</p>
+  <p>After installation, the data are stored in the browser's profile. This also including files added during using. The storage space occupied is controlled by the browser. And these data may be cleaned up if you run out of storage.</p>
+  <p><strong>The reader cannot guarantee that added files will not be cleaned up. Do not use the reader as a place to store or back up files.</strong></p>
+  <p>Whenever you launch this application, with network connection available, the reader checks for and downloads the updated version. And the newer version will be used next time you launch application. If you don't want automatic updates, you'll need to fork or deploy this project yourself.</p>
+  <p>You may also use this reader without installation. Installing may help to hide UI elements such as address bar and provide offline use.</p>
+  <h2>Instructions for basic operation</h2>
+  <h3>List of files</h3>
+  <p>If you need to add a file, click the "Add" button in the upper left corner, and select the text file you want to add.</p>
+  <p>If your file is rendered as mojibake, you may need to save the text file with UTF-8 encoding.</p>
+  <p>When you need to delete a file, you can swipe left, right-click or press keyboard Delete on the corresponding item in the list to get the delete button.</p>
+  <p>Click the "Settings" button in the upper right corner of the file list to open the settings. Clicking on the items in the list to start reading.</p>
+  <h3>Settings</h3>
+  <p>You may choose Flip mode, or Scroll mode for reading mode. This option affects how it is rendered and operated when reading.</p>
+  <p>The reader offers both dark and light themes. The reader automatically switches themes based on your current system settings if you select "Auto".</p>
+  <p>Font settings allow you to browse and select font files. Supported font types may vary from browser to browser. Most browsers would support <code>.ttf</code>, <code>.otf</code> files.</p>
+  <p>Language tags are used to prompt the language of the article to browser. The setting may affect the wrapping of text and different font selections.</p>
+  <p>Pre-processing is performed only once when files are added. Files already added are not affected by this option.</p>
+  <p>Voice reading uses the voices installed in the system. Voice reading may not be available if some browser privacy settings is enabled.</p>
+  <p>See Project's GitHub repo for instructions on advanced settings.</p>
+  <h3>Reading (Flip)</h3>
+  <ul>
+    <li>Go to the previous page: slide right (touch screen only), touch on the left side, scroll mouse wheel up, press <kbd>←</kbd>, press <kbd>PgUp</kbd></li>
+    <li>Go to the next page: slide left (touch screen only), tap on the right side, scroll mouse wheel down, press <kbd>→</kbd>, press <kbd>PgDown</kbd></li>
+    <li>Show menus: slide up (touch screen only), tap on middle, mouse right-click, press <kbd>↑</kbd>, press <kbd>Escape</kbd>, press <kbd>Tab</kbd></li>
+    <li>Show table of contents, bookmarks, searching: slide down (touch screen only), press <kbd>↓</kbd></li>
+  </ul>
+  <h3>Reading (Scroll)</h3>
+  <ul>
+    <li>Go to the previous page: slide down (touch screen only), tap on the bottom area, scroll mouse wheel up, press <kbd>↑</kbd>, press <kbd>PgUp</kbd></li>
+    <li>Go to the next page: slide up (touch screen only), tap on the top area, scroll mouse wheel down, press <kbd>↓</kbd>, press <kbd>PgDown</kbd></li>
+    <li>Show menus: slide left (touch screen only), tap on middle, mouse right-click, press <kbd>←</kbd>, press <kbd>Escape</kbd>, press <kbd>Tab</kbd></li>
+    <li>Show table of contents, bookmarks, searching: slide right (touch screen only), press <kbd>→</kbd></li>
+    <li>Auto Scroll: Double tap on middle to enable. After enabled, you may slide up / down, scroll mouse wheel, use arrow keys to adjust speed. Use other paging gestures for paging. Tap middle to stop.</li>
+  </ul>
+  <h3>Table of contents, bookmarks and searches</h3>
+  <p>You may switch between the three tabs using the three buttons at the bottom of the catalog, bookmarks, and search interface.</p>
+  <p>The reader does not provide the functionality to automatically extract table of contents. You will need to manually enter the template for the table of contents to extract it. Click the "Refresh" button in the upper right corner, enter the template and confirm. The reader will extract the table of contents based on the template.</p>
+  <p>If your article uses "CHAPTER I. Some Title" as the title of each chapter, you can enter "CHAPTER *. " as the template of table of contents. The template uses a asterisk (<code>*</code>) as a wildcard to match any text, and a space (<code>&#32;</code>) to match any whitespace characters. You may also use regular expressions by adding slashs (/) to the beginning and end of template.</p>
+  <p>Clicking the button in the upper right corner of bookmarks page to add bookmarks. You may delete bookmarks in a similar way just like the list of file page does.</p>
+  <p>Searching shows only the first result of each paragraph no matter the how many repeated searced text appears in a single paragraph.</p>
+  <h2>Frequently asked questions</h2>
+  <h3>Failed to render CJK characters; Incorrect line breakings</h3>
+  <p>The reader may not guess the language of its content. This may cause the browser to render CJK texts with wrong fonts. And may also lead to different line breaking behaviors than you expected.</p>
+  <p>You may fill language tags in operation, so the reader may work better. For example, you may use <code>ja</code> for Japanese, <code>en</code> for English, <code>de</code> for German.</p>
+  <p>You may also load custom font files.</p>
+  <h3>Text speech failed by rapidly flipping / scrolling pages</h3>
+  <p>Text speech may try to skip text it cannot read. If you try to read Chinese article with an English language voice. It will skip every CJK characters and cause rapidly flipping pages. You may need to choose correct voices in options.</p>
+</body>
+</html>

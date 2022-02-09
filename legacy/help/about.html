@@ -1,0 +1,38 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>About</title>
+  <base target="_blank" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+:root { font-size: 18px; font-family: sans-serif; }
+body { background: white; color: black; display: flow-root; max-width: 800px; margin: 0 auto; padding: 0 15px; }
+body:target { background: black; color: white; }
+a { color: #daaf50; text-decoration: underline; }
+body:target a { color: #dcb13d; }
+.header { display: flex; align-items: baseline; gap: 1em; }
+.header + p { margin-top: 0; }
+  </style>
+</head>
+<body id="dark">
+  <div class="header"><h1>tReader</h1><span id="version"></span></div>
+  <p>Copyright (c) 2020-2021 <span lang="zh-Hans">田生</span></p>
+  <p>
+    This project is released under the Mozilla Public License 2.0 with no copyleft exception.
+    Source code are available on its GitHub: <a href="https://github.com/tiansh/reader/" target="_blank" rel="noopener">https://github.com/tiansh/reader/</a>.
+  </p>
+<script>
+  const versionElement = document.getElementById('version');
+  fetch('../sw.js?version').then(resp => resp.text()).then(text => {
+    try {
+      const versionText = text.match(/\/\*\s*VERSION\s*\*\/".{1,20}"\/\*\s*VERSION\s*\*\//)[0];
+      const version = JSON.parse(versionText.match(/".*"/)[0]);
+      if (typeof version === 'string') versionElement.textContent = version;
+    } catch (_ignore) {
+      // ignore
+    }
+  });
+</script>
+</body>
+</html>

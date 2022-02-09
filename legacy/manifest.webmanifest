@@ -1,0 +1,53 @@
+{
+  "short_name": "tReader",
+  "name": "tReader",
+  "description": "A simple but customizable TXT file reader.",
+  "categories": [ "books", "productivity" ],
+  "icons": [{
+    "src": "icon/icon.png",
+    "type": "image/png",
+    "sizes": "512x512"
+  }, {
+    "src": "icon/icon.svg",
+    "type": "image/svg+xml",
+    "sizes": "16x16 32x32 48x48 64x64 72x72 96x96 128x128 256x256 512x512"
+  }, {
+    "src": "icon/maskable.png",
+    "type": "image/png",
+    "sizes": "512x512",
+    "purpose": "maskable"
+  }, {
+    "src": "icon/monochrome.png",
+    "type": "image/png",
+    "sizes": "512x512",
+    "purpose": "monochrome"
+  }],
+  "start_url": "./",
+  "scope": "./",
+  "background_color": "black",
+  "display": "fullscreen",
+  "theme_color": "black",
+  "share_target": {
+    "action": "/import",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "text",
+          "accept": "text/plain"
+        }
+      ]
+    }
+  },
+  "screenshots": [
+    { "src": "./screenshot/1.png" },
+    { "src": "./screenshot/2.png" },
+    { "src": "./screenshot/3.png" },
+    { "src": "./screenshot/4.png" },
+    { "src": "./screenshot/5.png" },
+    { "src": "./screenshot/6.png" },
+    { "src": "./screenshot/7.png" }
+  ]
+}
+
