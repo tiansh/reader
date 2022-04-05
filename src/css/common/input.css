@@ -198,3 +198,8 @@ button.submit-button .icon-go {
   display: inline-block;
   vertical-align: middle;
 }
+
+::-webkit-search-cancel-button,
+::-ms-clear {
+  display: none;
+}
