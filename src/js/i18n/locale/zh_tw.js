@@ -24,6 +24,7 @@ export default {
   listSearchPlaceholder: '搜尋',
   listEmptySearchTip: '沒有相符的檔案',
   listEmptyTip: '按下加號圖示匯入檔案',
+  listDropArea: '将档案放在这里以匯入',
 
   readContentsTemplate: '目錄範本',
   readContentsTemplateDescription: '使用星號(*)作為萬用字元',

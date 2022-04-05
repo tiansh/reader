@@ -35,6 +35,7 @@ export default class ListPage extends Page {
 
     this.fileListContainer = document.querySelector('#file_list_container');
     this.fileListElement = document.querySelector('#file_list');
+    this.fileDropArea = document.querySelector('#drop_area');
     this.searchContainer = this.fileListContainer.querySelector('.list-filter');
     this.searchInput = this.searchContainer.querySelector('.list-filter input');
     this.searchClearButton = template.iconButton('remove', i18n.getMessage('listFilterClear'));
@@ -103,7 +104,38 @@ export default class ListPage extends Page {
       }
       this.hideSortMenu();
     });
+
+    /** @param {DragEvent} event */
+    const isValidFlieDragEvent = event => {
+      const items = event.dataTransfer.items;
+      if (items.length !== 1) return false;
+      if (items[0].kind !== 'file') return false;
+      if (items[0].type !== 'text/plain') return false;
+      return true;
+    };
+    this.fileListElement.addEventListener('dragover', event => {
+      if (isValidFlieDragEvent(event)) {
+        this.fileListElement.classList.add('file-drag-over');
+      } else {
+        this.fileListElement.classList.remove('file-drag-over');
+      }
+      event.preventDefault();
+    });
+    this.fileListElement.addEventListener('dragleave', event => {
+      this.fileListElement.classList.remove('file-drag-over');
+      event.preventDefault();
+    });
+    this.fileListElement.addEventListener('drop', event => {
+      this.fileListElement.classList.remove('file-drag-over');
+      if (!isValidFlieDragEvent(event)) return;
+      /** @type {DataTransferItem} */
+      const item = event.dataTransfer.items[0];
+      const file = item.getAsFile();
+      this.importFile(file);
+      event.preventDefault();
+    });
   }
+  /** @param {File} item */
   async importFile(item) {
     try {
       this.importTip.style.display = 'block';
