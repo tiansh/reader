@@ -180,17 +180,15 @@ export default class FlipTextPage extends TextPage {
    */
   keyboardEvents(event) {
     super.keyboardEvents(event);
-    const current = this.readPage.activedSubpage();
-    if (!current) {
-      if (['PageUp', 'ArrowLeft'].includes(event.code)) {
-        this.prevPage({ resetSpeech: true, resetRender: false });
-      } else if (['PageDown', 'ArrowRight'].includes(event.code)) {
-        this.nextPage({ resetSpeech: true, resetRender: false });
-      } else if (['ArrowUp'].includes(event.code)) {
-        this.readPage.showControlPage();
-      } else if (['ArrowDown'].includes(event.code)) {
-        this.readPage.slideIndexPage('show');
-      }
+    if (!this.readPage.isTextPageOnTop()) return;
+    if (['PageUp', 'ArrowLeft'].includes(event.code)) {
+      this.prevPage({ resetSpeech: true, resetRender: false });
+    } else if (['PageDown', 'ArrowRight'].includes(event.code)) {
+      this.nextPage({ resetSpeech: true, resetRender: false });
+    } else if (['ArrowUp'].includes(event.code)) {
+      this.readPage.showControlPage();
+    } else if (['ArrowDown'].includes(event.code)) {
+      this.readPage.slideIndexPage('show');
     }
   }
   /**
