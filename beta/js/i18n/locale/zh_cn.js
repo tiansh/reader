@@ -24,6 +24,7 @@ export default {
   listSearchPlaceholder: '搜索',
   listEmptySearchTip: '找不到搜索的文件',
   listEmptyTip: '点击加号图标导入文件',
+  listDropArea: '将文件放在此处以导入',
 
   readContentsTemplate: '目录模板',
   readContentsTemplateDescription: '使用星号(*)作通配符',

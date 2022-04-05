@@ -24,6 +24,7 @@ export default {
   listSearchPlaceholder: 'Search',
   listEmptySearchTip: 'Cannot find files match searching',
   listEmptyTip: 'Tap the add mark import files',
+  listDropArea: 'Drop file here to import',
 
   readContentsTemplate: 'Template',
   readContentsTemplateDescription: 'Template for the table of content: Use asterisk (*) for wildcard',

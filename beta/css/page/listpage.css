@@ -185,6 +185,34 @@ button.screen-option-item {
   font-size: 30px;
 }
 
+#drop_area {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  display: none;
+  background: var(--default-background);
+  color: var(--list-comment-color);
+  align-items: center;
+  justify-content: center;
+}
+
+#drop_area::before {
+  content: " ";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  left: 10px;
+  bottom: 10px;
+  border: 4px dashed var(--border-color);
+}
+
+#file_list.file-drag-over #drop_area {
+  display: flex;
+}
+
 #import_tip {
   display: none;
 }

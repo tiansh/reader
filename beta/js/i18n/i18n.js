@@ -13,7 +13,7 @@ import zh_TW from './locale/zh_tw.js';
 
 const locales = [
   { name: /^en\b/i, lang: 'en', locale: en },
-  { name: /^zh\b(?:-(?!.*-Hans)(?:TW|HK|MO)|.*-Hant|$)/i, lang: 'zh-TW', locale: zh_TW },
+  { name: /^zh\b(?:(?!.*-Hans)-(?:TW|HK|MO)|.*-Hant|$)/i, lang: 'zh-TW', locale: zh_TW },
   { name: /^zh\b/i, lang: 'zh-CN', locale: zh_CN },
 ];
 
