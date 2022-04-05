@@ -235,7 +235,7 @@ export default class IndexContentsPage extends IndexSubPage {
     }
     const title = container.firstChild;
     title.textContent = item.title;
-    title.title = title;
+    title.title = item.title;
     title.lang = this.readPage.langTag;
   }
   getListItems() {
