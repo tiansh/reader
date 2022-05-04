@@ -105,8 +105,8 @@ self.addEventListener('fetch', function (event) {
     }
     return;
   } else if (event.request.method === 'POST') {
-    if (url.pathname === '/import') {
-      event.respondWith(Response.redirect(new URL('/#!/', location.href)));
+    if (url.pathname === new URL('./import', location.href).pathname) {
+      event.respondWith(Response.redirect(new URL('./#!/', location.href)));
       event.waitUntil(event.request.formData().then(async formData => {
         const file = formData.get('text');
         const client = await self.clients.get(event.resultingClientId);
