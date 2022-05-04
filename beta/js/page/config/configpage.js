@@ -175,7 +175,9 @@ class SelectConfigOptionPage extends ConfigOptionPage {
     });
     this.value = null;
     this.itemList.listElement.setAttribute('aria-labelby', this.titleElement.id);
-    this.description.textContent = configOption.description;
+    if (this.description) {
+      this.description.textContent = configOption.description;
+    }
   }
   cleanUp() {
     super.cleanUp();
