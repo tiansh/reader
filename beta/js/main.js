@@ -15,7 +15,7 @@ import ReadPage from './page/read/readpage.js';
 import ConfigPage from './page/config/configpage.js';
 import './page/common.js';
 
-; (async function () {
+const router = (async function () {
   const locale = await config.get('locale');
   if (locale !== 'auto') i18n.setLocale(locale);
   Array.from(document.querySelectorAll('[data-i18n]')).forEach(element => {
@@ -28,25 +28,27 @@ import './page/common.js';
     read: new ReadPage(),
     config: new ConfigPage(),
   }, '/');
-  
-  window.addEventListener('load', () => {
-    ; (async function () {
-      if (navigator.onLine === false) return;
-      if ('serviceWorker' in navigator) {
-        await navigator.serviceWorker.register('./sw.js');
-      }
-    }()).catch(() => {
-      // Service Worker may be rejected due to not supported, privacy setting, ect.
-    });
-  });
-  
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', async event => {
-      if (event.data.action === 'import') {
-        /** @type {ListPage} */
-        const page = await router.go('list');
-        page.importFile(event.data.file);
-      }
-    });
-  }
+  return router;
 });
+
+window.addEventListener('load', () => {
+  ; (async function () {
+    if (navigator.onLine === false) return;
+    if ('serviceWorker' in navigator) {
+      await navigator.serviceWorker.register('./sw.js');
+    }
+  }()).catch(() => {
+    // Service Worker may be rejected due to not supported, privacy setting, ect.
+  });
+});
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', async event => {
+    if (event.data.action === 'import') {
+      /** @type {ListPage} */
+      const page = await (await router).go('list');
+      page.importFile(event.data.file);
+    }
+  });
+}
+
