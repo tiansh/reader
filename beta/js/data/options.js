@@ -81,11 +81,12 @@ class ConfigOption {
 }
 
 class SelectConfigOption extends ConfigOption {
-  /** @param {{ name: string, title: string, select: { value: string, text: string }[], default: string }} config */
+  /** @param {{ name: string, title: string, select: { value: string, text: string }[], default: string, description: string }} config */
   constructor(config) {
     super(config);
     this.select = config.select;
     this.default = config.default;
+    this.description = config.description;
   }
   get type() { return 'select'; }
   isValidValue(value) {
@@ -267,7 +268,15 @@ class ExpertConfigOption extends ConfigOption {
  * @property {ConfigOption[]} items
  */
 /** @type {(ConfigGroup & { list?: boolean })[]} */
-const options = [{
+const options = (factory => {
+  let cache = null;
+  return () => {
+    if (cache) return cache;
+    cache = factory();
+    factory = null;
+    return cache;
+  };
+})(() => [{
   title: i18n.getMessage('configModeGroupTitle'),
   items: [new SelectConfigOption({
     name: 'view_mode',
@@ -408,6 +417,21 @@ const options = [{
   }), new WebpageConfigOption({
     title: i18n.getMessage('configHelpAbout'),
     url: './help/about.html',
+  }), new SelectConfigOption({
+    name: 'locale',
+    title: i18n.getMessage('configLocale'),
+    select: [
+      { value: 'auto', text: i18n.getMessage('configLocaleAuto') },
+      ...i18n.listLocales().map(locale => ({ 
+        value: locale.id,
+        text: locale.name,
+        render: text => {
+          text.lang = locale.id;
+        },
+      })),
+    ],
+    default: 'auto',
+    description: i18n.getMessage('configLocaleDescription'),
   })],
 }, {
   title: i18n.getMessage('configExpertGroupTitle'),
@@ -431,10 +455,10 @@ const options = [{
         value.indexOf(item) === index
       )).slice(0, 10) : [],
   })],
-}];
+}]);
 
 /** @type {ConfigGroup[]} */
-export const optionList = options.filter(group => group.list !== false);
-export const optionSet = new Set(options.flatMap(group => group.items));
-export const optionMap = new Map(options.flatMap(group => group.items.map(item => [item.name, item])));
+export const optionList = () => options().filter(group => group.list !== false);
+export const optionSet = () => new Set(options().flatMap(group => group.items));
+export const optionMap = () => new Map(options().flatMap(group => group.items.map(item => [item.name, item])));
 

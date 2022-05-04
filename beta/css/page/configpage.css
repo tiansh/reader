@@ -193,11 +193,16 @@
   left: 20px;
 }
 
+.config-option-select-description,
 .config-option-text-description {
   margin-top: 10px;
   padding: 0 20px;
   font-size: 16px;
   color: var(--list-comment-color);
+}
+.config-option-select-description {
+  margin-top: -20px;
+  margin-bottom: 20px;
 }
 
 .config-webpage-iframe {
