@@ -107,6 +107,7 @@ export default class ScrollTextPage extends TextPage {
     this.highlightContainer = container.get('highlight');
     this.autoScrollCover = container.get('cover');
 
+    this.readBodyElement.lang = this.readPage.getLang();
     this.autoScrollCover.setAttribute('aria-label', i18n.getMessage('readAutoScrollStop'));
 
     this.readScrollElement.addEventListener('scroll', event => {
