@@ -141,6 +141,7 @@ class SelectConfigOptionPage extends ConfigOptionPage {
   constructor(container, mainPage) {
     super(container, mainPage);
     this.listElement = this.container.querySelector('.config-option-select-list');
+    this.description = this.container.querySelector('.config-option-select-description');
   }
   async optionList() {
     return this.configOption.select.slice(0);
@@ -158,6 +159,7 @@ class SelectConfigOptionPage extends ConfigOptionPage {
       const text = container.appendChild(document.createElement('div'));
       text.classList.add('select-config-option-item');
       text.textContent = item.text;
+      if (item.render) item.render(text);
     };
     const onItemClick = item => {
       this.setValue(item.value);
@@ -173,6 +175,7 @@ class SelectConfigOptionPage extends ConfigOptionPage {
     });
     this.value = null;
     this.itemList.listElement.setAttribute('aria-labelby', this.titleElement.id);
+    this.description.textContent = configOption.description;
   }
   cleanUp() {
     super.cleanUp();
@@ -592,7 +595,7 @@ export default class ConfigPage extends Page {
         subPage.show();
       }
     };
-    optionList.forEach(group => {
+    optionList().forEach(group => {
       const titleElement = configList.appendChild(document.createElement('div'));
       titleElement.classList.add('config-title');
       titleElement.setAttribute('role', 'heading');

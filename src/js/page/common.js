@@ -71,10 +71,6 @@ document.body.addEventListener('touchmove', function (event) {
   }, { passive: false });
 }());
 
-Array.from(document.querySelectorAll('[data-i18n]')).forEach(element => {
-  element.textContent = i18n.getMessage(element.dataset.i18n, ...element.children);
-});
-
 const updateTheme = function () {
   const root = document.documentElement;
   const isLight = theme.getCurrent() === 'light';

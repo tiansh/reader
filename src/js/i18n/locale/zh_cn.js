@@ -9,6 +9,7 @@
 
 export default {
   locale: 'zh-CN',
+  localeName: '中文（简体）',
 
   title: 'tReader',
   titleWithName: '{0} - tReader',
@@ -104,6 +105,9 @@ export default {
   configHelpFilename: 'zh_cn.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: '关于',
+  configLocale: 'Language (语言)',
+  configLocaleAuto: '默认',
+  configLocaleDescription: '修改语言设置需要重新打开才能生效',
   configExpertGroupTitle: '高级',
   configExpert: '高级设置',
   configExpertDescription: '如果您不清楚应当如何填写请将此处留空，错误配置可能导致阅读器无法使用',

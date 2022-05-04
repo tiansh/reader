@@ -11,33 +11,40 @@ import en from './locale/en.js';
 import zh_CN from './locale/zh_cn.js';
 import zh_TW from './locale/zh_tw.js';
 
+/** @typedef {en} Locale */
+/** @typedef {keyof typeof en} LocaleKey */
+
+/** @template {T} @type {(lang: Locale, base: Locale) => Locale} */
+const fallback = (lang, base = null) => Object.assign(Object.create(base), lang);
+
 const locales = [
-  { name: /^en\b/i, lang: 'en', locale: en },
-  { name: /^zh\b(?:(?!.*-Hans)-(?:TW|HK|MO)|.*-Hant|$)/i, lang: 'zh-TW', locale: zh_TW },
-  { name: /^zh\b/i, lang: 'zh-CN', locale: zh_CN },
+  { name: /^en\b/i, lang: 'en', locale: fallback(en) },
+  { name: /^zh\b(?:(?!.*-Hans)-(?:TW|HK|MO)|.*-Hant|$)/i, lang: 'zh-TW', locale: fallback(zh_TW, en) },
+  { name: /^zh\b/i, lang: 'zh-CN', locale: fallback(zh_CN, en) },
 ];
 
-/** @type {en} */
-const prefer = (function () {
+const defaultLocale = (function () {
   const languages = navigator.languages;
+  /** @type {locales[number]} */
   const prefer = languages.reduce((match, lang) => {
     return match ?? locales.find(locale => locale.name.test(lang));
   }, null) ?? locales[0];
-  document.addEventListener('DOMContentLoaded', () => {
-    document.documentElement.lang = prefer.lang;
-  });
-  return Object.assign({}, en, prefer.locale);
+  return prefer;
 }());
+
+let currentLocale = defaultLocale;
+let localized = false;
 
 const i18n = {};
 
 export default i18n;
 
 /**
- * @param {keyof typeof prefer} name
+ * @param {LocaleKey} name
  */
 i18n.getMessage = function (name, ...placeholders) {
-  const message = Object.prototype.hasOwnProperty.call(prefer, name) ? prefer[name] : en[name];
+  localized = true;
+  const message = currentLocale.locale[name];
   if (typeof message === 'string') {
     return message.replace(/\{\d+\}/g, p => String(placeholders[parseInt(p.slice(1), 10)]));
   } else if (typeof message === 'function') {
@@ -47,4 +54,17 @@ i18n.getMessage = function (name, ...placeholders) {
   }
 };
 
+i18n.listLocales = function () {
+  return locales.map(locale => ({
+    id: locale.lang,
+    name: locale.locale.localeName,
+  })).sort((x, y) => x.id.localeCompare(y.id, 'en'));
+};
 
+i18n.setLocale = function (id) {
+  if (localized) return false;
+  const selected = locales.find(locale => locale.lang === id);
+  if (!selected) return false;
+  currentLocale = selected;
+  return true;
+};

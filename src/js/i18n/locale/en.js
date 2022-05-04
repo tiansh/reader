@@ -9,6 +9,7 @@
 
 export default {
   locale: 'en',
+  localeName: 'English',
 
   title: 'tReader',
   titleWithName: '{0} - tReader',
@@ -104,6 +105,9 @@ export default {
   configHelpFilename: 'en.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: 'About',
+  configLocale: 'Language',
+  configLocaleAuto: 'Default',
+  configLocaleDescription: 'Restart is required before new language settings take effect.',
   configExpertGroupTitle: 'Expert',
   configExpert: 'Expert Config',
   configExpertDescription: "Please leave blank if you don't know what you are doing. Options misconfigured may lead the reader to stop working.",

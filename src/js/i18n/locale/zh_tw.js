@@ -9,6 +9,7 @@
 
 export default {
   locale: 'zh-TW',
+  localeName: '中文（繁體）',
 
   title: 'tReader',
   titleWithName: '{0} - tReader',
@@ -104,6 +105,9 @@ export default {
   configHelpFilename: 'en.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: '關於',
+  configLocale: 'Language (語言)',
+  configLocaleAuto: '預設',
+  configLocaleDescription: '修改語言設定需要重新打開才能生效',
   configExpertGroupTitle: '專家',
   configExpert: '專家設定',
   configExpertDescription: '若您不清楚如何填寫，請將此處留空。錯誤設定會導致閱讀器無法使用。',

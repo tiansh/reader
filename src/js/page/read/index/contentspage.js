@@ -11,8 +11,6 @@ import IndexSubPage from './indexsubpage.js';
 import IndexPage from './indexpage.js';
 import ReadPage from '../readpage.js';
 import { optionMap } from '../../../data/options.js';
-import config from '../../../data/config.js';
-import file from '../../../data/file.js';
 import text from '../../../text/text.js';
 import ItemList from '../../../ui/component/itemlist.js';
 import i18n from '../../../i18n/i18n.js';
@@ -30,7 +28,7 @@ class IndexContentsTemplatePage {
     this.contentsPage = contentsPage;
 
     this.container = container.querySelector('#read_index_contents_config');
-    this.historyOption = optionMap.get('contents_history');
+    this.historyOption = optionMap().get('contents_history');
     this.showTemplatePage = true;
 
     const headerRef = template.create('header');
