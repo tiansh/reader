@@ -121,7 +121,7 @@ export default class ListPage extends Page {
       }
       event.preventDefault();
     });
-    this.fileListElement.addEventListener('dragleave', event => {
+    this.fileDropArea.addEventListener('dragleave', event => {
       this.fileListElement.classList.remove('file-drag-over');
       event.preventDefault();
     });
@@ -150,6 +150,7 @@ export default class ListPage extends Page {
     this.importTip.style.display = 'none';
     this.clearSearch();
     this.updateList();
+    this.scrollToList();
   }
   scrollToList() {
     this.fileListContainer.scrollTop = 105;
