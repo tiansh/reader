@@ -160,6 +160,7 @@ a {
   padding: 10px;
   font-size: 16px;
   border: 0 none;
+  height: auto;
 }
 
 .list-item-empty:only-child {
