@@ -60,9 +60,20 @@ export default class IndexSearchPage extends IndexSubPage {
     const cursorOnTab = this.indexPage.tabGroup === document.activeElement;
     const emptySearch = this.itemList.isListEmpty();
     if (emptySearch && !cursorOnTab) {
-      setTimeout(() => { // wait for css transition end
-        if (this.isCurrent) this.searchInput.focus();
-      }, 210);
+      const pageReady = () => {
+        this.searchInput.focus();
+      };
+      let timeout = false;
+      setTimeout(() => { timeout = true; }, 10e3);
+      const waitPageReady = () => {
+        const container = this.container;
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        if (!rect) return;
+        if (!rect.x && !rect.y) pageReady();
+        else if (!timeout) requestAnimationFrame(waitPageReady);
+      };
+      requestAnimationFrame(waitPageReady);
     }
   }
   searchText(searchTerm) {
