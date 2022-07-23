@@ -204,6 +204,7 @@ export default class FlipTextPage extends TextPage {
     if (!deltaY) return;
     if (deltaY > 0) this.nextPage({ resetSpeech: true, resetRender: false });
     else if (deltaY < 0) this.prevPage({ resetSpeech: true, resetRender: false });
+    // Wait when flip page ends
     setTimeout(() => { this.wheelBusy = false; }, 250);
     this.wheelBusy = true;
   }

@@ -47,6 +47,10 @@ export default {
 
   configPageTitle: '设置',
   configWithDetail: '详情',
+  configInstallGroupTitle: '安装',
+  configInstallButton: '安装网页应用',
+  configInstallGroupDescription: '使用支持 Web 应用的浏览器访问本站，可以允许您将 tReader 安装到您的设备上',
+  configInstallIosGuide: '在 iOS 系统安装网页应用：使用 Safari 浏览器打开本页；点击“分享”按钮；选择“添加到主屏幕”。',
   configModeGroupTitle: '模式',
   configMode: '阅读模式',
   configModeFlip: '翻页',
@@ -105,6 +109,7 @@ export default {
   configHelpFilename: 'zh_cn.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: '关于',
+  configHelpPrivacy: 'Privacy Policy',
   configLocale: 'Language (语言)',
   configLocaleAuto: '默认',
   configLocaleDescription: '修改语言设置需要重新打开才能生效',

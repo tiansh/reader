@@ -47,6 +47,10 @@ export default {
 
   configPageTitle: '設定',
   configWithDetail: '詳細資料',
+  configInstallGroupTitle: '安裝',
+  configInstallButton: '安裝網頁應用程式',
+  configInstallGroupDescription: '如使用支援網頁應用程式的瀏覽器，您將可以在您的裝置上安裝 tReader；安裝後',
+  configInstallIosGuide: '在 iOS 作業系統安裝網頁應用程式：使用 Safari 瀏覽器開啟此網頁；點擊“分享”按鈕；選擇“加入主畫面”。',
   configModeGroupTitle: '模式',
   configMode: '閱讀模式',
   configModeFlip: '翻頁',
@@ -105,6 +109,7 @@ export default {
   configHelpFilename: 'en.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: '關於',
+  configHelpPrivacy: 'Privacy Policy',
   configLocale: 'Language (語言)',
   configLocaleAuto: '預設',
   configLocaleDescription: '修改語言設定需要重新打開才能生效',

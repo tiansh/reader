@@ -47,6 +47,10 @@ export default {
 
   configPageTitle: 'Settings',
   configWithDetail: 'Detail',
+  configInstallGroupTitle: 'Install',
+  configInstallButton: 'Install Web App',
+  configInstallGroupDescription: 'You may install tReader to your device if you are using a browser with web app support.',
+  configInstallIosGuide: 'To install web app on iOS: Use Safari open this page; tap the "Share" button; choose "Add to Home Screen".',
   configModeGroupTitle: 'Mode',
   configMode: 'View Mode',
   configModeFlip: 'Flip',
@@ -105,6 +109,7 @@ export default {
   configHelpFilename: 'en.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: 'About',
+  configHelpPrivacy: 'Privacy Policy',
   configLocale: 'Language',
   configLocaleAuto: 'Default',
   configLocaleDescription: 'Restart is required before new language settings take effect.',

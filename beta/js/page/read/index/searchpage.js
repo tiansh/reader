@@ -12,6 +12,7 @@ import IndexPage from './indexpage.js';
 import ReadPage from '../readpage.js';
 import i18n from '../../../i18n/i18n.js';
 import template from '../../../ui/util/template.js';
+import config from '../../../data/config.js';
 
 export default class IndexSearchPage extends IndexSubPage {
   /**
@@ -60,12 +61,23 @@ export default class IndexSearchPage extends IndexSubPage {
     const cursorOnTab = this.indexPage.tabGroup === document.activeElement;
     const emptySearch = this.itemList.isListEmpty();
     if (emptySearch && !cursorOnTab) {
-      setTimeout(() => { // wait for css transition end
-        if (this.isCurrent) this.searchInput.focus();
-      }, 210);
+      const pageReady = () => {
+        this.searchInput.focus();
+      };
+      let timeout = false;
+      setTimeout(() => { timeout = true; }, 10e3);
+      const waitPageReady = () => {
+        const container = this.container;
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        if (!rect) return;
+        if (!rect.x && !rect.y) pageReady();
+        else if (!timeout) requestAnimationFrame(waitPageReady);
+      };
+      requestAnimationFrame(waitPageReady);
     }
   }
-  searchText(searchTerm) {
+  async searchText(searchTerm) {
     if (searchTerm) {
       this.clearSearch();
       this.emptyListSpan.textContent = i18n.getMessage('readSearchEmpty', searchTerm);
@@ -74,9 +86,30 @@ export default class IndexSearchPage extends IndexSubPage {
       this.lastSearchLine = 0;
       this.totalSearchHit = 0;
     }
-    const escaped = this.lastSearchText.replace(/[-[\]{}()*+?.,\\^$|#\s]/g,
-      c => `\\u${c.charCodeAt().toString(16).padStart(4, 0)}`);
-    const reg = new RegExp('(' + escaped + ')', 'i');
+
+    const currentSearchTerm = this.lastSearchText;
+    const [mode, flags] = await Promise.all([
+      config.expert('text.search_mode', 'string', 'text'),
+      config.expert('text.search_flags', 'string', 'iu'),
+    ]);
+    let reg = /(?!)/;
+    if (mode === 'regex') {
+      try {
+        reg = new RegExp(currentSearchTerm, flags);
+      } catch (e1) { /* ignore */ }
+    } else if (mode === 'wildcard') {
+      try {
+        const escaped = currentSearchTerm.replace(/[-[\]{}()*+?.,\\^$|#]|\s+/g,
+          c => /\s+/.test(c) ? '\\s+' : c === '*' ? '.*?' : `\\u${c.charCodeAt().toString(16).padStart(4, 0)}`);
+        reg = new RegExp('(' + escaped + ')', flags);
+      } catch (e2) { /* ignore */ }
+    } else {
+      try {
+        const escaped = currentSearchTerm.replace(/[-[\]{}()*+?.,\\^$|#\s]/g,
+          c => `\\u${c.charCodeAt().toString(16).padStart(4, 0)}`);
+        reg = new RegExp('(' + escaped + ')', flags);
+      } catch (e3) { /* ignore */ }
+    }
     this.lastSearchReg = reg;
     const lines = this.readPage.content.split('\n'), linum = lines.length;
 
@@ -127,20 +160,37 @@ export default class IndexSearchPage extends IndexSubPage {
       element.classList.add('index-search-item');
       element.lang = this.readPage.langTag;
       const line = item.line;
-      const index = line.match(reg).index;
-      const text = line.substr(Math.max(index - 10, 0), 200).trim().slice(0, 50);
-      text.split(reg).forEach((part, index) => {
-        if (index % 2 === 1) {
-          element.appendChild(document.createElement('mark')).textContent = part;
-        } else {
-          element.appendChild(document.createTextNode(part));
-        }
-      });
+      const matching = line.match(reg) || { index: 0, 0: '' };
+      const index = matching.index;
+      const size = matching[0].length;
+      const left = Math.max(index - 10, 0);
+      const right = Math.min(left + 200, line.length);
+      const cursor = item.cursor;
+      const leftText = line.slice(left, index).trimStart();
+      const matchText = line.slice(index, index + size);
+      const rightText = line.slice(index + size, right).trimRight();
+      element.appendChild(document.createTextNode(leftText));
+      element.appendChild(document.createElement('mark')).textContent = matchText;
+      element.appendChild(document.createTextNode(rightText));
+      element.dataset.cursor = cursor;
     } else {
       const text = container.appendChild(document.createElement('div'));
       text.classList.add('index-search-item', 'index-search-item-more');
       text.textContent = i18n.getMessage('readSearchTooMany', this.totalSearchHit);
     }
+  }
+  getCurrentScrollIndex() {
+    const cursor = this.readPage.getRenderCursor();
+    const list = this.itemList.getList();
+    if (!list.length) return null;
+    let l = 0, r = list.length - 1;
+    while (l <= r) {
+      const m = Math.floor((l + r) / 2);
+      if (list[m] == null) r = m - 1;
+      else if (list[m].cursor > cursor) r = m - 1;
+      else l = m + 1;
+    }
+    return r;
   }
   onItemClick(searchResult) {
     if (!searchResult) {
