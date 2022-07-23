@@ -28,18 +28,27 @@
   user-select: none;
 }
 
-.config-group {
+.config-page-content::before {
+  content: " ";
+  display: block;
+  margin-bottom: 35px;
+}
+
+.config-section {
   margin: 35px 0;
+}
+
+.config-group {
   background: var(--config-item-background);
   overflow: hidden;
 }
 
-.config-title {
-  padding: 0 15px;
-  line-height: 36px;
+.config-title,
+.config-description {
+  padding: 8px 15px;
+  line-height: 20px;
   font-size: 16px;
   color: var(--config-title-color);
-  margin: 35px 0 -35px;
 }
 
 .config-item {
@@ -80,6 +89,10 @@
   flex: 1 1 auto;
   margin-left: -25px;
 }
+.list-item-container[disabled] .config-item-title {
+  color: var(--list-comment-color);
+}
+
 .config-item-value {
   flex: 0 1 auto;
   text-align: right;
@@ -119,6 +132,7 @@
 
 .config-option-select-list {
   line-height: 50px;
+  margin: 35px 0;
 }
 
 .select-font-button-inner {
@@ -200,10 +214,6 @@
   font-size: 16px;
   color: var(--list-comment-color);
 }
-.config-option-select-description {
-  margin-top: -20px;
-  margin-bottom: 20px;
-}
 
 .config-webpage-iframe {
   display: block;
@@ -247,6 +257,10 @@
   padding: 0 20px;
   font-size: 16px;
   color: var(--list-comment-color);
+}
+
+.app-installed #app_install {
+  display: none;
 }
 
 @media screen and (min-width: 800px) {

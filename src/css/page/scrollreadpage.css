@@ -103,6 +103,7 @@
 
 .read-page-scroll .trunk {
   display: flow-root;
+  contain: strict;
   position: relative;
   z-index: 2;
   box-sizing: border-box;

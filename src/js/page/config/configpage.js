@@ -174,7 +174,7 @@ class SelectConfigOptionPage extends ConfigOptionPage {
       emptyListRender: this.emptyListRender,
     });
     this.value = null;
-    this.itemList.listElement.setAttribute('aria-labelby', this.titleElement.id);
+    this.itemList.listElement.setAttribute('aria-labelledby', this.titleElement.id);
     if (this.description) {
       this.description.textContent = configOption.description;
     }
@@ -208,7 +208,7 @@ class ColorConfigOptionPage extends ConfigOptionPage {
   constructor(container, mainPage) {
     super(container, mainPage);
     this.colorPickerElement = this.container.querySelector('.config-option-color-picker');
-    this.colorPickerElement.setAttribute('aria-labelby', this.titleElement.id);
+    this.colorPickerElement.setAttribute('aria-labelledby', this.titleElement.id);
   }
   renderOptions() {
     super.renderOptions();
@@ -581,13 +581,13 @@ export default class ConfigPage extends Page {
     const onItemClick = async item => {
       /** @type {ConfigOptionPage} */
       let subPage = null;
-      if (item.type === 'select') subPage = this.selectConfigPage;
-      if (item.type === 'color') subPage = this.colorConfigPage;
-      if (item.type === 'font') subPage = this.fontConfigPage;
-      if (item.type === 'voice') subPage = this.voiceConfigPage;
-      if (item.type === 'text') subPage = this.textConfigPage;
-      if (item.type === 'webpage') subPage = this.webpageConfigPage;
-      if (item.type === 'expert') subPage = this.expertConfigPage;
+      if (item.subPageType === 'select') subPage = this.selectConfigPage;
+      if (item.subPageType === 'color') subPage = this.colorConfigPage;
+      if (item.subPageType === 'font') subPage = this.fontConfigPage;
+      if (item.subPageType === 'voice') subPage = this.voiceConfigPage;
+      if (item.subPageType === 'text') subPage = this.textConfigPage;
+      if (item.subPageType === 'webpage') subPage = this.webpageConfigPage;
+      if (item.subPageType === 'expert') subPage = this.expertConfigPage;
       if (this.activeSubConfigPage) {
         this.activeSubConfigPage.cleanUp();
       }
@@ -596,19 +596,30 @@ export default class ConfigPage extends Page {
         await subPage.setConfigOption(item);
         subPage.show();
       }
+      if (item.onClick) {
+        item.onClick();
+      }
     };
     optionList().forEach(group => {
-      const titleElement = configList.appendChild(document.createElement('div'));
+      const sectionElement = configList.appendChild(document.createElement('div'));
+      sectionElement.classList.add('config-section');
+      if (group.id) sectionElement.id = group.id;
+      const titleElement = sectionElement.appendChild(document.createElement('div'));
       titleElement.classList.add('config-title');
       titleElement.setAttribute('role', 'heading');
       titleElement.textContent = group.title;
-      const groupElement = configList.appendChild(document.createElement('div'));
+      const groupElement = sectionElement.appendChild(document.createElement('div'));
       groupElement.classList.add('config-group');
       new ItemList(groupElement, {
         list: group.items,
         onItemClick,
         render: itemRender,
       });
+      if (group.description) {
+        const descriptionElement = sectionElement.appendChild(document.createElement('div'));
+        descriptionElement.classList.add('config-description');
+        descriptionElement.textContent = group.description;
+      }
     });
 
     this.subConfigPages.forEach(page => { page.onFirstActivate(); });

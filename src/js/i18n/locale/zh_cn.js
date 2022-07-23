@@ -47,6 +47,10 @@ export default {
 
   configPageTitle: '设置',
   configWithDetail: '详情',
+  configInstallGroupTitle: '安装',
+  configInstallButton: '安装网页应用',
+  configInstallGroupDescription: '使用支持网页应用的浏览器访问本站，可以允许您将 tReader 安装到您的设备上',
+  configInstallIosGuide: '在 iOS 系统安装网页应用：使用 Safari 浏览器打开本页；点击“分享”按钮；选择“添加到主屏幕”。',
   configModeGroupTitle: '模式',
   configMode: '阅读模式',
   configModeFlip: '翻页',
