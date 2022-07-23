@@ -42,6 +42,7 @@ const resourceList = [
   './js/ui/component/color.js',
   './js/ui/component/itemlist.js',
   './js/ui/component/range.js',
+  './js/ui/util/app.js',
   './js/ui/util/dom.js',
   './js/ui/util/onresize.js',
   './js/ui/util/template.js',
