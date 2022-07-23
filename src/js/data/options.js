@@ -466,6 +466,9 @@ const options = (factory => {
     title: i18n.getMessage('configHelpCredits'),
     url: './help/credits.html',
   }), new WebpageConfigOption({
+    title: i18n.getMessage('configHelpPrivacy'),
+    url: './help/privacy.html',
+  }), new WebpageConfigOption({
     title: i18n.getMessage('configHelpAbout'),
     url: './help/about.html',
   }), new SelectConfigOption({

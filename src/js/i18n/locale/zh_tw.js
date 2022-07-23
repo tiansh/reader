@@ -109,6 +109,7 @@ export default {
   configHelpFilename: 'en.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: '關於',
+  configHelpPrivacy: 'Privacy Policy',
   configLocale: 'Language (語言)',
   configLocaleAuto: '預設',
   configLocaleDescription: '修改語言設定需要重新打開才能生效',

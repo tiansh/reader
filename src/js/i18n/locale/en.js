@@ -109,6 +109,7 @@ export default {
   configHelpFilename: 'en.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: 'About',
+  configHelpPrivacy: 'Privacy Policy',
   configLocale: 'Language',
   configLocaleAuto: 'Default',
   configLocaleDescription: 'Restart is required before new language settings take effect.',

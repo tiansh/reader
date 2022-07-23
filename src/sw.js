@@ -14,6 +14,7 @@ const resourceList = [
   './help/credits.html',
   './help/en.html',
   './help/zh_cn.html',
+  './help/privacy.html',
   './css/common/input.css',
   './css/common/main.css',
   './css/icons/icons.css',
