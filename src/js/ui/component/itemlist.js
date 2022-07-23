@@ -230,6 +230,9 @@ export default class ItemList {
       this.listElement.appendChild(li);
     });
   }
+  getList() {
+    return [...this.list];
+  }
   setItem(item, index) {
     if (index < this.list.length) {
       this.list.splice(index, 1, item);

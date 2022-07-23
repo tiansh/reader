@@ -98,7 +98,6 @@ export default class IndexSubPage extends ReadSubPage {
       emptyListRender,
       onRemove,
     });
-    this.currentContentsIndex = null;
 
     this.pageButton.addEventListener('click', this.pageButtonAction);
 
@@ -116,16 +115,23 @@ export default class IndexSubPage extends ReadSubPage {
   getCurrentHighlightIndex() {
     return null;
   }
+  getCurrentScrollIndex() {
+    return null;
+  }
   updateCurrentHighlight() {
     const index = this.getCurrentHighlightIndex();
     const current = index === -1 ? null : index;
-    if (this.currentContentsIndex === current) return;
     this.itemList.clearSelectItem();
     if (current != null) {
       this.itemList.setSelectItem(current, true);
-      this.itemList.scrollIntoView(current);
+      this.itemList.scrollIntoView(current, { block: 'nearest' });
+    } else {
+      const index = this.getCurrentScrollIndex();
+      const scroll = index === -1 ? null : index;
+      if (scroll != null) {
+        this.itemList.scrollIntoView(scroll, { block: 'start' });
+      }
     }
-    this.currentContentsIndex = current;
   }
   getListItems() {
     return [];
@@ -145,7 +151,6 @@ export default class IndexSubPage extends ReadSubPage {
   pageButtonAction() { }
   setList(newList) {
     this.itemList.setList(newList);
-    this.currentContentsIndex = null;
     this.updateCurrentHighlight();
   }
   updateList() {

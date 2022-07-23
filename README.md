@@ -45,6 +45,11 @@ encoding=utf-8,gbk,big5,utf-8
 contents_max_length=100
 ; 生成目录时，如果识别到的目录条目数量超过如下限制，会拒绝生成目录
 contents_size_limit=2000
+; 搜索时用户输入识别方式
+; 支持取值 text, wildcard, regex
+search_mode=text
+; 搜索时正则的标志，i 为忽略大小写
+search_flags=iu
 
 [speech]
 ; 语音朗读时，单条语音最多的字数
