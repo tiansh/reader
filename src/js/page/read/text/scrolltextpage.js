@@ -176,8 +176,12 @@ export default class ScrollTextPage extends TextPage {
         this.pageDown({ resetSpeech: true, resetRender: false });
       } else if (grid.y === 1) {
         this.readPage.showControlPage();
-        this.justShowControlPage = true;
-        setTimeout(() => { this.justShowControlPage = false; }, this.doubleTapTimeout);
+        const token = this.justShowControlPage = {};
+        setTimeout(() => {
+          if (this.justShowControlPage === token) {
+            this.justShowControlPage = null;
+          }
+        }, this.doubleTapTimeout);
       }
     });
 
@@ -1113,7 +1117,7 @@ export default class ScrollTextPage extends TextPage {
   hide() {
     super.hide();
     if (this.justShowControlPage) {
-      this.justShowControlPage = false;
+      this.justShowControlPage = null;
       this.autoScrollStart();
     }
   }
