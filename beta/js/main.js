@@ -47,7 +47,7 @@ if ('serviceWorker' in navigator) {
     if (event.data.action === 'import') {
       /** @type {ListPage} */
       const page = await (await router).go('list');
-      page.importFile(event.data.file);
+      await page.importFile(event.data.file);
     }
   });
 }

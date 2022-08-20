@@ -7,7 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-const version = /* VERSION */"20220724"/* VERSION */; // eslint-disable-line quotes
+const version = /* VERSION */"20211231"/* VERSION */; // eslint-disable-line quotes
 
 const resourceList = [
   './help/about.html',
@@ -31,6 +31,7 @@ const resourceList = [
   './css/normalize-8.0.1.css',
   './data/han/s2t.json',
   './data/han/t2s.json',
+  './js/data/app.js',
   './js/data/config.js',
   './js/data/file.js',
   './js/data/options.js',
@@ -42,7 +43,6 @@ const resourceList = [
   './js/ui/component/color.js',
   './js/ui/component/itemlist.js',
   './js/ui/component/range.js',
-  './js/ui/util/app.js',
   './js/ui/util/dom.js',
   './js/ui/util/onresize.js',
   './js/ui/util/template.js',

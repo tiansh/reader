@@ -51,10 +51,12 @@ export default class IndexSearchPage extends IndexSubPage {
     });
 
     this.disablePageButton();
+    this.searchResultList = [];
   }
   onActivate() {
     super.onActivate();
     this.searchInput.value = '';
+    this.clearSearch();
   }
   setCurrent() {
     super.setCurrent();
@@ -113,10 +115,12 @@ export default class IndexSearchPage extends IndexSubPage {
     this.lastSearchReg = reg;
     const lines = this.readPage.content.split('\n'), linum = lines.length;
 
-    const searchResult = this.lastSearchResult;
-    searchResult.pop();
+    const searchResult = this.searchResultList;
     const lastSearchResultSize = searchResult.length;
-    if (lastSearchResultSize) this.itemList.removeItem(lastSearchResultSize);
+    if (lastSearchResultSize && searchResult[lastSearchResultSize - 1] == null) {
+      this.itemList.removeItem(lastSearchResultSize - 1);
+      searchResult.pop();
+    }
     const searchLimit = 1000;
     let searchHit = 0;
     let cursor = this.lastSearchCursor, i = this.lastSearchLine;
@@ -137,9 +141,10 @@ export default class IndexSearchPage extends IndexSubPage {
     this.totalSearchHit += searchHit;
     this.itemList.appendList(searchResult.slice(lastSearchResultSize));
     this.enablePageButton();
+    this.listUpdated();
   }
   clearSearch() {
-    this.lastSearchResult = [];
+    this.searchResultList = [];
     this.itemList.setList([]);
     this.disablePageButton();
     this.emptyListSpan.textContent = i18n.getMessage('readSearchInitial');
@@ -179,18 +184,11 @@ export default class IndexSearchPage extends IndexSubPage {
       text.textContent = i18n.getMessage('readSearchTooMany', this.totalSearchHit);
     }
   }
-  getCurrentScrollIndex() {
-    const cursor = this.readPage.getRenderCursor();
-    const list = this.itemList.getList();
-    if (!list.length) return null;
-    let l = 0, r = list.length - 1;
-    while (l <= r) {
-      const m = Math.floor((l + r) / 2);
-      if (list[m] == null) r = m - 1;
-      else if (list[m].cursor > cursor) r = m - 1;
-      else l = m + 1;
-    }
-    return r;
+  getListItems() {
+    return this.searchResultList;
+  }
+  getCurrentIndex() {
+    return super.getCurrentIndex();
   }
   onItemClick(searchResult) {
     if (!searchResult) {

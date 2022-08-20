@@ -264,6 +264,7 @@ button.tab-item:focus {
 
 .read-index.read-sub-page-current .index-list {
   overflow-y: auto;
+  content-visibility: auto;
 }
 
 .index-list[hidden] {
@@ -276,7 +277,8 @@ button.tab-item:focus {
 }
 
 #contents_list .list-item-selected-icon,
-#bookmark_list .list-item-selected-icon {
+#bookmark_list .list-item-selected-icon,
+#search_list .list-item-selected-icon {
   display: none;
 }
 
@@ -297,7 +299,8 @@ button.tab-item:focus {
 }
 
 #contents_list .list-item-selected,
-#bookmark_list .list-item-selected {
+#bookmark_list .list-item-selected,
+#search_list .list-item-selected {
   background: var(--list-active-background);
 }
 

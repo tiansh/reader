@@ -34,6 +34,10 @@
   margin-bottom: 35px;
 }
 
+#config_page_webpage .config-page-content::before {
+  display: none;
+}
+
 .config-section {
   margin: 35px 0;
 }
@@ -135,6 +139,10 @@
   margin: 35px 0;
 }
 
+.config-option-select-description {
+  margin-top: -25px;
+}
+
 .select-font-button-inner {
   line-height: 50px;
   text-align: center;
@@ -209,10 +217,13 @@
 
 .config-option-select-description,
 .config-option-text-description {
-  margin-top: 10px;
   padding: 0 20px;
   font-size: 16px;
   color: var(--list-comment-color);
+}
+
+.config-option-text-description {
+  margin-top: 10px;
 }
 
 .config-webpage-iframe {

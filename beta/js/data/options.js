@@ -10,7 +10,7 @@
 import config from './config.js';
 import i18n from '../i18n/i18n.js';
 import template from '../ui/util/template.js';
-import app from '../ui/util/app.js';
+import app from './app.js';
 
 class ConfigOption {
   /** @param {{ name: string, title: string }} config */
@@ -476,7 +476,7 @@ const options = (factory => {
     title: i18n.getMessage('configLocale'),
     select: [
       { value: 'auto', text: i18n.getMessage('configLocaleAuto') },
-      ...i18n.listLocales().map(locale => ({ 
+      ...i18n.listLocales().map(locale => ({
         value: locale.id,
         text: locale.name,
         render: text => {
