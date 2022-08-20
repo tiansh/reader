@@ -58,7 +58,9 @@ export default class ListPage extends Page {
   }
   show() {
     super.show();
-    this.scrollToList();
+    requestAnimationFrame(() => {
+      this.scrollToList();
+    });
   }
   async onInactivate() {
     this.clearList();
@@ -137,13 +139,14 @@ export default class ListPage extends Page {
   }
   /** @param {File} item */
   async importFile(item) {
+    let result = null;
     try {
       this.importTip.style.display = 'block';
       const raw_content = await text.readFile(item);
       const content = await text.preprocess(raw_content);
       const raw_title = text.parseFilename(item.name);
       const title = await text.preprocess(raw_title);
-      await file.add({ title, content });
+      result = await file.add({ title, content });
     } catch (e) {
       alert(i18n.getMessage('listImportFail'));
     }
@@ -151,6 +154,7 @@ export default class ListPage extends Page {
     this.clearSearch();
     this.updateList();
     this.scrollToList();
+    return result;
   }
   scrollToList() {
     this.fileListContainer.scrollTop = 105;

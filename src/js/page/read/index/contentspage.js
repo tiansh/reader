@@ -197,12 +197,6 @@ export default class IndexContentsPage extends IndexSubPage {
   }
   setCurrent() {
     super.setCurrent();
-    // Always make current item of table of contents on the top of page
-    // So it would be easier for anyone who want to skip to next section
-    const index = this.getCurrentHighlightIndex();
-    if (index != null && index !== -1) {
-      this.itemList.scrollIntoView(index, { block: 'start' });
-    }
   }
   unsetCurrent() {
     super.unsetCurrent();
@@ -215,8 +209,8 @@ export default class IndexContentsPage extends IndexSubPage {
     const readIndex = this.readPage.readIndex;
     const template = (input == null ? readIndex.getContentsTemplate() : input) || '';
     readIndex.setContents(template);
-    this.updateList();
-    this.indexPage.bookmarkPage.updateList();
+    this.refreshList();
+    this.indexPage.bookmarkPage.refreshList();
     this.readPage.textPage.forceUpdate();
   }
   pageButtonAction() {
@@ -240,9 +234,8 @@ export default class IndexContentsPage extends IndexSubPage {
     const index = this.readPage.index;
     return index.content?.items || [];
   }
-  getCurrentHighlightIndex() {
-    const cursor = this.readPage.getRenderCursor();
-    const readIndex = this.readPage.readIndex;
-    return readIndex.getIndexOfContentsByCursor(cursor);
+  getCurrentIndex() {
+    const [index] = super.getCurrentIndex();
+    return [index, true];
   }
 }

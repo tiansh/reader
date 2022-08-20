@@ -34,6 +34,10 @@
   margin-bottom: 35px;
 }
 
+#config_page_webpage .config-page-content::before {
+  display: none;
+}
+
 .config-section {
   margin: 35px 0;
 }
