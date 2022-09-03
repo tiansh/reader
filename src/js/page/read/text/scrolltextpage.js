@@ -437,7 +437,6 @@ export default class ScrollTextPage extends TextPage {
     }
     event.preventDefault();
     event.stopPropagation();
-    
   }
   /**
    * @param {MouseEvent} event
