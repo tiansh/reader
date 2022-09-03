@@ -164,6 +164,11 @@
   display: none;
 }
 
+.index-tab-group .icon {
+  padding: 10px 30px;
+  margin: -10px -30px;
+}
+
 #read_index_contents {
   --tab-index: 0;
 }
@@ -211,6 +216,8 @@ button.tab-item {
   line-height: 20px;
   outline: none;
   width: 40px;
+  overflow: hidden;
+  border-radius: 20px;
 }
 
 button.tab-item:focus {
