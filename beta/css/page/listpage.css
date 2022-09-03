@@ -19,6 +19,14 @@
   top: -1000px;
 }
 
+#file_list_sensor {
+  height: 1px;
+  margin-bottom: 1px;
+  position: fixed;
+  z-index: -2;
+  visibility: hidden;
+}
+
 .list-filter {
   padding-right: 40px;
   position: relative;

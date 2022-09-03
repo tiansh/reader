@@ -136,7 +136,9 @@ export default class IndexSubPage extends ReadSubPage {
       if (highlight) {
         this.itemList.setSelectItem(current, true);
       }
-      this.itemList.scrollIntoView(current, { block: position });
+      if (position) {
+        this.itemList.scrollIntoView(current, { block: position });
+      }
     }
   }
   /** @returns {ListITem[]} */
@@ -145,7 +147,7 @@ export default class IndexSubPage extends ReadSubPage {
   }
   cursorChange(cursor, config) {
     if (!this.itemList) return;
-    this.updateCurrentHighlight('nearest');
+    this.updateCurrentHighlight(false);
   }
   emptyListRender(container) { }
   listItemRender(container, item) { }

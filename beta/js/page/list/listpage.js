@@ -35,6 +35,8 @@ export default class ListPage extends Page {
 
     this.fileListContainer = document.querySelector('#file_list_container');
     this.fileListElement = document.querySelector('#file_list');
+    this.fileListSensor = document.querySelector('#file_list_sensor');
+    this.fileListTop = document.querySelector('#file_list_top');
     this.fileDropArea = document.querySelector('#drop_area');
     this.searchContainer = this.fileListContainer.querySelector('.list-filter');
     this.searchInput = this.searchContainer.querySelector('.list-filter input');
@@ -58,9 +60,7 @@ export default class ListPage extends Page {
   }
   show() {
     super.show();
-    requestAnimationFrame(() => {
-      this.scrollToList();
-    });
+    this.scrollToList();
   }
   async onInactivate() {
     this.clearList();
@@ -157,7 +157,13 @@ export default class ListPage extends Page {
     return result;
   }
   scrollToList() {
-    this.fileListContainer.scrollTop = 105;
+    if (!this.active) return;
+    const scrollable = this.fileListSensor.clientHeight;
+    if (scrollable) {
+      this.fileListContainer.scrollTop = this.fileListTop.clientHeight;
+    } else requestAnimationFrame(() => {
+      this.scrollToList();
+    });
   }
   async updateList() {
     const token = this.lastToken = {};
@@ -244,7 +250,7 @@ export default class ListPage extends Page {
     const cmp = {
       dateread: (a, b) => b.lastAccessTime - a.lastAccessTime,
       dateadd: (a, b) => b.createTime - a.createTime,
-      title: (a, b) => a.title.localeCompare(b.title, navigator.language),
+      title: (a, b) => a.title.localeCompare(b.title, this.langTag || navigator.language),
     }[sortBy];
     files.sort(cmp);
   }

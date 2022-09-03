@@ -24,7 +24,8 @@ button[type="submit"] {
 }
 
 button .icon {
-  padding: 0;
+  padding: 14px;
+  margin: -14px;
 }
 
 .range-outer {
