@@ -35,7 +35,8 @@ window.addEventListener('load', () => {
   ; (async function () {
     if (navigator.onLine === false) return;
     if ('serviceWorker' in navigator) {
-      await navigator.serviceWorker.register('./sw.js');
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      reg.update();
     }
   }()).catch(() => {
     // Service Worker may be rejected due to not supported, privacy setting, ect.
