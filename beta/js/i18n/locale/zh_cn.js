@@ -92,6 +92,7 @@ export default {
   configSpeechVoice: '语音',
   configSpeechVoiceRemote: '(远程)',
   configSpeechVoiceEmpty: '未发现可用的语音',
+  configSpeechVoicePrivacy: '使用被标记为“远程”的语音时，将要朗读的文本会被发送到第三方的服务器上。请在使用前自行确认对应服务的隐私条款。',
   configSpeechPitch: '语调',
   configSpeechPitchNum: pitch => {
     if (pitch === 0) return '0 (最低)';

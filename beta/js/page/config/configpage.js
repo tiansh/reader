@@ -124,7 +124,7 @@ class ConfigOptionPage {
       this.configOption = null;
     }
   }
-  renderOptions() { }
+  async renderOptions() { }
   renderValue(value) { }
   onConfigValueChange(value) {
     this.renderValue(value);
@@ -210,8 +210,8 @@ class ColorConfigOptionPage extends ConfigOptionPage {
     this.colorPickerElement = this.container.querySelector('.config-option-color-picker');
     this.colorPickerElement.setAttribute('aria-labelledby', this.titleElement.id);
   }
-  renderOptions() {
-    super.renderOptions();
+  async renderOptions() {
+    await super.renderOptions();
     this.colorPicker = new ColorPicker(this.colorPickerElement);
     this.colorPicker.onChange(value => {
       this.setValue(value);
@@ -334,7 +334,6 @@ class FontConfigOptionPage extends SelectConfigOptionPage {
 }
 
 class VoiceConfigOptionPage extends SelectConfigOptionPage {
-
   constructor(container, mainPage) {
     super(container, mainPage);
 
@@ -347,6 +346,8 @@ class VoiceConfigOptionPage extends SelectConfigOptionPage {
   }
   onFirstActivate() {
     super.onFirstActivate();
+
+    this.description = this.container.querySelector('.config-option-voice-description');
 
     const update = () => {
       const prefer = speech.getPreferVoice();
@@ -402,6 +403,10 @@ class VoiceConfigOptionPage extends SelectConfigOptionPage {
     if (this.configOption !== configOption) return;
     this.renderValue(value);
   }
+  async renderOptions() {
+    await super.renderOptions();
+    this.description.textContent = this.configOption.description;
+  }
   cleanUp() {
     this.configOption = null;
     if (this.itemList) {
@@ -428,7 +433,7 @@ class TextConfigOptionPage extends ConfigOptionPage {
     this.input.addEventListener('input', this.onInput);
   }
   async renderOptions() {
-    super.renderOptions();
+    await super.renderOptions();
     const configOption = this.configOption;
     this.inputTitle.textContent = configOption.label;
     this.description.textContent = configOption.description;
@@ -494,7 +499,7 @@ class ExpertConfigOptionPage extends ConfigOptionPage {
     this.input.addEventListener('input', this.onInput);
   }
   async renderOptions() {
-    super.renderOptions();
+    await super.renderOptions();
     const configOption = this.configOption;
     this.description.textContent = configOption.description;
     this.input.value = await this.getValue();

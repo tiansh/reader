@@ -92,6 +92,7 @@ export default {
   configSpeechVoice: '語音',
   configSpeechVoiceRemote: '(遠端)',
   configSpeechVoiceEmpty: '未發現可用的語音',
+  configSpeechVoicePrivacy: '使用標記為“遠端”的語音時，您的文本將會傳送至第三方的伺服器以轉換語音。您可以在使用前首先確認對應的隱私權聲明。',
   configSpeechPitch: '語調',
   configSpeechPitchNum: pitch => {
     if (pitch === 0) return '0 (最低)';

@@ -139,7 +139,8 @@
   margin: 35px 0;
 }
 
-.config-option-select-description {
+.config-option-select-description,
+.config-option-voice-description {
   margin-top: -25px;
 }
 
@@ -216,6 +217,7 @@
 }
 
 .config-option-select-description,
+.config-option-voice-description,
 .config-option-text-description {
   padding: 0 20px;
   font-size: 16px;
