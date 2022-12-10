@@ -13,9 +13,10 @@ import template from '../ui/util/template.js';
 import app from './app.js';
 
 class ConfigOption {
-  /** @param {{ name: string, title: string }} config */
+  /** @param {{ name: string, description: string?, title: string }} config */
   constructor(config) {
     this.title = config.title;
+    this.description = config.description ?? '';
     if (config.name != null) {
       this.name = config.name;
       this.default = null;
@@ -97,7 +98,6 @@ class SelectConfigOption extends ConfigOption {
     super(config);
     this.select = config.select;
     this.default = config.default;
-    this.description = config.description;
   }
   get type() { return 'select'; }
   isValidValue(value) {
@@ -176,7 +176,7 @@ class FontConfigOption extends ConfigOption {
 }
 
 class VoiceConfigOption extends ConfigOption {
-  /** @param {{ name: string, title: string, default: Color }} config */
+  /** @param {{ name: string, title: string, description: string }} config */
   constructor(config) {
     super(config);
     this.default = config.default;
@@ -195,7 +195,6 @@ class TextConfigOption extends ConfigOption {
     super(config);
     this.default = config.default;
     this.label = config.label;
-    this.description = config.description;
   }
   get type() { return 'text'; }
   isValidValue(value) { return typeof value === 'string'; }
@@ -261,7 +260,6 @@ class ExpertConfigOption extends ConfigOption {
     super(config);
     this.default = config.default;
     this.label = config.label;
-    this.description = config.description;
   }
   get type() { return 'expert'; }
   isValidValue(value) { return typeof value === 'string'; }
@@ -440,6 +438,7 @@ const options = (factory => {
     name: 'speech_voice',
     title: i18n.getMessage('configSpeechVoice'),
     default: null,
+    description: i18n.getMessage('configSpeechVoicePrivacy'),
   }), new SelectConfigOption({
     name: 'speech_pitch',
     title: i18n.getMessage('configSpeechPitch'),

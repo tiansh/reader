@@ -92,6 +92,7 @@ export default {
   configSpeechVoice: 'Voice',
   configSpeechVoiceRemote: '(Remote)',
   configSpeechVoiceEmpty: 'No available speech voice detected.',
+  configSpeechVoicePrivacy: 'Using voices marked as "remote", if there are any, would send your text to a third party online service. You may check their privacy statement before using these services.',
   configSpeechPitch: 'Speech Pitch',
   configSpeechPitchNum: pitch => {
     if (pitch === 0) return '0 (lowest)';
