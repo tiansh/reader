@@ -7,7 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-const version = /* VERSION */"20221210"/* VERSION */; // eslint-disable-line quotes
+const version = /* VERSION */"20221225"/* VERSION */; // eslint-disable-line quotes
 
 const resourceList = [
   './help/about.html',

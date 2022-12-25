@@ -191,6 +191,9 @@ button.screen-option-item {
 
 #file_list .list-item-remove .icon {
   font-size: 30px;
+  line-height: 30px;
+  width: 30px;
+  height: 30px;
 }
 
 #drop_area {
