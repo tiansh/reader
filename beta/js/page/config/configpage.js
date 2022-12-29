@@ -461,17 +461,22 @@ class WebpageConfigOptionPage extends ConfigOptionPage {
     this.iframeContainer = this.iframe.parentNode;
     this.iframeContainer.replaceChild(this.placeholder, this.iframe);
     super.onFirstActivate();
-    this.iframe.addEventListener('load', event => {
-      this.iframe.title = this.iframe.contentDocument.title;
-    });
   }
   show() {
     super.show();
     this.iframe.src = this.getUrl();
+    const url = this.iframe.src;
     theme.addChangeListener(this.themeChange);
+    this.iframe.hidden = true;
     if (this.placeholder.parentNode === this.iframeContainer) {
       this.iframeContainer.replaceChild(this.iframe, this.placeholder);
     }
+    this.iframe.addEventListener('load', () => {
+      if (this.iframe.src !== url) return;
+      if (this.iframe.parentNode !== this.iframeContainer) return;
+      this.iframe.title = this.iframe.contentDocument.title;
+      this.iframe.hidden = false;
+    }, { once: true });
   }
   hide() {
     super.hide();

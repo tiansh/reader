@@ -142,6 +142,7 @@
 .config-option-select-description,
 .config-option-voice-description {
   margin-top: -25px;
+  margin-bottom: 25px;
 }
 
 .select-font-button-inner {
@@ -153,6 +154,7 @@
 .select-config-option-item {
   padding: 10px 0;
   line-height: 30px;
+  white-space: normal;
 }
 
 #select_font_file {
@@ -233,6 +235,10 @@
   border: 0 none;
   width: 100%;
   height: 100%;
+}
+
+.config-webpage-iframe[hidden] {
+  opacity: 0;
 }
 
 .config-option-expert {
