@@ -194,6 +194,10 @@ button.list-item-container.hover {
   left: 0;
   margin: auto;
   display: none;
+  height: 20px;
+  width: 20px;
+  line-height: 20px;
+  text-align: center;
 }
 
 .list-item-selected .list-item-selected-icon {
@@ -263,9 +267,12 @@ button.list-item-container.hover {
   overflow: visible;
 }
 
-
 .noscroll .scroll {
   overflow: hidden;
+}
+
+.scroll {
+  scrollbar-gutter: stable;
 }
 
 .button-wrap {
