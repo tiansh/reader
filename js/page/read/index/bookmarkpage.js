@@ -37,7 +37,7 @@ export default class IndexBookmarkPage extends IndexSubPage {
   }
   addBookmark() {
     this.readPage.readIndex.addBookmark(this.readPage.getRenderCursor());
-    this.updateList();
+    this.refreshList();
   }
   pageButtonAction() {
     this.addBookmark();
@@ -67,10 +67,8 @@ export default class IndexBookmarkPage extends IndexSubPage {
   getListItems() {
     return Array.from(this.readPage.readIndex.getBookmarkList());
   }
-  getCurrentHighlightIndex() {
-    const readIndex = this.readPage.readIndex;
-    const cursor = this.readPage.getRenderCursor();
-    return readIndex.getIndexOfBookmarksByCursor(cursor);
+  getCurrentIndex() {
+    return super.getCurrentIndex();
   }
   onRemoveItem(bookmark) {
     const readIndex = this.readPage.readIndex;
@@ -79,7 +77,6 @@ export default class IndexBookmarkPage extends IndexSubPage {
     readIndex.deleteBookmark(bookmark.cursor);
     if (this.itemList) {
       this.itemList.removeItem(index);
-      this.updateCurrentHighlight();
     }
   }
 }

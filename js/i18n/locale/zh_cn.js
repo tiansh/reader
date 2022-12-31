@@ -9,6 +9,7 @@
 
 export default {
   locale: 'zh-CN',
+  localeName: '中文（简体）',
 
   title: 'tReader',
   titleWithName: '{0} - tReader',
@@ -24,6 +25,7 @@ export default {
   listSearchPlaceholder: '搜索',
   listEmptySearchTip: '找不到搜索的文件',
   listEmptyTip: '点击加号图标导入文件',
+  listDropArea: '将文件放在此处以导入',
 
   readContentsTemplate: '目录模板',
   readContentsTemplateDescription: '使用星号(*)作通配符',
@@ -45,6 +47,10 @@ export default {
 
   configPageTitle: '设置',
   configWithDetail: '详情',
+  configInstallGroupTitle: '安装',
+  configInstallButton: '安装网页应用',
+  configInstallGroupDescription: '使用支持 Web 应用的浏览器访问本站，可以允许您将 tReader 安装到您的设备上',
+  configInstallIosGuide: '在 iOS 系统安装网页应用：使用 Safari 浏览器打开本页；点击“分享”按钮；选择“添加到主屏幕”。',
   configModeGroupTitle: '模式',
   configMode: '阅读模式',
   configModeFlip: '翻页',
@@ -86,6 +92,7 @@ export default {
   configSpeechVoice: '语音',
   configSpeechVoiceRemote: '(远程)',
   configSpeechVoiceEmpty: '未发现可用的语音',
+  configSpeechVoicePrivacy: '使用被标记为“远程”的语音时，将要朗读的文本会被发送到第三方的服务器上。请在使用前自行确认对应服务的隐私条款。',
   configSpeechPitch: '语调',
   configSpeechPitchNum: pitch => {
     if (pitch === 0) return '0 (最低)';
@@ -103,6 +110,10 @@ export default {
   configHelpFilename: 'zh_cn.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: '关于',
+  configHelpPrivacy: 'Privacy Policy',
+  configLocale: 'Language (语言)',
+  configLocaleAuto: '默认',
+  configLocaleDescription: '修改语言设置需要重新打开才能生效',
   configExpertGroupTitle: '高级',
   configExpert: '高级设置',
   configExpertDescription: '如果您不清楚应当如何填写请将此处留空，错误配置可能导致阅读器无法使用',

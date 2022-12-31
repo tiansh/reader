@@ -107,6 +107,7 @@ export default class ScrollTextPage extends TextPage {
     this.highlightContainer = container.get('highlight');
     this.autoScrollCover = container.get('cover');
 
+    this.readBodyElement.lang = this.readPage.getLang();
     this.autoScrollCover.setAttribute('aria-label', i18n.getMessage('readAutoScrollStop'));
 
     this.readScrollElement.addEventListener('scroll', event => {
@@ -175,8 +176,12 @@ export default class ScrollTextPage extends TextPage {
         this.pageDown({ resetSpeech: true, resetRender: false });
       } else if (grid.y === 1) {
         this.readPage.showControlPage();
-        this.justShowControlPage = true;
-        setTimeout(() => { this.justShowControlPage = false; }, this.doubleTapTimeout);
+        const token = this.justShowControlPage = {};
+        setTimeout(() => {
+          if (this.justShowControlPage === token) {
+            this.justShowControlPage = null;
+          }
+        }, this.doubleTapTimeout);
       }
     });
 
@@ -388,50 +393,50 @@ export default class ScrollTextPage extends TextPage {
    * @param {KeyboardEvent} event
    */
   keyboardEvents(event) {
-    const current = this.readPage.activedSubpage();
-    if (!current) {
-      if (['PageUp', 'PageDown'].includes(event.code)) {
-        // wrap in raf so it may have correct transition effect
-        window.requestAnimationFrame(() => {
-          if (this.autoScrollRunning) {
-            this.autoScrollStop({ paging: true });
-            if (event.code === 'PageUp') {
-              this.pageUp({ resetSpeech: true, resetRender: false });
-            } else {
-              this.pageDown({ resetSpeech: true, resetRender: false });
-            }
-          } else if (!this.autoScrollBusy()) {
-            if (event.code === 'PageUp') {
-              this.pageUp({ resetSpeech: true, resetRender: false });
-            } else {
-              this.pageDown({ resetSpeech: true, resetRender: false });
-            }
-          }
-        });
-      } else if (['ArrowLeft'].includes(event.code)) {
-        if (!this.autoScrollRunning && !this.autoScrollPaging) {
-          this.readPage.showControlPage();
-        }
-      } else if (['ArrowRight'].includes(event.code)) {
-        if (!this.autoScrollRunning && !this.autoScrollPaging) {
-          this.readPage.slideIndexPage('show');
-        }
-      } else if (['ArrowUp', 'ArrowDown'].includes(event.code)) {
+    super.keyboardEvents(event);
+    if (!this.readPage.isTextPageOnTop()) return;
+    if (['PageUp', 'PageDown', 'ArrowUp', 'ArrowDown'].includes(event.code)) {
+      const direction = ['PageUp', 'ArrowUp'].includes(event.code) ? 'Up' : 'Down';
+      // wrap in raf so it may have correct transition effect
+      window.requestAnimationFrame(() => {
         if (this.autoScrollRunning) {
-          const pow = event.code === 'ArrowUp' ? -1 : 1;
-          const speedFactor = this.autoScrollSpeedFactor * 1.1 ** pow;
-          this.autoScrollUpdate({ speedFactor });
+          this.autoScrollStop({ paging: true });
+          if (direction === 'Up') {
+            this.pageUp({ resetSpeech: true, resetRender: false });
+          } else {
+            this.pageDown({ resetSpeech: true, resetRender: false });
+          }
+        } else if (!this.autoScrollBusy()) {
+          if (direction === 'Up') {
+            this.pageUp({ resetSpeech: true, resetRender: false });
+          } else {
+            this.pageDown({ resetSpeech: true, resetRender: false });
+          }
         }
-      } else if (['Home', 'End'].includes(event.code)) {
-        // do nothing
-      } else if (['Escape'].includes(event.code) && this.autoScrollBusy()) {
-        this.autoScrollStop();
-      } else {
-        return;
+      });
+    } else if (['ArrowLeft'].includes(event.code)) {
+      if (!this.autoScrollRunning && !this.autoScrollPaging) {
+        this.readPage.showControlPage();
       }
-      event.preventDefault();
-      event.stopPropagation();
+    } else if (['ArrowRight'].includes(event.code)) {
+      if (!this.autoScrollRunning && !this.autoScrollPaging) {
+        this.readPage.slideIndexPage('show');
+      }
+    } else if (['ArrowUp', 'ArrowDown'].includes(event.code)) {
+      if (this.autoScrollRunning) {
+        const pow = event.code === 'ArrowUp' ? -1 : 1;
+        const speedFactor = this.autoScrollSpeedFactor * 1.1 ** pow;
+        this.autoScrollUpdate({ speedFactor });
+      }
+    } else if (['Home', 'End'].includes(event.code)) {
+      // do nothing
+    } else if (['Escape'].includes(event.code) && this.autoScrollBusy()) {
+      this.autoScrollStop();
+    } else {
+      return;
     }
+    event.preventDefault();
+    event.stopPropagation();
   }
   /**
    * @param {MouseEvent} event
@@ -1111,7 +1116,7 @@ export default class ScrollTextPage extends TextPage {
   hide() {
     super.hide();
     if (this.justShowControlPage) {
-      this.justShowControlPage = false;
+      this.justShowControlPage = null;
       this.autoScrollStart();
     }
   }

@@ -9,6 +9,7 @@
 
 export default {
   locale: 'en',
+  localeName: 'English',
 
   title: 'tReader',
   titleWithName: '{0} - tReader',
@@ -24,6 +25,7 @@ export default {
   listSearchPlaceholder: 'Search',
   listEmptySearchTip: 'Cannot find files match searching',
   listEmptyTip: 'Tap the add mark import files',
+  listDropArea: 'Drop file here to import',
 
   readContentsTemplate: 'Template',
   readContentsTemplateDescription: 'Template for the table of content: Use asterisk (*) for wildcard',
@@ -45,6 +47,10 @@ export default {
 
   configPageTitle: 'Settings',
   configWithDetail: 'Detail',
+  configInstallGroupTitle: 'Install',
+  configInstallButton: 'Install Web App',
+  configInstallGroupDescription: 'You may install tReader to your device if you are using a browser with web app support.',
+  configInstallIosGuide: 'To install web app on iOS: Use Safari open this page; tap the "Share" button; choose "Add to Home Screen".',
   configModeGroupTitle: 'Mode',
   configMode: 'View Mode',
   configModeFlip: 'Flip',
@@ -86,6 +92,7 @@ export default {
   configSpeechVoice: 'Voice',
   configSpeechVoiceRemote: '(Remote)',
   configSpeechVoiceEmpty: 'No available speech voice detected.',
+  configSpeechVoicePrivacy: 'Using voices marked as "remote", if there are any, would send your text to a third party online service. You may check their privacy statement before using these services.',
   configSpeechPitch: 'Speech Pitch',
   configSpeechPitchNum: pitch => {
     if (pitch === 0) return '0 (lowest)';
@@ -103,6 +110,10 @@ export default {
   configHelpFilename: 'en.html',
   configHelpCredits: 'Open Source Credits',
   configHelpAbout: 'About',
+  configHelpPrivacy: 'Privacy Policy',
+  configLocale: 'Language',
+  configLocaleAuto: 'Default',
+  configLocaleDescription: 'Restart is required before new language settings take effect.',
   configExpertGroupTitle: 'Expert',
   configExpert: 'Expert Config',
   configExpertDescription: "Please leave blank if you don't know what you are doing. Options misconfigured may lead the reader to stop working.",

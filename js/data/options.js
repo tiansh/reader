@@ -10,18 +10,21 @@
 import config from './config.js';
 import i18n from '../i18n/i18n.js';
 import template from '../ui/util/template.js';
-
+import app from './app.js';
 
 class ConfigOption {
-  /** @param {{ name: string, title: string }} config */
+  /** @param {{ name: string, description: string?, title: string }} config */
   constructor(config) {
-    this.name = config.name;
     this.title = config.title;
-    /** @type {string} */
-    this.default = null;
-    this.initialized = false;
+    this.description = config.description ?? '';
+    if (config.name != null) {
+      this.name = config.name;
+      this.default = null;
+      this.initialized = false;
+    } else {
+      this.name = null;
+    }
     this.rendered = false;
-    this.normalizeConfig();
     if (!ConfigOption.globalIndex) {
       ConfigOption.globalIndex = 0;
     }
@@ -29,8 +32,15 @@ class ConfigOption {
   }
   /** @returns {string} */
   get type() { throw Error('Unimplementated'); }
-  setConfig(value) { return config.set(this.name, value); }
-  getConfig(value) { return config.get(this.name, value); }
+  get subPageType() { return this.type; }
+  setConfig(value) {
+    if (this.name == null) return (void 0);
+    return config.set(this.name, value);
+  }
+  getConfig(value) {
+    if (this.name == null) return (void 0);
+    return config.get(this.name, value);
+  }
   /**
    * @param {HTMLElement} container
    */
@@ -64,13 +74,15 @@ class ConfigOption {
     if (this.initialized) return;
     this.initialized = true;
     this.render(container);
-    await this.normalizeConfig();
-    await config.get(this.name).then(value => {
-      this.renderValue(value);
-      config.addListener(this.name, value => {
+    if (this.name != null) {
+      await this.normalizeConfig();
+      await config.get(this.name).then(value => {
         this.renderValue(value);
+        config.addListener(this.name, value => {
+          this.renderValue(value);
+        });
       });
-    });
+    }
   }
   detailIcon() {
     const detailIcon = template.icon('detail');
@@ -81,7 +93,7 @@ class ConfigOption {
 }
 
 class SelectConfigOption extends ConfigOption {
-  /** @param {{ name: string, title: string, select: { value: string, text: string }[], default: string }} config */
+  /** @param {{ name: string, title: string, select: { value: string, text: string }[], default: string, description: string }} config */
   constructor(config) {
     super(config);
     this.select = config.select;
@@ -98,8 +110,8 @@ class SelectConfigOption extends ConfigOption {
     this.resultElement.classList.add('config-item-value');
     itemElement.appendChild(this.detailIcon());
     this.resultElement.id = 'config_item_value_' + this.index;
-    this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
-    this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
+    this.resultElement.setAttribute('aria-labelledby', this.titleElement.id);
+    this.titleElement.setAttribute('aria-labelledby', this.resultElement.id);
   }
   renderValue(value) {
     this.resultElement.textContent = this.select.find(i => i.value === value).text;
@@ -124,8 +136,8 @@ class ColorConfigOption extends ConfigOption {
     this.resultElement.classList.add('config-item-value', 'config-item-color-value');
     itemElement.appendChild(this.detailIcon());
     this.resultElement.id = 'config_item_value_' + this.index;
-    this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
-    this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
+    this.resultElement.setAttribute('aria-labelledby', this.titleElement.id);
+    this.titleElement.setAttribute('aria-labelledby', this.resultElement.id);
   }
   renderValue(value) {
     this.resultElement.style.backgroundColor = value;
@@ -153,8 +165,8 @@ class FontConfigOption extends ConfigOption {
     this.resultElement.classList.add('config-item-value');
     itemElement.appendChild(this.detailIcon());
     this.resultElement.id = 'config_item_value_' + this.index;
-    this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
-    this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
+    this.resultElement.setAttribute('aria-labelledby', this.titleElement.id);
+    this.titleElement.setAttribute('aria-labelledby', this.resultElement.id);
   }
   renderValue(value) {
     const id = value ? 'configTextFontFamilyCustom' : 'configTextFontFamilyDefault';
@@ -164,7 +176,7 @@ class FontConfigOption extends ConfigOption {
 }
 
 class VoiceConfigOption extends ConfigOption {
-  /** @param {{ name: string, title: string, default: Color }} config */
+  /** @param {{ name: string, title: string, description: string }} config */
   constructor(config) {
     super(config);
     this.default = config.default;
@@ -183,7 +195,6 @@ class TextConfigOption extends ConfigOption {
     super(config);
     this.default = config.default;
     this.label = config.label;
-    this.description = config.description;
   }
   get type() { return 'text'; }
   isValidValue(value) { return typeof value === 'string'; }
@@ -194,8 +205,8 @@ class TextConfigOption extends ConfigOption {
     this.resultElement.classList.add('config-item-value');
     itemElement.appendChild(this.detailIcon());
     this.resultElement.id = 'config_item_value_' + this.index;
-    this.resultElement.setAttribute('aria-labelby', this.titleElement.id);
-    this.titleElement.setAttribute('aria-labelby', this.resultElement.id);
+    this.resultElement.setAttribute('aria-labelledby', this.titleElement.id);
+    this.titleElement.setAttribute('aria-labelledby', this.resultElement.id);
   }
   renderValue(value) {
     this.resultElement.textContent = value;
@@ -203,6 +214,7 @@ class TextConfigOption extends ConfigOption {
 }
 
 class StubConfigOption extends ConfigOption {
+  constructor(config) { super(config); }
   setConfig(value) { }
   getConfig(value) { }
   renderValue(value) { }
@@ -248,7 +260,6 @@ class ExpertConfigOption extends ConfigOption {
     super(config);
     this.default = config.default;
     this.label = config.label;
-    this.description = config.description;
   }
   get type() { return 'expert'; }
   isValidValue(value) { return typeof value === 'string'; }
@@ -261,13 +272,60 @@ class ExpertConfigOption extends ConfigOption {
   }
 }
 
+class ButtonConfigOption extends StubConfigOption {
+  /** @param {{ onClick: () => void }} config */
+  constructor(config) {
+    super(config);
+    this.onClick = config.onClick;
+  }
+  get type() { return 'button'; }
+  get subPageType() { return null; }
+  renderValue() {
+
+  }
+}
+
 /**
  * @typedef {Object} ConfigGroup
  * @property {string} title
  * @property {ConfigOption[]} items
  */
 /** @type {(ConfigGroup & { list?: boolean })[]} */
-const options = [{
+const options = (factory => {
+  let cache = null;
+  return () => {
+    if (cache) return cache;
+    cache = factory();
+    factory = null;
+    return cache;
+  };
+})(() => [{
+  id: 'app_install',
+  title: i18n.getMessage('configInstallGroupTitle'),
+  items: [Object.assign(new ButtonConfigOption({
+    title: i18n.getMessage('configInstallButton'),
+    onClick() {
+      if (app.supportInstall) app.showPrompt();
+      else if (app.hasIosInstallTip) {
+        // Simply show guides to tell user how to install
+        // An `alert` should be enough here
+        alert(i18n.getMessage('configInstallIosGuide'));
+      }
+    },
+  }), {
+    async setup(container) {
+      Object.getPrototypeOf(this).setup.call(this, container);
+      const button = container.closest('button');
+      if (!app.supportInstall && !app.hasIosInstallTip) {
+        button.disabled = true;
+      }
+      app.promptAvailable.then(() => {
+        button.disabled = false;
+      });
+    },
+  })],
+  description: i18n.getMessage('configInstallGroupDescription'),
+}, {
   title: i18n.getMessage('configModeGroupTitle'),
   items: [new SelectConfigOption({
     name: 'view_mode',
@@ -329,7 +387,7 @@ const options = [{
   }), new SelectConfigOption({
     name: 'line_height',
     title: i18n.getMessage('configTextLineHeight'),
-    select: [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 2.0].map(n => ({
+    select: [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 2.0, 2.2, 2.5, 3.0, 4.0].map(n => ({
       value: String(n),
       text: i18n.getMessage('configTextLineHeightNum', n),
     })),
@@ -337,7 +395,7 @@ const options = [{
   }), new SelectConfigOption({
     name: 'paragraph_spacing',
     title: i18n.getMessage('configTextParagraphSpacing'),
-    select: [0, 0.2, 0.5, 0.8, 1, 1.2, 1.5, 2].map(n => ({
+    select: [0, 0.2, 0.5, 0.8, 1, 1.2, 1.5, 2, 2.5, 3, 4].map(n => ({
       value: String(n),
       text: i18n.getMessage('configTextParagraphSpacingNum', n),
     })),
@@ -380,6 +438,7 @@ const options = [{
     name: 'speech_voice',
     title: i18n.getMessage('configSpeechVoice'),
     default: null,
+    description: i18n.getMessage('configSpeechVoicePrivacy'),
   }), new SelectConfigOption({
     name: 'speech_pitch',
     title: i18n.getMessage('configSpeechPitch'),
@@ -406,8 +465,26 @@ const options = [{
     title: i18n.getMessage('configHelpCredits'),
     url: './help/credits.html',
   }), new WebpageConfigOption({
+    title: i18n.getMessage('configHelpPrivacy'),
+    url: './help/privacy.html',
+  }), new WebpageConfigOption({
     title: i18n.getMessage('configHelpAbout'),
     url: './help/about.html',
+  }), new SelectConfigOption({
+    name: 'locale',
+    title: i18n.getMessage('configLocale'),
+    select: [
+      { value: 'auto', text: i18n.getMessage('configLocaleAuto') },
+      ...i18n.listLocales().map(locale => ({
+        value: locale.id,
+        text: locale.name,
+        render: text => {
+          text.lang = locale.id;
+        },
+      })),
+    ],
+    default: 'auto',
+    description: i18n.getMessage('configLocaleDescription'),
   })],
 }, {
   title: i18n.getMessage('configExpertGroupTitle'),
@@ -431,10 +508,10 @@ const options = [{
         value.indexOf(item) === index
       )).slice(0, 10) : [],
   })],
-}];
+}]);
 
 /** @type {ConfigGroup[]} */
-export const optionList = options.filter(group => group.list !== false);
-export const optionSet = new Set(options.flatMap(group => group.items));
-export const optionMap = new Map(options.flatMap(group => group.items.map(item => [item.name, item])));
+export const optionList = () => options().filter(group => group.list !== false);
+export const optionSet = () => new Set(options().flatMap(group => group.items));
+export const optionMap = () => new Map(options().flatMap(group => group.items.map(item => [item.name, item])));
 

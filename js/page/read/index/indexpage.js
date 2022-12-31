@@ -137,7 +137,7 @@ export default class IndexPage extends ReadSubPage {
   }
   cursorChange(cursor, config) {
     this.subPages.forEach(page => {
-      page.cursorChange(config);
+      page.cursorChange(cursor, config);
     });
   }
 }

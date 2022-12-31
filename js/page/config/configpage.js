@@ -124,7 +124,7 @@ class ConfigOptionPage {
       this.configOption = null;
     }
   }
-  renderOptions() { }
+  async renderOptions() { }
   renderValue(value) { }
   onConfigValueChange(value) {
     this.renderValue(value);
@@ -141,6 +141,7 @@ class SelectConfigOptionPage extends ConfigOptionPage {
   constructor(container, mainPage) {
     super(container, mainPage);
     this.listElement = this.container.querySelector('.config-option-select-list');
+    this.description = this.container.querySelector('.config-option-select-description');
   }
   async optionList() {
     return this.configOption.select.slice(0);
@@ -158,6 +159,7 @@ class SelectConfigOptionPage extends ConfigOptionPage {
       const text = container.appendChild(document.createElement('div'));
       text.classList.add('select-config-option-item');
       text.textContent = item.text;
+      if (item.render) item.render(text);
     };
     const onItemClick = item => {
       this.setValue(item.value);
@@ -172,7 +174,10 @@ class SelectConfigOptionPage extends ConfigOptionPage {
       emptyListRender: this.emptyListRender,
     });
     this.value = null;
-    this.itemList.listElement.setAttribute('aria-labelby', this.titleElement.id);
+    this.itemList.listElement.setAttribute('aria-labelledby', this.titleElement.id);
+    if (this.description) {
+      this.description.textContent = configOption.description;
+    }
   }
   cleanUp() {
     super.cleanUp();
@@ -203,10 +208,10 @@ class ColorConfigOptionPage extends ConfigOptionPage {
   constructor(container, mainPage) {
     super(container, mainPage);
     this.colorPickerElement = this.container.querySelector('.config-option-color-picker');
-    this.colorPickerElement.setAttribute('aria-labelby', this.titleElement.id);
+    this.colorPickerElement.setAttribute('aria-labelledby', this.titleElement.id);
   }
-  renderOptions() {
-    super.renderOptions();
+  async renderOptions() {
+    await super.renderOptions();
     this.colorPicker = new ColorPicker(this.colorPickerElement);
     this.colorPicker.onChange(value => {
       this.setValue(value);
@@ -329,7 +334,6 @@ class FontConfigOptionPage extends SelectConfigOptionPage {
 }
 
 class VoiceConfigOptionPage extends SelectConfigOptionPage {
-
   constructor(container, mainPage) {
     super(container, mainPage);
 
@@ -342,6 +346,8 @@ class VoiceConfigOptionPage extends SelectConfigOptionPage {
   }
   onFirstActivate() {
     super.onFirstActivate();
+
+    this.description = this.container.querySelector('.config-option-voice-description');
 
     const update = () => {
       const prefer = speech.getPreferVoice();
@@ -397,6 +403,10 @@ class VoiceConfigOptionPage extends SelectConfigOptionPage {
     if (this.configOption !== configOption) return;
     this.renderValue(value);
   }
+  async renderOptions() {
+    await super.renderOptions();
+    this.description.textContent = this.configOption.description;
+  }
   cleanUp() {
     this.configOption = null;
     if (this.itemList) {
@@ -423,7 +433,7 @@ class TextConfigOptionPage extends ConfigOptionPage {
     this.input.addEventListener('input', this.onInput);
   }
   async renderOptions() {
-    super.renderOptions();
+    await super.renderOptions();
     const configOption = this.configOption;
     this.inputTitle.textContent = configOption.label;
     this.description.textContent = configOption.description;
@@ -451,17 +461,22 @@ class WebpageConfigOptionPage extends ConfigOptionPage {
     this.iframeContainer = this.iframe.parentNode;
     this.iframeContainer.replaceChild(this.placeholder, this.iframe);
     super.onFirstActivate();
-    this.iframe.addEventListener('load', event => {
-      this.iframe.title = this.iframe.contentDocument.title;
-    });
   }
   show() {
     super.show();
     this.iframe.src = this.getUrl();
+    const url = this.iframe.src;
     theme.addChangeListener(this.themeChange);
+    this.iframe.hidden = true;
     if (this.placeholder.parentNode === this.iframeContainer) {
       this.iframeContainer.replaceChild(this.iframe, this.placeholder);
     }
+    this.iframe.addEventListener('load', () => {
+      if (this.iframe.src !== url) return;
+      if (this.iframe.parentNode !== this.iframeContainer) return;
+      this.iframe.title = this.iframe.contentDocument.title;
+      this.iframe.hidden = false;
+    }, { once: true });
   }
   hide() {
     super.hide();
@@ -489,7 +504,7 @@ class ExpertConfigOptionPage extends ConfigOptionPage {
     this.input.addEventListener('input', this.onInput);
   }
   async renderOptions() {
-    super.renderOptions();
+    await super.renderOptions();
     const configOption = this.configOption;
     this.description.textContent = configOption.description;
     this.input.value = await this.getValue();
@@ -576,13 +591,13 @@ export default class ConfigPage extends Page {
     const onItemClick = async item => {
       /** @type {ConfigOptionPage} */
       let subPage = null;
-      if (item.type === 'select') subPage = this.selectConfigPage;
-      if (item.type === 'color') subPage = this.colorConfigPage;
-      if (item.type === 'font') subPage = this.fontConfigPage;
-      if (item.type === 'voice') subPage = this.voiceConfigPage;
-      if (item.type === 'text') subPage = this.textConfigPage;
-      if (item.type === 'webpage') subPage = this.webpageConfigPage;
-      if (item.type === 'expert') subPage = this.expertConfigPage;
+      if (item.subPageType === 'select') subPage = this.selectConfigPage;
+      if (item.subPageType === 'color') subPage = this.colorConfigPage;
+      if (item.subPageType === 'font') subPage = this.fontConfigPage;
+      if (item.subPageType === 'voice') subPage = this.voiceConfigPage;
+      if (item.subPageType === 'text') subPage = this.textConfigPage;
+      if (item.subPageType === 'webpage') subPage = this.webpageConfigPage;
+      if (item.subPageType === 'expert') subPage = this.expertConfigPage;
       if (this.activeSubConfigPage) {
         this.activeSubConfigPage.cleanUp();
       }
@@ -591,19 +606,30 @@ export default class ConfigPage extends Page {
         await subPage.setConfigOption(item);
         subPage.show();
       }
+      if (item.onClick) {
+        item.onClick();
+      }
     };
-    optionList.forEach(group => {
-      const titleElement = configList.appendChild(document.createElement('div'));
+    optionList().forEach(group => {
+      const sectionElement = configList.appendChild(document.createElement('div'));
+      sectionElement.classList.add('config-section');
+      if (group.id) sectionElement.id = group.id;
+      const titleElement = sectionElement.appendChild(document.createElement('div'));
       titleElement.classList.add('config-title');
       titleElement.setAttribute('role', 'heading');
       titleElement.textContent = group.title;
-      const groupElement = configList.appendChild(document.createElement('div'));
+      const groupElement = sectionElement.appendChild(document.createElement('div'));
       groupElement.classList.add('config-group');
       new ItemList(groupElement, {
         list: group.items,
         onItemClick,
         render: itemRender,
       });
+      if (group.description) {
+        const descriptionElement = sectionElement.appendChild(document.createElement('div'));
+        descriptionElement.classList.add('config-description');
+        descriptionElement.textContent = group.description;
+      }
     });
 
     this.subConfigPages.forEach(page => { page.onFirstActivate(); });

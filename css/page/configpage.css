@@ -28,18 +28,31 @@
   user-select: none;
 }
 
-.config-group {
+.config-page-content::before {
+  content: " ";
+  display: block;
+  margin-bottom: 35px;
+}
+
+#config_page_webpage .config-page-content::before {
+  display: none;
+}
+
+.config-section {
   margin: 35px 0;
+}
+
+.config-group {
   background: var(--config-item-background);
   overflow: hidden;
 }
 
-.config-title {
-  padding: 0 15px;
-  line-height: 36px;
+.config-title,
+.config-description {
+  padding: 8px 15px;
+  line-height: 20px;
   font-size: 16px;
   color: var(--config-title-color);
-  margin: 35px 0 -35px;
 }
 
 .config-item {
@@ -80,6 +93,10 @@
   flex: 1 1 auto;
   margin-left: -25px;
 }
+.list-item-container[disabled] .config-item-title {
+  color: var(--list-comment-color);
+}
+
 .config-item-value {
   flex: 0 1 auto;
   text-align: right;
@@ -119,6 +136,13 @@
 
 .config-option-select-list {
   line-height: 50px;
+  margin: 35px 0;
+}
+
+.config-option-select-description,
+.config-option-voice-description {
+  margin-top: -25px;
+  margin-bottom: 25px;
 }
 
 .select-font-button-inner {
@@ -130,6 +154,7 @@
 .select-config-option-item {
   padding: 10px 0;
   line-height: 30px;
+  white-space: normal;
 }
 
 #select_font_file {
@@ -193,11 +218,16 @@
   left: 20px;
 }
 
+.config-option-select-description,
+.config-option-voice-description,
 .config-option-text-description {
-  margin-top: 10px;
   padding: 0 20px;
   font-size: 16px;
   color: var(--list-comment-color);
+}
+
+.config-option-text-description {
+  margin-top: 10px;
 }
 
 .config-webpage-iframe {
@@ -205,6 +235,10 @@
   border: 0 none;
   width: 100%;
   height: 100%;
+}
+
+.config-webpage-iframe[hidden] {
+  opacity: 0;
 }
 
 .config-option-expert {
@@ -242,6 +276,10 @@
   padding: 0 20px;
   font-size: 16px;
   color: var(--list-comment-color);
+}
+
+.app-installed #app_install {
+  display: none;
 }
 
 @media screen and (min-width: 800px) {

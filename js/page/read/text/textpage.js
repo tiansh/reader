@@ -33,6 +33,7 @@ export default class TextPage {
 
     // EXPERT_CONFIG Use 4th / 5th button for paging
     this.useMouseClickPaging = await config.expert('appearance.mouse_paging', 'boolean', false);
+    this.minStep = 100;
 
     document.addEventListener('keydown', this.keyboardEvents);
     document.addEventListener('wheel', this.wheelEvents);
@@ -165,7 +166,7 @@ export default class TextPage {
     const area = width * height;
     const textArea = (this.configs?.font_size || 18) ** 2;
     this.stepCache = Math.floor(area / textArea);
-    return this.stepCache;
+    return Math.max(this.stepCache, this.minStep);
   }
 }
 

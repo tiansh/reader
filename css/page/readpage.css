@@ -164,6 +164,11 @@
   display: none;
 }
 
+.index-tab-group .icon {
+  padding: 10px 30px;
+  margin: -10px -30px;
+}
+
 #read_index_contents {
   --tab-index: 0;
 }
@@ -211,6 +216,8 @@ button.tab-item {
   line-height: 20px;
   outline: none;
   width: 40px;
+  overflow: hidden;
+  border-radius: 20px;
 }
 
 button.tab-item:focus {
@@ -264,6 +271,7 @@ button.tab-item:focus {
 
 .read-index.read-sub-page-current .index-list {
   overflow-y: auto;
+  content-visibility: auto;
 }
 
 .index-list[hidden] {
@@ -276,7 +284,8 @@ button.tab-item:focus {
 }
 
 #contents_list .list-item-selected-icon,
-#bookmark_list .list-item-selected-icon {
+#bookmark_list .list-item-selected-icon,
+#search_list .list-item-selected-icon {
   display: none;
 }
 
@@ -297,7 +306,8 @@ button.tab-item:focus {
 }
 
 #contents_list .list-item-selected,
-#bookmark_list .list-item-selected {
+#bookmark_list .list-item-selected,
+#search_list .list-item-selected {
   background: var(--list-active-background);
 }
 

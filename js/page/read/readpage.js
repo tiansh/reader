@@ -232,6 +232,11 @@ export default class ReadPage extends Page {
     if (this.isJumpActive()) return this.jumpPage;
     return null;
   }
+  isTextPageOnTop() {
+    if (this.isControlActive() || this.isJumpActive()) return false;
+    if (this.isIndexActive()) return this.isSideIndexActive();
+    return true;
+  }
   toggleSpeech() {
     return this.speech.toggle();
   }

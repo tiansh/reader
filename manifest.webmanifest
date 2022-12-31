@@ -1,6 +1,6 @@
 {
-  "short_name": "tReader",
   "name": "tReader",
+  "short_name": "tReader",
   "description": "A simple but customizable TXT file reader.",
   "categories": [ "books", "productivity" ],
   "icons": [{
@@ -28,7 +28,7 @@
   "display": "fullscreen",
   "theme_color": "black",
   "share_target": {
-    "action": "/import",
+    "action": "./import",
     "method": "POST",
     "enctype": "multipart/form-data",
     "params": {

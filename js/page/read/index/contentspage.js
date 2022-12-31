@@ -11,8 +11,6 @@ import IndexSubPage from './indexsubpage.js';
 import IndexPage from './indexpage.js';
 import ReadPage from '../readpage.js';
 import { optionMap } from '../../../data/options.js';
-import config from '../../../data/config.js';
-import file from '../../../data/file.js';
 import text from '../../../text/text.js';
 import ItemList from '../../../ui/component/itemlist.js';
 import i18n from '../../../i18n/i18n.js';
@@ -30,7 +28,7 @@ class IndexContentsTemplatePage {
     this.contentsPage = contentsPage;
 
     this.container = container.querySelector('#read_index_contents_config');
-    this.historyOption = optionMap.get('contents_history');
+    this.historyOption = optionMap().get('contents_history');
     this.showTemplatePage = true;
 
     const headerRef = template.create('header');
@@ -199,12 +197,6 @@ export default class IndexContentsPage extends IndexSubPage {
   }
   setCurrent() {
     super.setCurrent();
-    // Always make current item of table of contents on the top of page
-    // So it would be easier for anyone who want to skip to next section
-    const index = this.getCurrentHighlightIndex();
-    if (index != null && index !== -1) {
-      this.itemList.scrollIntoView(index, { block: 'start' });
-    }
   }
   unsetCurrent() {
     super.unsetCurrent();
@@ -217,8 +209,8 @@ export default class IndexContentsPage extends IndexSubPage {
     const readIndex = this.readPage.readIndex;
     const template = (input == null ? readIndex.getContentsTemplate() : input) || '';
     readIndex.setContents(template);
-    this.updateList();
-    this.indexPage.bookmarkPage.updateList();
+    this.refreshList();
+    this.indexPage.bookmarkPage.refreshList();
     this.readPage.textPage.forceUpdate();
   }
   pageButtonAction() {
@@ -235,15 +227,15 @@ export default class IndexContentsPage extends IndexSubPage {
     }
     const title = container.firstChild;
     title.textContent = item.title;
+    title.title = item.title;
     title.lang = this.readPage.langTag;
   }
   getListItems() {
     const index = this.readPage.index;
     return index.content?.items || [];
   }
-  getCurrentHighlightIndex() {
-    const cursor = this.readPage.getRenderCursor();
-    const readIndex = this.readPage.readIndex;
-    return readIndex.getIndexOfContentsByCursor(cursor);
+  getCurrentIndex() {
+    const [index] = super.getCurrentIndex();
+    return [index, true];
   }
 }

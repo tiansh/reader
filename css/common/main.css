@@ -160,6 +160,7 @@ a {
   padding: 10px;
   font-size: 16px;
   border: 0 none;
+  height: auto;
 }
 
 .list-item-empty:only-child {
@@ -186,12 +187,17 @@ button.list-item-container.hover {
   background: var(--list-active-background);
 }
 
-.list-item-selected-icon {
+.list-item-selected-icon.list-item-selected-icon {
   position: absolute;
-  top: 50%;
-  left: 10px;
-  transform: translateY(-50%);
+  top: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
   display: none;
+  height: 20px;
+  width: 20px;
+  line-height: 20px;
+  text-align: center;
 }
 
 .list-item-selected .list-item-selected-icon {
@@ -244,10 +250,16 @@ button.list-item-container.hover {
 }
 
 .list-item-remove .icon {
+  width: 20px;
+  height: 20px;
+  text-align: center;
+  line-height: 20px;
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
 }
 
 .list-item.list-item-slide-remove,
@@ -255,9 +267,12 @@ button.list-item-container.hover {
   overflow: visible;
 }
 
-
 .noscroll .scroll {
   overflow: hidden;
+}
+
+.scroll {
+  scrollbar-gutter: stable;
 }
 
 .button-wrap {

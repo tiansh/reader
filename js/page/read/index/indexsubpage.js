@@ -36,7 +36,7 @@ export default class IndexSubPage extends ReadSubPage {
   updateListRender() {
     if (!this.itemList) return;
     if (this.isCurrent && this.isShow) {
-      this.updateCurrentHighlight();
+      this.updateCurrentHighlight('start');
       dom.enableKeyboardFocus(this.container);
     } else {
       dom.disableKeyboardFocus(this.container);
@@ -98,7 +98,6 @@ export default class IndexSubPage extends ReadSubPage {
       emptyListRender,
       onRemove,
     });
-    this.currentContentsIndex = null;
 
     this.pageButton.addEventListener('click', this.pageButtonAction);
 
@@ -113,29 +112,45 @@ export default class IndexSubPage extends ReadSubPage {
   disablePageButton() {
     this.pageButton.disabled = true;
   }
-  getCurrentHighlightIndex() {
-    return null;
+  /** @returns {[number, boolean]} */
+  getCurrentIndex() {
+    const cursor = this.readPage.getRenderCursor();
+    const list = this.getListItems();
+    if (!list || !list.length) return [null, null];
+    let l = 0, r = list.length - 1;
+    while (l <= r) {
+      const m = Math.floor((l + r) / 2);
+      if (list[m] == null) r = m - 1;
+      else if (list[m].cursor > cursor) r = m - 1;
+      else l = m + 1;
+    }
+    if (!list[r]) return [null, null];
+    return [r, list[r].cursor === cursor];
   }
-  updateCurrentHighlight() {
-    const index = this.getCurrentHighlightIndex();
+  /** @param {'start' | 'nearest'} position */
+  updateCurrentHighlight(position) {
+    const [index, highlight] = this.getCurrentIndex();
     const current = index === -1 ? null : index;
-    if (this.currentContentsIndex === current) return;
     this.itemList.clearSelectItem();
     if (current != null) {
-      this.itemList.setSelectItem(current, true);
-      this.itemList.scrollIntoView(current);
+      if (highlight) {
+        this.itemList.setSelectItem(current, true);
+      }
+      if (position) {
+        this.itemList.scrollIntoView(current, { block: position });
+      }
     }
-    this.currentContentsIndex = current;
   }
+  /** @returns {ListITem[]} */
   getListItems() {
     return [];
   }
   cursorChange(cursor, config) {
     if (!this.itemList) return;
-    this.updateCurrentHighlight();
+    this.updateCurrentHighlight(false);
   }
-  emptyListRender() { }
-  listItemRender() { }
+  emptyListRender(container) { }
+  listItemRender(container, item) { }
   onItemClick(item) {
     this.readPage.setCursor(item.cursor, { resetSpeech: true, resetRender: false });
     if (!this.readPage.useSideIndex) {
@@ -143,12 +158,13 @@ export default class IndexSubPage extends ReadSubPage {
     }
   }
   pageButtonAction() { }
-  setList(newList) {
-    this.itemList.setList(newList);
-    this.currentContentsIndex = null;
-    this.updateCurrentHighlight();
+  listUpdated() {
+    requestAnimationFrame(() => {
+      this.updateCurrentHighlight('start');
+    });
   }
-  updateList() {
-    this.setList([...this.getListItems()]);
+  refreshList() {
+    this.itemList.setList([...this.getListItems()]);
+    this.listUpdated();
   }
 }

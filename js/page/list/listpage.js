@@ -35,6 +35,9 @@ export default class ListPage extends Page {
 
     this.fileListContainer = document.querySelector('#file_list_container');
     this.fileListElement = document.querySelector('#file_list');
+    this.fileListSensor = document.querySelector('#file_list_sensor');
+    this.fileListTop = document.querySelector('#file_list_top');
+    this.fileDropArea = document.querySelector('#drop_area');
     this.searchContainer = this.fileListContainer.querySelector('.list-filter');
     this.searchInput = this.searchContainer.querySelector('.list-filter input');
     this.searchClearButton = template.iconButton('remove', i18n.getMessage('listFilterClear'));
@@ -103,24 +106,64 @@ export default class ListPage extends Page {
       }
       this.hideSortMenu();
     });
+
+    /** @param {DragEvent} event */
+    const isValidFlieDragEvent = event => {
+      const items = event.dataTransfer.items;
+      if (items.length !== 1) return false;
+      if (items[0].kind !== 'file') return false;
+      if (items[0].type !== 'text/plain') return false;
+      return true;
+    };
+    this.fileListElement.addEventListener('dragover', event => {
+      if (isValidFlieDragEvent(event)) {
+        this.fileListElement.classList.add('file-drag-over');
+      } else {
+        this.fileListElement.classList.remove('file-drag-over');
+      }
+      event.preventDefault();
+    });
+    this.fileDropArea.addEventListener('dragleave', event => {
+      this.fileListElement.classList.remove('file-drag-over');
+      event.preventDefault();
+    });
+    this.fileListElement.addEventListener('drop', event => {
+      this.fileListElement.classList.remove('file-drag-over');
+      if (!isValidFlieDragEvent(event)) return;
+      /** @type {DataTransferItem} */
+      const item = event.dataTransfer.items[0];
+      const file = item.getAsFile();
+      this.importFile(file);
+      event.preventDefault();
+    });
   }
+  /** @param {File} item */
   async importFile(item) {
+    let result = null;
     try {
       this.importTip.style.display = 'block';
       const raw_content = await text.readFile(item);
       const content = await text.preprocess(raw_content);
       const raw_title = text.parseFilename(item.name);
       const title = await text.preprocess(raw_title);
-      await file.add({ title, content });
+      result = await file.add({ title, content });
     } catch (e) {
       alert(i18n.getMessage('listImportFail'));
     }
     this.importTip.style.display = 'none';
     this.clearSearch();
     this.updateList();
+    this.scrollToList();
+    return result;
   }
   scrollToList() {
-    this.fileListContainer.scrollTop = 105;
+    if (!this.active) return;
+    const scrollable = this.fileListSensor.clientHeight;
+    if (scrollable) {
+      this.fileListContainer.scrollTop = this.fileListTop.clientHeight;
+    } else requestAnimationFrame(() => {
+      this.scrollToList();
+    });
   }
   async updateList() {
     const token = this.lastToken = {};
@@ -207,7 +250,7 @@ export default class ListPage extends Page {
     const cmp = {
       dateread: (a, b) => b.lastAccessTime - a.lastAccessTime,
       dateadd: (a, b) => b.createTime - a.createTime,
-      title: (a, b) => a.title.localeCompare(b.title, navigator.language),
+      title: (a, b) => a.title.localeCompare(b.title, this.langTag || navigator.language),
     }[sortBy];
     files.sort(cmp);
   }

@@ -24,7 +24,8 @@ button[type="submit"] {
 }
 
 button .icon {
-  padding: 0;
+  padding: 14px;
+  margin: -14px;
 }
 
 .range-outer {
@@ -99,7 +100,7 @@ button .icon {
 
 .color-picker {
   width: 100%;
-  padding: 10px 20px;
+  padding: 0 20px;
   box-sizing: border-box;
 }
 
@@ -197,4 +198,9 @@ button.submit-button .icon-go {
   line-height: 30px;
   display: inline-block;
   vertical-align: middle;
+}
+
+::-webkit-search-cancel-button,
+::-ms-clear {
+  display: none;
 }
