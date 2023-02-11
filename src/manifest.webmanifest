@@ -35,7 +35,7 @@
       "files": [
         {
           "name": "text",
-          "accept": "text/plain"
+          "accept": [ "text/plain", "application/gzip"]
         }
       ]
     }

@@ -70,6 +70,7 @@ const resourceList = [
   './js/page/router.js',
   './js/page/page.js',
   './js/main.js',
+  './js/lib/pako@2.1.0/pako_inflate.min.js',
   './icon/icon.png',
   './icon/icon.svg',
   './icon/icon.ico',
