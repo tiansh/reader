@@ -114,13 +114,13 @@ speech.getPreferVoiceAsync = async function () {
 };
 
 let speechPitch = 1, speechRate = 1;
-config.get('speech_pitch').then(pitch => {
+config.get('speech_pitch', '1').then(pitch => {
   speechPitch = Number(pitch);
   config.addListener('speech_pitch', pitch => {
     speechPitch = Number(pitch);
   });
 });
-config.get('speech_rate').then(rate => {
+config.get('speech_rate', '1').then(rate => {
   speechRate = Number(rate);
   config.addListener('speech_rate', rate => {
     speechRate = Number(rate);

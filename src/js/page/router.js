@@ -42,7 +42,7 @@ export default class Router {
   }
   async initial() {
     this.setTitle();
-    const path = await config.get('path') || '#!' + this.fallback;
+    const path = await config.get('path', '#!' + this.fallback);
     this.hashTo(path);
   }
   /** @returns {Page} */

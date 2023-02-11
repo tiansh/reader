@@ -41,7 +41,7 @@ const updateConfigTheme = theme => {
   updateTheme();
 };
 config.addListener('theme', updateConfigTheme);
-config.get('theme').then(updateConfigTheme);
+config.get('theme', 'auto').then(updateConfigTheme);
 
 theme.getCurrent = function () {
   const useLightTheme = currentTheme === 'light' || currentTheme === 'auto' && autoUseLight;
