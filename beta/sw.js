@@ -7,7 +7,7 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-const version = /* VERSION */"20221230"/* VERSION */; // eslint-disable-line quotes
+const version = /* VERSION */"20230212"/* VERSION */; // eslint-disable-line quotes
 
 const resourceList = [
   './help/about.html',
@@ -70,6 +70,7 @@ const resourceList = [
   './js/page/router.js',
   './js/page/page.js',
   './js/main.js',
+  './js/lib/pako@2.1.0/pako_inflate.min.js',
   './icon/icon.png',
   './icon/icon.svg',
   './icon/icon.ico',
