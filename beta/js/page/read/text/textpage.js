@@ -103,18 +103,23 @@ export default class TextPage {
     this.customFont = document.querySelector('#custom_font');
     this.customStyle = document.querySelector('#custom_style');
 
-    /** @type {
-     ('light_text' | 'light_background' | 'dark_text' | 'dark_background' |
+    /** @typedef {'light_text' | 'light_background' | 'dark_text' | 'dark_background' |
       'font_size' | 'font_family' | 'font_list' |
-      'line_height' | 'paragraph_spacing')[]
-     * } */
-    const keys = [
-      'light_text', 'light_background', 'dark_text', 'dark_background',
-      'font_size', 'font_family', 'font_list',
-      'line_height', 'paragraph_spacing',
-    ];
-    /** @type {{ [key in typeof keys[0]]?: string }} */
-    const configs = Object.fromEntries(await Promise.all(keys.map(async key => [key, await config.get(key)])));
+      'line_height' | 'paragraph_spacing'} ReadConfigKey */
+    /** @type {{[key in ReadConfigKey]: string }} */
+    const keys = {
+      light_text: '#000000',
+      light_background: '#ffffff',
+      dark_text: '#ffffff',
+      dark_background: '#000000',
+      font_size: '18',
+      font_family: null,
+      font_list: '',
+      line_height: '1.5',
+      paragraph_spacing: '0.5',
+    };
+    /** @type {{ [key in ReadConfigKey]?: string }} */
+    const configs = Object.fromEntries(await Promise.all(Object.keys(keys).map(async key => [key, await config.get(key, keys[key])])));
 
     const font = configs.font_family && Array.isArray(configs.font_list) &&
       configs.font_list.find(font => font.id === configs.font_family).content || null;

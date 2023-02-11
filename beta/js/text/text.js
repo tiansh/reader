@@ -137,14 +137,14 @@ const convertLineEnding = function (text) {
 };
 
 const maxEmptyLine = async function (text) {
-  const setting = await config.get('max_empty_lines');
+  const setting = await config.get('max_empty_lines', 'disable');
   if (setting === 'disable') return text;
   const max = Number(setting);
   return text.replace(new RegExp(`(?:\\n\\s*){${max},}\\n`, 'g'), '\n'.repeat(max + 1));
 };
 
 const chineseConvert = async function (text) {
-  const setting = await config.get('chinese_convert');
+  const setting = await config.get('chinese_convert', 'disable');
   if (setting === 'disable') return text;
   const convertFile = setting === 's2t' ? './data/han/s2t.json' : './data/han/t2s.json';
   /** @type {{ [ch: string]: [string, number] }[]} */

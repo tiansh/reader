@@ -18,9 +18,9 @@ config.EXPERT_CONFIG_NAME = EXPERT_CONFIG_NAME;
 
 const listenerList = [];
 
-config.get = async name => {
+config.get = async (name, defaultValue) => {
   let value = await storage.config.getItem(name);
-  return value;
+  return value ?? defaultValue;
 };
 
 config.set = async (name, value) => {
