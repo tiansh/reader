@@ -114,6 +114,8 @@ pause_on_hidden=false
     * MIT License; https://github.com/necolas/normalize.css
 * icon.svg / icon.woff based on Feather
     * MIT License; https://github.com/feathericons/feather
+* pako: JavaScript port of zlib
+    * MIT License, ZLIB License: https://github.com/nodeca/pako
 * s2t.json, t2s.json Chinese traditional / simplified translation tables based on OpenCC
     * Apache License 2.0; https://github.com/BYVoid/OpenCC
     * For more details about the modification, see https://github.com/tiansh/opencc-fsm
