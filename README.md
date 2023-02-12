@@ -122,7 +122,7 @@ pause_on_hidden=false
 
 ## About
 
-Copyright (C) 2020-2022 田生
+Copyright (C) 2020-2023 田生
 
 This project is released under the Mozilla Public License 2.0 with no copyleft exception. You may checkout LICENSE file for more detail.
 
