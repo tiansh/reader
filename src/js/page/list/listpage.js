@@ -55,7 +55,7 @@ export default class ListPage extends Page {
   }
   async onActivate() {
     this.updateSort();
-    this.langTag = await config.get('cjk_lang_tag', 'und');
+    this.langTag = await config.get('cjk_lang_tag', navigator.language || 'und');
     await this.updateList();
   }
   show() {
