@@ -391,7 +391,7 @@ const options = (factory => {
       value: String(n),
       text: i18n.getMessage('configTextLineHeightNum', n),
     })),
-    default: '1.5',
+    default: '1.3',
   }), new SelectConfigOption({
     name: 'paragraph_spacing',
     title: i18n.getMessage('configTextParagraphSpacing'),

@@ -115,7 +115,7 @@ export default class TextPage {
       font_size: '18',
       font_family: null,
       font_list: '',
-      line_height: '1.5',
+      line_height: '1.3',
       paragraph_spacing: '0.5',
     };
     /** @type {{ [key in ReadConfigKey]?: string }} */
