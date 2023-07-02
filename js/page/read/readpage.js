@@ -62,8 +62,8 @@ export default class ReadPage extends Page {
    * @param {{ id: number }} config
    */
   async onActivate({ id }) {
-    this.langTag = await config.get('cjk_lang_tag');
-    this.renderStyle = await config.get('view_mode');
+    this.langTag = await config.get('cjk_lang_tag', 'und');
+    this.renderStyle = await config.get('view_mode', 'flip');
 
     // EXPERT_CONFIG when index page show as side bar
     this.screenWidthSideIndex = await config.expert('appearance.screen_width_side_index', 'number', 960);

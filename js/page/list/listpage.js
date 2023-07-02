@@ -55,7 +55,7 @@ export default class ListPage extends Page {
   }
   async onActivate() {
     this.updateSort();
-    this.langTag = await config.get('cjk_lang_tag');
+    this.langTag = await config.get('cjk_lang_tag', navigator.language || 'und');
     await this.updateList();
   }
   show() {
@@ -112,7 +112,11 @@ export default class ListPage extends Page {
       const items = event.dataTransfer.items;
       if (items.length !== 1) return false;
       if (items[0].kind !== 'file') return false;
-      if (items[0].type !== 'text/plain') return false;
+      if (![
+        'text/plain',
+        'application/gzip',
+        'application/x-gzip',
+      ].includes(items[0].type)) return false;
       return true;
     };
     this.fileListElement.addEventListener('dragover', event => {

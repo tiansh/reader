@@ -13,6 +13,8 @@ const text = {};
 
 export default text;
 
+/** @type {Promise<boolean>} */
+let compressConfigPromise = null;
 const defaultEncodingList = ['utf-8', 'gbk', 'big5', 'utf-16le', 'utf-16be', 'utf-8'];
 
 /**
@@ -20,38 +22,58 @@ const defaultEncodingList = ['utf-8', 'gbk', 'big5', 'utf-16le', 'utf-16be', 'ut
  * @returns {Promise<string>}
  */
 text.readFile = async function (file) {
-  return new Promise((resolve, reject) => {
+  const loadContent = new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.addEventListener('load', async event => {
-      const result = reader.result;
-
-      // EXPERT_CONFIG Text encoding when try to decode, use comma split multiple encodings
-      const encodingListConfig = await config.expert('text.encoding', 'string', '');
-      const encodingList = encodingListConfig.split(',')
-        .map(encoding => encoding.trim()).filter(encoding => encoding);
-
-      const text = [...encodingList, ...defaultEncodingList].reduce((text, encoding, index, fullList) => {
-        if (text != null) return text;
-        const fatal = ![encodingList.length - 1, fullList.length - 1].includes(index);
-        const decoder = new TextDecoder(encoding, { fatal });
-        try {
-          return decoder.decode(result);
-        } catch (e) {
-          return null;
-        }
-      }, null);
-      if (text) resolve(text);
-      reject(null);
+      resolve(reader.result);
     });
     reader.addEventListener('error', event => {
       reject(reader.error);
     });
     reader.readAsArrayBuffer(file);
   });
+  // EXPERT_CONFIG Text encoding when try to decode, use comma split multiple encodings
+  const encodingListConfigPromise = config.expert('text.encoding', 'string', '');
+  const isCompress = ['application/gzip', 'application/x-gzip'].includes(file.type);
+  if (isCompress) try {
+    compressConfigPromise = compressConfigPromise ?? new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = './js/lib/pako@2.1.0/pako_inflate.min.js';
+      script.addEventListener('error', event => {
+        document.body.removeChild(script);
+        reject(script);
+      });
+      script.addEventListener('load', event => { resolve(); });
+      document.body.appendChild(script);
+    });
+  } catch (e) {
+    alert('load script fail:', e);
+    compressConfigPromise = null;
+  }
+  const [content, encodingListConfig] =
+    await Promise.all([loadContent, encodingListConfigPromise, compressConfigPromise]);
+  return new Promise((resolve, reject) => {
+    let data = content;
+    if (isCompress) data = window.pako.inflate(content);
+    const encodingList = encodingListConfig.split(',')
+      .map(encoding => encoding.trim()).filter(encoding => encoding);
+    const text = [...encodingList, ...defaultEncodingList].reduce((text, encoding, index, fullList) => {
+      if (text != null) return text;
+      const fatal = ![encodingList.length - 1, fullList.length - 1].includes(index);
+      const decoder = new TextDecoder(encoding, { fatal });
+      try {
+        return decoder.decode(data);
+      } catch (e) {
+        return null;
+      }
+    }, null);
+    if (text) resolve(text);
+    reject(null);
+  });
 };
 
 text.parseFilename = function (filename) {
-  return filename.replace(/\.[^.]+$/, '');
+  return filename.replace(/\.[^.]+(?:\.gz)?$/, '');
 };
 
 /**
@@ -115,14 +137,14 @@ const convertLineEnding = function (text) {
 };
 
 const maxEmptyLine = async function (text) {
-  const setting = await config.get('max_empty_lines');
+  const setting = await config.get('max_empty_lines', 'disable');
   if (setting === 'disable') return text;
   const max = Number(setting);
   return text.replace(new RegExp(`(?:\\n\\s*){${max},}\\n`, 'g'), '\n'.repeat(max + 1));
 };
 
 const chineseConvert = async function (text) {
-  const setting = await config.get('chinese_convert');
+  const setting = await config.get('chinese_convert', 'disable');
   if (setting === 'disable') return text;
   const convertFile = setting === 's2t' ? './data/han/s2t.json' : './data/han/t2s.json';
   /** @type {{ [ch: string]: [string, number] }[]} */

@@ -16,7 +16,7 @@ import ConfigPage from './page/config/configpage.js';
 import './page/common.js';
 
 const router = (async function () {
-  const locale = await config.get('locale');
+  const locale = await config.get('locale', 'auto');
   if (locale !== 'auto') i18n.setLocale(locale);
   Array.from(document.querySelectorAll('[data-i18n]')).forEach(element => {
     element.textContent = i18n.getMessage(element.dataset.i18n, ...element.children);
