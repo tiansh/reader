@@ -110,6 +110,10 @@ export default {
     if (rate === 1) return '1× (默认)';
     return rate + '×';
   },
+  configSystemGroupTitle: '系统',
+  configAutoLock: '自动锁定',
+  configAutoLockNormal: '默认',
+  configAutoLockPrevent: '从不',
   configHelpGroupTitle: '帮助',
   configHelpTopic: '帮助',
   configHelpFilename: 'zh_cn.html',

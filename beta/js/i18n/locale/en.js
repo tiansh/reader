@@ -110,6 +110,10 @@ export default {
     if (rate === 1) return '1× (normal)';
     return rate + '×';
   },
+  configSystemGroupTitle: 'System',
+  configAutoLock: 'Auto-Lock',
+  configAutoLockNormal: 'Default',
+  configAutoLockPrevent: 'Never',
   configHelpGroupTitle: 'Help',
   configHelpTopic: 'Help',
   configHelpFilename: 'en.html',

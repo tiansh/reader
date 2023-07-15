@@ -456,7 +456,18 @@ const options = (factory => {
     })),
     default: '1',
   })],
-}, {
+}, ...(navigator.wakeLock ? [{
+  title: i18n.getMessage('configSystemGroupTitle'),
+  items: [new SelectConfigOption({
+    name: 'auto_lock',
+    title: i18n.getMessage('configAutoLock'),
+    select: [
+      { value: 'normal', text: i18n.getMessage('configAutoLockNormal') },
+      { value: 'prevent', text: i18n.getMessage('configAutoLockPrevent') },
+    ],
+    default: 'normal',
+  })],
+}] : []), {
   title: i18n.getMessage('configHelpGroupTitle'),
   items: [new WebpageConfigOption({
     title: i18n.getMessage('configHelpTopic'),
