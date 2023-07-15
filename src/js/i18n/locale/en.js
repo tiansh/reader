@@ -44,6 +44,11 @@ export default {
   readPageScrollDown: 'Scroll Down',
   readControlClose: 'Hide buttons',
   readAutoScrollStop: 'Stop auto scroll',
+  readMenuButton: 'More',
+  readMenuShare: 'Share',
+  readMenuDownload: 'Download',
+  readMenuAutoScroll: 'Auto Scroll',
+  readMenuCancel: 'Cancel',
 
   configPageTitle: 'Settings',
   configWithDetail: 'Detail',

@@ -44,6 +44,11 @@ export default {
   readPageScrollDown: '向下翻',
   readControlClose: '隐藏按钮',
   readAutoScrollStop: '停止滚动',
+  readMenuButton: '更多',
+  readMenuShare: '共享',
+  readMenuDownload: '下载',
+  readMenuAutoScroll: '自动滚动',
+  readMenuCancel: '取消',
 
   configPageTitle: '设置',
   configWithDetail: '详情',

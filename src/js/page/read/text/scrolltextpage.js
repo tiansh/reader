@@ -74,6 +74,12 @@ export default class ScrollTextPage extends TextPage {
       container.style.setProperty('--text-max-width', this.maxTextWidth + 'px');
     }
     this.observeEdgeReadAloud();
+    this.checkTimeResolutionForAutoScroll().then(() => {
+      if (this.isCurrent) {
+        this.autoScrollMenuUnload = this.readPage.controlPage.registerMoreMenu(
+          i18n.getMessage('readMenuAutoScroll'), () => { this.autoScrollStart(); });
+      }
+    });
   }
   async onInactivate() {
     this.unobserveEdgeReadAloud();
@@ -94,6 +100,7 @@ export default class ScrollTextPage extends TextPage {
     this.autoScrollStop();
     this.autoScrollSpeedFactor = null;
     this.textAreaOffset = null;
+    this.autoScrollMenuUnload?.();
   }
   initUpdatePage() {
     super.initUpdatePage();
@@ -1138,23 +1145,12 @@ export default class ScrollTextPage extends TextPage {
       this.autoScrollStart();
     }
   }
-  autoScrollStart() {
-    if (this.readPage.isSpeaking()) return;
-    if (this.autoScrollRunning) return;
-    this.autoScrollPaging = false;
-    const currentAutoScroll = this.autoScrollRunning = {};
-    this.readPage.disableControlPage();
-    this.container.classList.add('read-page-auto-scroll');
-    const rAF = callback => {
-      if (currentAutoScroll === this.autoScrollRunning) {
-        window.requestAnimationFrame(callback);
-      }
-    };
-    new Promise((resolve, reject) => {
+  checkTimeResolutionForAutoScroll() {
+    return new Promise((resolve, reject) => {
       const historyTime = [];
       (function checkFrameTick(count) {
         if (count === 0) resolve();
-        rAF(() => {
+        window.requestAnimationFrame(() => {
           const now = performance.now();
           if (historyTime.includes(now)) reject();
           else {
@@ -1163,7 +1159,16 @@ export default class ScrollTextPage extends TextPage {
           }
         });
       }(5));
-    }).then(() => {
+    });
+  }
+  autoScrollStart() {
+    if (this.readPage.isSpeaking()) return;
+    if (this.autoScrollRunning) return;
+    this.autoScrollPaging = false;
+    const currentAutoScroll = this.autoScrollRunning = {};
+    this.readPage.disableControlPage();
+    this.container.classList.add('read-page-auto-scroll');
+    this.checkTimeResolutionForAutoScroll().then(() => {
       if (currentAutoScroll !== this.autoScrollRunning) return;
       window.getSelection()?.empty();
       document.addEventListener('visibilitychange', this.autoScrollOnVisibilityChange);

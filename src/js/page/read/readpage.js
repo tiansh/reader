@@ -18,6 +18,7 @@ import Page from '../page.js';
 import file from '../../data/file.js';
 import config from '../../data/config.js';
 import onResize from '../../ui/util/onresize.js';
+import i18n from '../../i18n/i18n.js';
 
 export default class ReadPage extends Page {
   constructor() {
@@ -57,6 +58,18 @@ export default class ReadPage extends Page {
       this.container.scrollLeft = 0;
       event.preventDefault();
     });
+
+    const mayShare = this.canShareFile();
+    this.shareFile = this.shareFile.bind(this);
+    if (mayShare) {
+      this.controlPage.registerMoreMenu(i18n.getMessage('readMenuShare'), this.shareFile);
+    }
+    this.downloadFile = this.downloadFile.bind(this);
+    const maybeNeedDownload = !mayShare ||
+      navigator.userAgentData?.mobile === true ? false : !['iPhone', 'iPad'].includes(navigator.platform);
+    if (maybeNeedDownload) {
+      this.controlPage.registerMoreMenu(i18n.getMessage('readMenuDownload'), this.downloadFile);
+    }
   }
   /**
    * @param {{ id: number }} config
@@ -277,5 +290,30 @@ export default class ReadPage extends Page {
   isSpeaking() { return this.speech.isWorking(); }
   getBookmarks() { return this.index.bookmarks; }
   getContents() { return this.index.content; }
+  canShareFile() {
+    if (!navigator.share) return false;
+    if (!navigator.canShare) return false;
+    const testFile = new File([''], 'file.txt', { type: 'text/plain' });
+    return navigator.canShare({ files: [testFile] });
+  }
+  downloadContent() {
+    const text = '\ufeff' + this.content.replace(/\r\n|\r|\n/g, '\r\n');
+    return new TextEncoder().encode(text).buffer;
+  }
+  shareFile() {
+    const file = new File([this.downloadContent()], this.meta.title + '.txt', { type: 'text/plain' });
+    return navigator.share({ files: [file] });
+  }
+  downloadFile() {
+    const blob = new Blob([this.downloadContent()], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = this.meta.title + '.txt';
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => { URL.revokeObjectURL(url); }, 10e3);
+  }
 }
 

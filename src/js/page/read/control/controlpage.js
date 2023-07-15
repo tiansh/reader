@@ -12,6 +12,7 @@ import ReadPage from '../readpage.js';
 import speech from '../../../text/speech.js';
 import i18n from '../../../i18n/i18n.js';
 import template from '../../../ui/util/template.js';
+import Menu from '../../../ui/component/menu.js';
 
 export default class ControlPage extends ReadSubPage {
   /**
@@ -28,8 +29,12 @@ export default class ControlPage extends ReadSubPage {
     this.container.insertBefore(headerRef.get('root'), this.container.firstChild);
     const backButton = template.iconButton('back', i18n.getMessage('buttonBack'));
     headerRef.get('left').appendChild(backButton);
+    const moreButton = template.iconButton('more', i18n.getMessage('readMenuButton'));
+    headerRef.get('right').appendChild(moreButton);
     this.bookTitleElement = headerRef.get('mid');
     this.backButton = backButton;
+    this.moreButton = moreButton;
+    moreButton.hidden = true;
     this.hide();
 
     this.coverElement = this.container.querySelector('.read-control-cover');
@@ -49,6 +54,14 @@ export default class ControlPage extends ReadSubPage {
     this.speechButton = genButton('speech', i18n.getMessage('buttonSpeech'));
     const stopIcon = template.icon('speech-stop', i18n.getMessage('buttonSpeechStop'));
     this.speechButton.querySelector('.icon').after(stopIcon);
+
+    this.moreButtons = [];
+    this.moreMenuHandler = new Map();
+    this.moreMenu = new Menu({
+      groups: [this.moreButtons, [{
+        title: i18n.getMessage('readMenuCancel'),
+      }]],
+    });
 
     [
       { name: 'contents', button: this.contentsButton },
@@ -70,6 +83,10 @@ export default class ControlPage extends ReadSubPage {
     });
     this.backButton.addEventListener('click', event => {
       this.readPage.gotoList();
+    });
+    this.moreMenu.bind(this.moreButton, action => {
+      if (!action) return;
+      this.moreMenuHandler.get(action)();
     });
     this.coverElement.addEventListener('touchstart', event => {
       event.preventDefault();
@@ -136,5 +153,15 @@ export default class ControlPage extends ReadSubPage {
   }
   focus() {
     this.backButton.focus();
+  }
+  registerMoreMenu(title, handler) {
+    this.moreButton.hidden = false;
+    const key = {}, item = { title, value: key };
+    this.moreButtons.push(item);
+    this.moreMenuHandler.set(key, handler);
+    return () => {
+      this.moreButtons.splice(this.moreButtons.indexOf(item), 1);
+      this.moreMenuHandler.delete(key);
+    };
   }
 }
