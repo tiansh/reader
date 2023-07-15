@@ -41,7 +41,6 @@ export default class Menu {
         buttons[next].focus();
       }
     }
-    console.log(event.code);
   }
   /** @param {MouseEvent} event */
   clickHandler(event) {
