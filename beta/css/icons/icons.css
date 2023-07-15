@@ -107,3 +107,8 @@
   content: "\e90d";
 }
 
+.icon-more::before {
+  content: "\e90e";
+}
+
+

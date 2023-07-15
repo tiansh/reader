@@ -15,6 +15,7 @@ import i18n from '../../i18n/i18n.js';
 import template from '../../ui/util/template.js';
 import dom from '../../ui/util/dom.js';
 import ItemList from '../../ui/component/itemlist.js';
+import Menu from '../../ui/component/menu.js';
 
 export default class ListPage extends Page {
   constructor() {
@@ -41,15 +42,27 @@ export default class ListPage extends Page {
     this.searchContainer = this.fileListContainer.querySelector('.list-filter');
     this.searchInput = this.searchContainer.querySelector('.list-filter input');
     this.searchClearButton = template.iconButton('remove', i18n.getMessage('listFilterClear'));
-    this.sortButton = this.fileListContainer.querySelector('.list-sort');
+    this.sortButton = this.fileListContainer.querySelector('.list-sort button');
     this.sortContent = this.fileListContainer.querySelector('.list-sort-content');
-    this.sortMenu = document.querySelector('#list_sort_menu');
     this.importTip = document.querySelector('#import_tip');
 
     this.searchInput.placeholder = i18n.getMessage('listSearchPlaceholder');
     this.searchClearButton.classList.add('list-filter-clear');
     this.searchClearButton.disabled = true;
     this.searchContainer.appendChild(this.searchClearButton);
+    this.sortKey = {
+      dateread: i18n.getMessage('listSortByDateRead'),
+      dateadd: i18n.getMessage('listSortByDateAdd'),
+      title: i18n.getMessage('listSortByTitle'),
+    };
+    this.sortMenu = new Menu({
+      groups: [['dateread', 'dateadd', 'title'].map(value => ({
+        title: this.sortKey[value],
+        value,
+      })), [{
+        title: i18n.getMessage('listSortCancel'),
+      }]],
+    });
     this.initialListener();
     this.options = { sortBy: 'dateread', search: '' };
   }
@@ -88,24 +101,6 @@ export default class ListPage extends Page {
     this.searchClearButton.addEventListener('click', event => {
       this.clearSearch();
     });
-    this.sortMenuKeyboardHandler = this.sortMenuKeyboardHandler.bind(this);
-    this.sortButton.addEventListener('click', event => {
-      this.showSortMenu();
-    });
-    this.sortMenu.addEventListener('click', event => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      const item = target.closest('.screen-option-item');
-      if (item) {
-        const option = item.dataset.option;
-        if (option) {
-          this.options.sortBy = option;
-          this.updateSort();
-          this.updateList();
-        }
-      }
-      this.hideSortMenu();
-    });
 
     /** @param {DragEvent} event */
     const isValidFlieDragEvent = event => {
@@ -139,6 +134,12 @@ export default class ListPage extends Page {
       const file = item.getAsFile();
       this.importFile(file);
       event.preventDefault();
+    });
+    this.sortMenu.bind(this.sortButton, sortBy => {
+      if (!sortBy) return;
+      this.options.sortBy = sortBy;
+      this.updateSort();
+      this.updateList();
     });
   }
   /** @param {File} item */
@@ -239,9 +240,7 @@ export default class ListPage extends Page {
     return this.updateSearch();
   }
   updateSort() {
-    const menuItems = [...document.querySelectorAll('.list-sort-menu [data-option]')];
-    const activeItem = menuItems.find(item => item.dataset.option === this.options.sortBy);
-    this.sortContent.querySelector('span').textContent = activeItem.textContent;
+    this.sortContent.querySelector('span').textContent = this.sortKey[this.options.sortBy];
   }
   searchFiles(/** @type {import('../../data/storage.js').ReaderFileMeta[]} */files) {
     for (let i = 0; i < files.length;) {
@@ -257,34 +256,6 @@ export default class ListPage extends Page {
       title: (a, b) => a.title.localeCompare(b.title, this.langTag || navigator.language),
     }[sortBy];
     files.sort(cmp);
-  }
-  /** @param {KeyboardEvent} event */
-  sortMenuKeyboardHandler(event) {
-    if (event.code === 'Escape') {
-      this.hideSortMenu();
-    }
-  }
-  showSortMenu() {
-    this.sortMenu.style.display = 'block';
-    this.element.setAttribute('aria-hidden', 'true');
-    dom.disableKeyboardFocus(this.element);
-    document.addEventListener('keydown', this.sortMenuKeyboardHandler);
-    if (document.activeElement === this.sortButton) {
-      this.sortMenu.querySelector('button').focus();
-    }
-    this.sortMenuActiveElementBefore = document.activeElement;
-    if (document.activeElement.matches('button')) {
-      const buttons = this.sortMenu.querySelectorAll('.screen-option-item');
-      Array.from(buttons).pop().focus();
-    }
-  }
-  hideSortMenu() {
-    this.sortMenu.style.display = 'none';
-    this.element.setAttribute('aria-hidden', 'false');
-    dom.enableKeyboardFocus(this.element);
-    document.removeEventListener('keydown', this.sortMenuKeyboardHandler);
-    this.sortMenuActiveElementBefore.focus();
-    this.sortMenuActiveElementBefore = null;
   }
 }
 

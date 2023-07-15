@@ -44,6 +44,7 @@ export default class ReadSubPage {
     this.hide();
   }
   onInactivate() { }
+  onResize() { }
   cursorChange(cursor, config) { }
 }
 
