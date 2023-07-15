@@ -101,7 +101,8 @@ defined by the Mozilla Public License, v. 2.0.
     </div>
     <div id="read_index_contents" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_contents_tab">
       <div class="index-tab-container">
-        <div id="contents_list" class="index-list scroll" tabindex="-1"></div>
+        <div id="contents_list" class="contents-list index-list scroll" tabindex="-1"></div>
+        <div id="contents_list_fake" class="contents-list index-list" tabindex="-1" aria-hidden="true"></div>
       </div>
       <div id="read_index_contents_config" class="">
         <div class="index-tab-container">
@@ -116,7 +117,7 @@ defined by the Mozilla Public License, v. 2.0.
     </div>
     <div id="read_index_bookmark" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_bookmark_tab">
       <div class="index-tab-container">
-        <div id="bookmark_list" class="index-list scroll" tabindex="-1"></div>
+        <div id="bookmark_list" class="bookmark-list index-list scroll" tabindex="-1"></div>
       </div>
     </div>
     <div id="read_index_search" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_search_tab">
@@ -125,7 +126,7 @@ defined by the Mozilla Public License, v. 2.0.
           <div class="search-box-placehodler" tabindex="-1" aria-hidden="true"></div>
           <form action="/"><label><span class="icon icon-search" role="img" aria-hidden="true"></span><input type="search" name="search_box" class="search-input" /></label></form>
         </div>
-        <div id="search_list" class="index-list scroll" tabindex="-1"></div>
+        <div id="search_list" class="search-list index-list scroll" tabindex="-1"></div>
       </div>
     </div>
   </div>

@@ -187,8 +187,8 @@
 }
 
 .read-page-scroll .read-index {
-  left: calc(var(--slide-offset) - var(--window-width));
-  right: calc(var(--window-width) - var(--slide-offset));
+  left: min(calc(var(--slide-offset) - var(--index-width)), 0px);
+  right: calc(var(--index-width) - var(--slide-offset));
 }
 
 .read-page-scroll .read-index.read-sub-page-current {

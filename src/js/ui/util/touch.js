@@ -7,6 +7,8 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
+import onResize from './onresize.js';
+
 /** @typedef {[number, number]} Point */
 /** @typedef {'x'|'y'} Direction */
 
@@ -60,7 +62,8 @@ export class TouchGestureListener {
         direction = calculateDirection([dx, dy]);
       }
       if (direction) {
-        const offset = direction === 'x' ? dx : dy;
+        const [width, height] = onResize.currentSize();
+        const offset = direction === 'x' ? Math.min(dx, width) : Math.min(dy, height);
         const action = direction === 'x' ? 'movex' : 'movey';
         this.trigger(action, offset, { touch });
       }

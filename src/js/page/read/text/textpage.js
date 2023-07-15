@@ -38,8 +38,6 @@ export default class TextPage {
     document.addEventListener('keydown', this.keyboardEvents);
     document.addEventListener('wheel', this.wheelEvents);
     this.container.addEventListener('mousedown', this.mouseEvents);
-
-    onResize.addListener(this.onResize);
   }
   createContainer() {
     return document.createElement('div');
@@ -61,6 +59,7 @@ export default class TextPage {
     container.remove();
   }
   initUpdatePage() {
+    onResize.addListener(this.onResize);
   }
   show() {
     const container = this.container;

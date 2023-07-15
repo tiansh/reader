@@ -96,7 +96,6 @@ export default class ReadPage extends Page {
     }
     await this.textPage.onActivate({ id });
 
-    onResize.addListener(this.onResize);
     document.addEventListener('keydown', this.keyboardEvents);
     this.router.setTitle(this.meta.title, this.getLang());
 
@@ -131,9 +130,12 @@ export default class ReadPage extends Page {
     // Some text page render requires rendered dom to meansure its element size
     // So we have to put it after show().
     this.textPage.initUpdatePage();
+    this.indexPage.initUpdatePage();
+    onResize.addListener(this.onResize);
   }
   onResize() {
     this.updateSideIndex();
+    this.subPages.forEach(page => { page.onResize(); });
   }
   keyboardEvents(event) {
     if (event.code === 'Escape') {

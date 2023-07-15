@@ -35,7 +35,7 @@ export default class ReadIndex {
       // EXPERT_CONFIG Maximum length of line for table of contents
       config.expert('text.contents_max_length', 'number', 100),
       // EXPERT_CONFIG Maximum size of table of contents
-      config.expert('text.contents_size_limit', 'number', 2000),
+      config.expert('text.contents_size_limit', 'number', 5000),
     ]).then(([maxLength, limit]) => {
       this.config = { maxLength, limit };
     });

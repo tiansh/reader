@@ -112,6 +112,9 @@ export default class IndexPage extends ReadSubPage {
     this.tabGroup.style.setProperty('--active-index', pageIndex);
     this.currentSubPageIndex = pageIndex;
   }
+  initUpdatePage() {
+    if (this.subPages) this.subPages.forEach(page => { page.initUpdatePage(); });
+  }
   show(/** @type {'contents'|'bookmark'|'search'|null} */page = null) {
     const actived = this.isCurrent;
     super.show();
@@ -130,7 +133,7 @@ export default class IndexPage extends ReadSubPage {
     if (this.isCurrent !== actived) {
       this.readPage.updateIndexRender();
     }
-    if (this.subpages) this.subPages.forEach(page => { page.hide(); });
+    if (this.subPages) this.subPages.forEach(page => { page.hide(); });
   }
   isSubPageCurrent(/** @type {'contents'|'bookmark'|'search'} */page = null) {
     return this.subPageMap[page]?.isShow;
@@ -139,5 +142,9 @@ export default class IndexPage extends ReadSubPage {
     this.subPages.forEach(page => {
       page.cursorChange(cursor, config);
     });
+  }
+  onResize() {
+    super.onResize();
+    this.subPages.forEach(page => { page.onResize(); });
   }
 }

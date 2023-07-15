@@ -44,7 +44,7 @@ encoding=utf-8,gbk,big5,utf-8
 ; 生成目录时，仅考虑长度不超过如下值的行
 contents_max_length=100
 ; 生成目录时，如果识别到的目录条目数量超过如下限制，会拒绝生成目录
-contents_size_limit=2000
+contents_size_limit=5000
 ; 搜索时用户输入识别方式
 ; 支持取值 text, wildcard, regex
 search_mode=text

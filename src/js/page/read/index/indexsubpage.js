@@ -36,7 +36,6 @@ export default class IndexSubPage extends ReadSubPage {
   updateListRender() {
     if (!this.itemList) return;
     if (this.isCurrent && this.isShow) {
-      this.updateCurrentHighlight('start');
       dom.enableKeyboardFocus(this.container);
     } else {
       dom.disableKeyboardFocus(this.container);
@@ -98,14 +97,17 @@ export default class IndexSubPage extends ReadSubPage {
       emptyListRender,
       onRemove,
     });
-
     this.pageButton.addEventListener('click', this.pageButtonAction);
-
   }
   onInactivate() {
     this.itemList.dispatch();
     this.itemList = null;
   }
+  initUpdatePage() {
+    this.updateCurrentHighlight('start');
+    this.updateListRender();
+  }
+  onResize() { }
   enablePageButton() {
     this.pageButton.disabled = false;
   }
