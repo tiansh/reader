@@ -111,10 +111,6 @@ export default {
     if (rate === 1) return '1× (預設)';
     return rate + '×';
   },
-  configSystemGroupTitle: '系統',
-  configAutoLock: '自動鎖定',
-  configAutoLockNormal: '預設',
-  configAutoLockPrevent: '從不',
   configHelpGroupTitle: '說明',
   configHelpTopic: '說明',
   configHelpFilename: 'en.html',

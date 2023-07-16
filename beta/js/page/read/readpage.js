@@ -28,7 +28,6 @@ export default class ReadPage extends Page {
     this.useSideIndex = null;
     this.onResize = this.onResize.bind(this);
     this.keyboardEvents = this.keyboardEvents.bind(this);
-    this.wakeLockReacquire = this.wakeLockReacquire.bind(this);
   }
   matchUrl(url) {
     if (!/\/read\/\d+/.test(url)) return null;
@@ -115,8 +114,6 @@ export default class ReadPage extends Page {
 
     this.subPages.forEach(page => { page.onActivate(); });
     this.updateSideIndex();
-
-    await this.wakeLockRequire();
   }
   async onUpdate({ id }) {
     this.onInactivate();
@@ -137,7 +134,6 @@ export default class ReadPage extends Page {
     this.textPage = null;
     this.container.classList.remove('read-page-scroll', 'read-page-flip');
     this.router.setTitle();
-    await this.wakeLockRelease();
   }
   gotoList() {
     this.router.go('list');
@@ -318,25 +314,6 @@ export default class ReadPage extends Page {
     link.click();
     document.body.removeChild(link);
     setTimeout(() => { URL.revokeObjectURL(url); }, 10e3);
-  }
-  async wakeLockRequire() {
-    const useWakeLock = (await config.get('auto_lock', 'normal')) === 'prevent';
-    if (!useWakeLock) return;
-    if (!navigator.wakeLock) return;
-    this.wakeLock = true;
-    document.addEventListener('visibilitychange', this.wakeLockReacquire);
-    try { await navigator.wakeLock.request('screen'); } catch (_ignore) { /* ignore */ }
-  }
-  async wakeLockReacquire() {
-    if (this.wakeLock !== null && document.visibilityState === 'visible') {
-      this.wakeLock = await navigator.wakeLock.request('screen');
-    }
-  }
-  async wakeLockRelease() {
-    if (!this.wakeLock) return;
-    this.wakeLock.release();
-    this.wakeLock = null;
-    document.removeEventListener('visibilitychange', this.reacquireWakeLock);
   }
 }
 
