@@ -190,12 +190,12 @@ export default class IndexContentsPage extends IndexSubPage {
 
     this.renderReal = true;
     this.fakeListElement = this.container.querySelector('#contents_list_fake');
-    this.fakeListUl = this.fakeListElement.appendChild(document.createElement('ul'));
-    this.fakeListUl.className = 'item-list item-list-selectable';
     this.fakeListElement.remove();
   }
   onActivate() {
     super.onActivate();
+    this.fakeListUl = this.fakeListElement.appendChild(document.createElement('ul'));
+    this.fakeListUl.className = 'item-list item-list-selectable';
   }
   onInactivate() {
     this.recoverRealList();
@@ -266,7 +266,7 @@ export default class IndexContentsPage extends IndexSubPage {
     return [index, true];
   }
   updateCurrentHighlight(position) {
-    if (position && !this.renderReal) {
+    if (!this.renderReal) {
       this.recoverRealList();
       super.updateCurrentHighlight(position);
       this.hideRealList();
@@ -275,7 +275,7 @@ export default class IndexContentsPage extends IndexSubPage {
     }
   }
   refreshList() {
-    if (!this.isCurrent) {
+    if (!this.renderReal) {
       this.recoverRealList();
       super.refreshList();
       this.hideRealList();
@@ -297,7 +297,10 @@ export default class IndexContentsPage extends IndexSubPage {
     this.renderReal = false;
     this.listElement.after(this.fakeListElement);
     this.updateFakeList();
-    this.fakeListElement.scrollTop = this.listElement.scrollTop;
+    const scrollTop = this.listElement.scrollTop;
+    window.requestAnimationFrame(() => {
+      this.fakeListElement.scrollTop = scrollTop;
+    });
     this.listElement.remove();
   }
   updateFakeList() {

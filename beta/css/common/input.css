@@ -260,7 +260,7 @@ button.screen-option-item {
   padding: 0 12px;
   height: 53px;
   line-height: 53px;
-  font-size: 25px;
+  font-size: 22px;
   border-bottom: 1px solid var(--border-color);
   background: var(--menu-background);
   color: var(--menu-color);
@@ -268,8 +268,8 @@ button.screen-option-item {
 }
 
 .screen-option .button-wrap {
-  margin: 0 -12px;
   padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .screen-option-item:first-child {
