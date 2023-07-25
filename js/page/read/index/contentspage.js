@@ -187,13 +187,24 @@ export default class IndexContentsPage extends IndexSubPage {
   onFirstActivate() {
     super.onFirstActivate();
     this.templatePage.onFirstActivate(this, this.container);
+
+    this.renderReal = true;
+    this.fakeListElement = this.container.querySelector('#contents_list_fake');
+    this.fakeListElement.remove();
   }
   onActivate() {
     super.onActivate();
+    this.fakeListUl = this.fakeListElement.appendChild(document.createElement('ul'));
+    this.fakeListUl.className = 'item-list item-list-selectable';
   }
   onInactivate() {
+    this.recoverRealList();
     super.onInactivate();
     this.templatePage.hide();
+    this.fakeListElement.innerHTML = '';
+  }
+  onResize() {
+    this.refreshList();
   }
   setCurrent() {
     super.setCurrent();
@@ -201,6 +212,22 @@ export default class IndexContentsPage extends IndexSubPage {
   unsetCurrent() {
     super.unsetCurrent();
     if (this.templatePage) this.templatePage.hide();
+  }
+  updateListRender() {
+    super.updateListRender();
+    const shouldRenderReal = this.isCurrent && this.isShow;
+    if (shouldRenderReal && !this.renderReal) {
+      // Wait some timeout so make sure the animation of slide in is finished
+      // Maybe we should wait for some transition event, but it could be too complex
+      // and waiting a fixed time should be enough here
+      setTimeout(() => {
+        if (this.isCurrent && this.isShow && !this.renderReal) {
+          this.recoverRealList();
+        }
+      }, 100);
+    } else if (!shouldRenderReal && this.renderReal) {
+      this.hideRealList();
+    }
   }
   createPageButton() {
     return template.iconButton('refresh', i18n.getMessage('buttonContentsRefresh'));
@@ -237,5 +264,57 @@ export default class IndexContentsPage extends IndexSubPage {
   getCurrentIndex() {
     const [index] = super.getCurrentIndex();
     return [index, true];
+  }
+  updateCurrentHighlight(position) {
+    if (!this.renderReal) {
+      this.recoverRealList();
+      super.updateCurrentHighlight(position);
+      this.hideRealList();
+    } else {
+      super.updateCurrentHighlight(position);
+    }
+  }
+  refreshList() {
+    if (!this.renderReal) {
+      this.recoverRealList();
+      super.refreshList();
+      this.hideRealList();
+    } else {
+      super.refreshList();
+    }
+  }
+  recoverRealList() {
+    if (this.renderReal) return;
+    this.renderReal = true;
+    this.fakeListElement.before(this.listElement);
+    this.listElement.scrollTop = this.fakeListElement.scrollTop;
+    this.fakeListElement.remove();
+  }
+  hideRealList() {
+    if (!this.renderReal) return;
+    if (!this.itemList) return;
+    if (this.itemList.isListEmpty()) return;
+    this.renderReal = false;
+    this.listElement.after(this.fakeListElement);
+    this.updateFakeList();
+    const scrollTop = this.listElement.scrollTop;
+    window.requestAnimationFrame(() => {
+      this.fakeListElement.scrollTop = scrollTop;
+    });
+    this.listElement.remove();
+  }
+  updateFakeList() {
+    this.fakeListUl.innerHTML = '';
+    const container = this.listElement;
+    const listItems = Array.from(container.querySelectorAll('li'));
+    if (!listItems.length) return;
+    const start = listItems.findIndex(item => item.offsetTop + item.clientHeight >= container.scrollTop);
+    let end;
+    for (end = start; end < listItems.length && listItems[end].offsetTop <= container.scrollTop + container.clientHeight; end++) {
+      this.fakeListUl.appendChild(listItems[end].cloneNode(true));
+    }
+    this.fakeListUl.style.paddingTop = listItems[start].offsetTop + 'px';
+    const lastItem = listItems[end - 1];
+    this.fakeListUl.style.paddingBottom = container.scrollHeight - lastItem.offsetTop - lastItem.clientHeight + 'px';
   }
 }

@@ -12,11 +12,12 @@ import i18n from '../i18n/i18n.js';
 import theme from '../theme/theme.js';
 import config from '../data/config.js';
 
-onResize.addListener(([width, height]) => {
+const updateWindowSize = function ([width, height]) {
   const html = document.documentElement;
   html.style.setProperty('--window-width', width + 'px');
   html.style.setProperty('--window-height', height + 'px');
-});
+};
+onResize.addListener(updateWindowSize);
 
 // Only add .hover className when user use a mouse
 // mouseover will sometime not triggered after touchstart

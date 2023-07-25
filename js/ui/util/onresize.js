@@ -21,6 +21,8 @@ onResize.addListener = function (/** @type {ResizeListener} */listener) {
   const pos = listeners.indexOf(listener);
   if (pos !== -1) return null;
   listeners.push(listener);
+  const [width, height] = onResize.currentSize();
+  if (width && height) listener([width, height]);
   return listener;
 };
 

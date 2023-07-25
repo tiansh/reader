@@ -44,6 +44,12 @@ export default {
   readPageScrollDown: '向下翻',
   readControlClose: '隱藏按鈕',
   readAutoScrollStop: '停止捲動',
+  readMenuButton: '更多',
+  readMenuShare: '分享',
+  readMenuDownload: '下載',
+  readMenuAutoScroll: '自動捲動',
+  readMenuCancel: '取消',
+
 
   configPageTitle: '設定',
   configWithDetail: '詳細資料',

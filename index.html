@@ -45,157 +45,157 @@ defined by the Mozilla Public License, v. 2.0.
 <style id="custom_css"></style>
 </head>
 <body>
-<div class="page" id="list_page">
-  <input id="file" type="file" accept="text/plain,application/gzip" tabindex="-1" aria-hidden="true" />
-  <div id="file_list_container" class="file-list-container scroll" tabindex="-1">
-    <div id="file_list_sensor"></div>
-    <div id="file_list_top" class="list-action">
-      <div class="list-filter">
-        <div class="search-box">
-          <label><span class="icon icon-search" role="img" aria-hidden="true"></span><input type="search" class="search-input" /></label>
-        </div>
-      </div>
-      <div class="list-sort">
-        <button type="button" class="list-sort">
-          <div class="button-wrap" tabindex="-1">
-            <span class="list-sort-title"><span data-i18n="listSortTitle"></span></span>
-            <span class="list-sort-content"><span></span><span class="icon icon-detail" role="img"></span></span>
+<div class="pages" id="pages">
+  <div class="page" id="list_page">
+    <input id="file" type="file" accept="text/plain,application/gzip" tabindex="-1" aria-hidden="true" />
+    <div id="file_list_container" class="file-list-container scroll" tabindex="-1">
+      <div id="file_list_sensor"></div>
+      <div id="file_list_top" class="list-action">
+        <div class="list-filter">
+          <div class="search-box">
+            <label><span class="icon icon-search" role="img" aria-hidden="true"></span><input type="search" class="search-input" /></label>
           </div>
-        </button>
-      </div>
-    </div>
-    <div role="main" id="file_list"><div id="drop_area" data-i18n="listDropArea"></div></div>
-    <div id="import_tip">
-      <div class="tip-cover"></div>
-      <div class="tip-content"><span data-i18n="listImportTip"></span></div>
-    </div>
-  </div>
-</div>
-<div id="list_sort_menu" class="list-sort-menu" role="dialog" aria-modal="true">
-  <div class="backdrop"></div>
-  <div class="list-sort-options screen-option">
-    <div class="screen-option-group">
-      <button type="button" class="screen-option-item" data-option="dateread" data-option-default><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateRead"></span></div></button>
-      <button type="button" class="screen-option-item" data-option="dateadd"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByDateAdd"></span></div></button>
-      <button type="button" class="screen-option-item" data-option="title"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortByTitle"></span></div></button>
-    </div>
-    <div class="screen-option-group">
-      <button type="button" class="screen-option-item"><div class="button-wrap" tabindex="-1"><span data-i18n="listSortCancel"></span></div></button>
-    </div>
-  </div>
-</div>
-<div class="page" id="read_page">
-  <div class="read-layer read-sub-page read-control">
-    <div class="footer-line"><div class="icon-line" role="toolbar"></div></div>
-    <button class="read-control-cover"></button>
-  </div>
-  <div class="read-layer read-sub-page read-index">
-    <div class="index-tab-group">
-      <div class="tab-group" role="tablist" tabindex="0">
-        <div class="tab-group-wrap" tabindex="-1">
-          <button type="button" id="read_index_contents_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_contents" tabindex="-1"></button>
-          <button type="button" id="read_index_bookmark_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_bookmark" tabindex="-1"></button>
-          <button type="button" id="read_index_search_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_search" tabindex="-1"></button>
+        </div>
+        <div class="list-sort">
+          <button type="button" class="list-sort">
+            <div class="button-wrap" tabindex="-1">
+              <span class="list-sort-title"><span data-i18n="listSortTitle"></span></span>
+              <span class="list-sort-content"><span></span><span class="icon icon-detail" role="img"></span></span>
+            </div>
+          </button>
         </div>
       </div>
-    </div>
-    <div id="read_index_contents" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_contents_tab">
-      <div class="index-tab-container">
-        <div id="contents_list" class="index-list scroll" tabindex="-1"></div>
+      <div role="main" id="file_list"><div id="drop_area" data-i18n="listDropArea"></div></div>
+      <div id="import_tip">
+        <div class="tip-cover"></div>
+        <div class="tip-content"><span data-i18n="listImportTip"></span></div>
       </div>
-      <div id="read_index_contents_config" class="">
+    </div>
+  </div>
+  <div class="page" id="read_page">
+    <div class="read-layer read-sub-page read-control">
+      <div class="footer-line"><div class="icon-line" role="toolbar"></div></div>
+      <button class="read-control-cover"></button>
+    </div>
+    <div class="read-layer read-sub-page read-index">
+      <div class="index-tab-group">
+        <div class="tab-group" role="tablist" tabindex="0">
+          <div class="tab-group-wrap" tabindex="-1">
+            <button type="button" id="read_index_contents_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_contents" tabindex="-1"></button>
+            <button type="button" id="read_index_bookmark_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_bookmark" tabindex="-1"></button>
+            <button type="button" id="read_index_search_tab" class="tab-item" role="tab" aria-selected="false" aria-controls="read_index_search" tabindex="-1"></button>
+          </div>
+        </div>
+      </div>
+      <div id="read_index_contents" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_contents_tab">
         <div class="index-tab-container">
-          <div class="config-option-text">
-            <form action="/"><label><span class="config-option-text-title" data-i18n="readContentsTemplate"></span><input class="config-option-text-input input-with-submit" type="text" enterkeyhint="search"></label></form>
+          <div id="contents_list" class="contents-list index-list scroll" tabindex="-1"></div>
+          <div id="contents_list_fake" class="contents-list index-list" tabindex="-1" aria-hidden="true"></div>
+        </div>
+        <div id="read_index_contents_config" class="">
+          <div class="index-tab-container">
+            <div class="config-option-text">
+              <form action="/"><label><span class="config-option-text-title" data-i18n="readContentsTemplate"></span><input class="config-option-text-input input-with-submit" type="text" enterkeyhint="search"></label></form>
+            </div>
+            <div class="config-option-text-description" data-i18n="readContentsTemplateDescription"></div>
+            <div class="contents-history-title"><span data-i18n="readContentsTemplateHistory"></span></div>
+            <div class="contents-history-list scroll" tabindex="-1"></div>
           </div>
-          <div class="config-option-text-description" data-i18n="readContentsTemplateDescription"></div>
-          <div class="contents-history-title"><span data-i18n="readContentsTemplateHistory"></span></div>
-          <div class="contents-history-list scroll" tabindex="-1"></div>
+        </div>
+      </div>
+      <div id="read_index_bookmark" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_bookmark_tab">
+        <div class="index-tab-container">
+          <div id="bookmark_list" class="bookmark-list index-list scroll" tabindex="-1"></div>
+        </div>
+      </div>
+      <div id="read_index_search" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_search_tab">
+        <div class="index-tab-container">
+          <div class="search-box">
+            <div class="search-box-placehodler" tabindex="-1" aria-hidden="true"></div>
+            <form action="/"><label><span class="icon icon-search" role="img" aria-hidden="true"></span><input type="search" name="search_box" class="search-input" /></label></form>
+          </div>
+          <div id="search_list" class="search-list index-list scroll" tabindex="-1"></div>
         </div>
       </div>
     </div>
-    <div id="read_index_bookmark" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_bookmark_tab">
-      <div class="index-tab-container">
-        <div id="bookmark_list" class="index-list scroll" tabindex="-1"></div>
-      </div>
-    </div>
-    <div id="read_index_search" class="index-tab-panel" role="tabpanel" aria-labelledby="read_index_search_tab">
-      <div class="index-tab-container">
-        <div class="search-box">
-          <div class="search-box-placehodler" tabindex="-1" aria-hidden="true"></div>
-          <form action="/"><label><span class="icon icon-search" role="img" aria-hidden="true"></span><input type="search" name="search_box" class="search-input" /></label></form>
-        </div>
-        <div id="search_list" class="index-list scroll" tabindex="-1"></div>
+    <div class="read-layer read-sub-page read-jump">
+      <div class="read-jump-cover"></div>
+      <div class="footer-line">
+        <div id="jump_range"></div>
       </div>
     </div>
   </div>
-  <div class="read-layer read-sub-page read-jump">
-    <div class="read-jump-cover"></div>
-    <div class="footer-line">
-      <div id="jump_range"></div>
+  <div class="page" id="config_page">
+    <div class="config-page-main config-page">
+      <div role="main" class="config-page-content scroll" tabindex="-1"></div>
+    </div>
+    <div id="config_page_select" class="config-option-page config-page">
+      <div role="main" class="config-page-content scroll">
+        <div class="config-option-select-list config-group"></div>
+        <div class="config-option-select-description"></div>
+      </div>
+    </div>
+    <div id="config_page_color" class="config-option-page config-page">
+      <div role="main" class="config-page-content scroll">
+        <div class="config-option-color-picker"></div>
+      </div>
+    </div>
+    <div id="config_page_font" class="config-option-page config-page">
+      <div role="main" class="config-page-content scroll">
+        <input id="select_font_file" type="file" accept="font/ttf,font/otf,font/woff,font/woff2" />
+        <div class="font-select-section config-group"></div>
+        <div class="config-option-select-list config-group"></div>
+      </div>
+    </div>
+    <div id="config_page_voice" class="config-option-page config-page">
+      <div role="main" class="config-page-content scroll">
+        <div class="config-option-select-list config-group"></div>
+        <div class="config-option-voice-description"></div>
+      </div>
+    </div>
+    <div id="config_page_text" class="config-option-page config-page">
+      <div role="main" class="config-page-content scroll">
+        <div class="config-option-text">
+          <label>
+            <span class="config-option-text-title"></span>
+            <input class="config-option-text-input" type="text" enterkeyhint="done" />
+          </label>
+        </div>
+        <div class="config-option-text-description"></div>
+      </div>
+    </div>
+    <div id="config_page_webpage" class="config-option-page config-page">
+      <div role="main" class="config-page-content">
+        <iframe src="about:blank" class="config-webpage-iframe"></iframe>
+      </div>
+    </div>
+    <div id="config_page_about" class="config-option-page config-page">
+    </div>
+    <div id="config_page_expert" class="config-option-page config-page">
+      <div role="main" class="config-page-content scroll">
+        <div class="config-option-expert">
+          <textarea class="config-option-expert-input scroll" type="text" enterkeyhint="done"></textarea>
+        </div>
+        <div class="config-option-expert-description"></div>
+      </div>
     </div>
   </div>
 </div>
-<div class="page" id="config_page">
-  <div class="config-page-main config-page">
-    <div role="main" class="config-page-content scroll" tabindex="-1"></div>
-  </div>
-  <div id="config_page_select" class="config-option-page config-page">
-    <div role="main" class="config-page-content scroll">
-      <div class="config-option-select-list config-group"></div>
-      <div class="config-option-select-description"></div>
-    </div>
-  </div>
-  <div id="config_page_color" class="config-option-page config-page">
-    <div role="main" class="config-page-content scroll">
-      <div class="config-option-color-picker"></div>
-    </div>
-  </div>
-  <div id="config_page_font" class="config-option-page config-page">
-    <div role="main" class="config-page-content scroll">
-      <input id="select_font_file" type="file" accept="font/ttf,font/otf,font/woff,font/woff2" />
-      <div class="font-select-section config-group"></div>
-      <div class="config-option-select-list config-group"></div>
-    </div>
-  </div>
-  <div id="config_page_voice" class="config-option-page config-page">
-    <div role="main" class="config-page-content scroll">
-      <div class="config-option-select-list config-group"></div>
-      <div class="config-option-voice-description"></div>
-    </div>
-  </div>
-  <div id="config_page_text" class="config-option-page config-page">
-    <div role="main" class="config-page-content scroll">
-      <div class="config-option-text">
-        <label>
-          <span class="config-option-text-title"></span>
-          <input class="config-option-text-input" type="text" enterkeyhint="done" />
-        </label>
-      </div>
-      <div class="config-option-text-description"></div>
-    </div>
-  </div>
-  <div id="config_page_webpage" class="config-option-page config-page">
-    <div role="main" class="config-page-content">
-      <iframe src="about:blank" class="config-webpage-iframe"></iframe>
-    </div>
-  </div>
-  <div id="config_page_about" class="config-option-page config-page">
-  </div>
-  <div id="config_page_expert" class="config-option-page config-page">
-    <div role="main" class="config-page-content scroll">
-      <div class="config-option-expert">
-        <textarea class="config-option-expert-input scroll" type="text" enterkeyhint="done"></textarea>
-      </div>
-      <div class="config-option-expert-description"></div>
-    </div>
-  </div>
+<div id="screen_menu" class="screen-menu" role="dialog" aria-modal="true">
+  <div class="backdrop"></div>
+  <div class="screen-option"></div>
 </div>
 <template id="icon">
   <span class="icon" role="img"></span>
 </template>
 <template id="icon_button">
   <button type="button"><div class="button-wrap" tabindex="-1" data-ref="icon"></div></button>
+</template>
+<template id="menugroup">
+  <div class="screen-option-group"></div>
+</template>
+<template id="menuitem">
+  <button type="button" class="screen-option-item"><div class="button-wrap" tabindex="-1"><span data-ref="text"></span></div></button>
 </template>
 <template id="header">
   <div class="header-line" role="navigation">

@@ -634,6 +634,7 @@ export default class FlipTextPage extends TextPage {
       let boundary = body.getBoundingClientRect().top + body.scrollHeight - body.clientHeight;
       const paragraphs = Array.from(body.querySelectorAll('p[data-start]'));
       let firstOut = paragraphs.find(p => p.getBoundingClientRect().bottom > boundary);
+      if (!firstOut) return low;
       if (firstOut === body.firstChild) {
         const ref = firstOut.nextSibling;
         firstOut.remove();

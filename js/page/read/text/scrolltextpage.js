@@ -73,8 +73,16 @@ export default class ScrollTextPage extends TextPage {
       const container = this.readScrollElement.parentNode;
       container.style.setProperty('--text-max-width', this.maxTextWidth + 'px');
     }
+    this.observeEdgeReadAloud();
+    this.checkTimeResolutionForAutoScroll().then(() => {
+      if (this.isCurrent) {
+        this.autoScrollMenuUnload = this.readPage.controlPage.registerMoreMenu(
+          i18n.getMessage('readMenuAutoScroll'), () => { this.autoScrollStart(); });
+      }
+    });
   }
   async onInactivate() {
+    this.unobserveEdgeReadAloud();
     await super.onInactivate();
 
     this.trunks = null;
@@ -92,6 +100,7 @@ export default class ScrollTextPage extends TextPage {
     this.autoScrollStop();
     this.autoScrollSpeedFactor = null;
     this.textAreaOffset = null;
+    this.autoScrollMenuUnload?.();
   }
   initUpdatePage() {
     super.initUpdatePage();
@@ -767,7 +776,23 @@ export default class ScrollTextPage extends TextPage {
     const length = paragraph.last - paragraph.start;
     if (index < 0) return element.getBoundingClientRect().top;
     if (index >= length) return element.getBoundingClientRect().bottom;
-    const textNode = element.firstChild;
+    // Typically, we have only one child in current paragraph, so element.firstChild
+    // should work as expected. However, if Edge speech aloud is used, it may have
+    // more elements here, so we write up some work arounds to resolve this issue
+    /** @type {Text[]} */
+    const textNodeList = (function getAllTextNodes(element) {
+      return Array.from(element.childNodes).flatMap(node => {
+        if (node.nodeType === Node.TEXT_NODE) return [node];
+        if (node.nodeType === Node.ELEMENT_NODE) return getAllTextNodes(node);
+        return [];
+      });
+    }(element));
+    const textNode = textNodeList.find(node => {
+      const length = node.nodeValue.length;
+      if (length > index) return true;
+      index -= length;
+    });
+    if (!textNode) return element.getBoundingClientRect().bottom;
     const range = document.createRange();
     range.setStart(textNode, index);
     range.setEnd(textNode, index + 1);
@@ -1120,23 +1145,12 @@ export default class ScrollTextPage extends TextPage {
       this.autoScrollStart();
     }
   }
-  autoScrollStart() {
-    if (this.readPage.isSpeaking()) return;
-    if (this.autoScrollRunning) return;
-    this.autoScrollPaging = false;
-    const currentAutoScroll = this.autoScrollRunning = {};
-    this.readPage.disableControlPage();
-    this.container.classList.add('read-page-auto-scroll');
-    const rAF = callback => {
-      if (currentAutoScroll === this.autoScrollRunning) {
-        window.requestAnimationFrame(callback);
-      }
-    };
-    new Promise((resolve, reject) => {
+  checkTimeResolutionForAutoScroll() {
+    return new Promise((resolve, reject) => {
       const historyTime = [];
       (function checkFrameTick(count) {
         if (count === 0) resolve();
-        rAF(() => {
+        window.requestAnimationFrame(() => {
           const now = performance.now();
           if (historyTime.includes(now)) reject();
           else {
@@ -1145,7 +1159,16 @@ export default class ScrollTextPage extends TextPage {
           }
         });
       }(5));
-    }).then(() => {
+    });
+  }
+  autoScrollStart() {
+    if (this.readPage.isSpeaking()) return;
+    if (this.autoScrollRunning) return;
+    this.autoScrollPaging = false;
+    const currentAutoScroll = this.autoScrollRunning = {};
+    this.readPage.disableControlPage();
+    this.container.classList.add('read-page-auto-scroll');
+    this.checkTimeResolutionForAutoScroll().then(() => {
       if (currentAutoScroll !== this.autoScrollRunning) return;
       window.getSelection()?.empty();
       document.addEventListener('visibilitychange', this.autoScrollOnVisibilityChange);
@@ -1238,6 +1261,37 @@ export default class ScrollTextPage extends TextPage {
   }
   autoScrollBusy() {
     return this.autoScrollRunning || this.autoScrollPaging;
+  }
+  observeEdgeReadAloud() {
+    const container = this.readBodyElement;
+    const observer = new MutationObserver(mutationList => {
+      const readOut = mutationList.find(mutation => {
+        const target = mutation.target;
+        if (!(target instanceof Element)) return false;
+        if (target.tagName !== 'MSREADOUTSPAN') return false;
+        if (target.className !== 'msreadout-word-highlight') return false;
+        if (!target.textContent) return false;
+        return true;
+      });
+      if (!readOut) return;
+      /** @type {Element} */
+      const readOutElement = readOut.target;
+      const bottom = readOutElement.getBoundingClientRect().bottom;
+      const screenHeight = onResize.currentSize()[1];
+      if (!(this.scrollActive || this.scrollActiveFinishing || this.scrollToBusy)) {
+        if (bottom > screenHeight - this.textAreaOffset.bottom) {
+          this.pageDown({ resetSpeech: false, resetRender: false });
+        }
+      }
+    });
+    observer.observe(container, { childList: true, subtree: true });
+    this.edgeReadAloudObserver = observer;
+  }
+  unobserveEdgeReadAloud() {
+    if (this.edgeReadAloudObserver) {
+      this.edgeReadAloudObserver.disconnect();
+      this.edgeReadAloudObserver = null;
+    }
   }
 }
 
