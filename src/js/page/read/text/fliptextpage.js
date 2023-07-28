@@ -390,7 +390,7 @@ export default class FlipTextPage extends TextPage {
     const step = this.step();
     if (context.cursor == null) context.cursor = context.start;
     if (context.previous == null) {
-      const text = content.slice(context.cursor - this.maxContentLength, context.cursor);
+      const text = content.slice(Math.max(0, context.cursor - this.maxContentLength), context.cursor);
       context.previous = text.slice(text.lastIndexOf('\n') + 1);
     }
     let pos = context.cursor;
@@ -416,7 +416,7 @@ export default class FlipTextPage extends TextPage {
         const paragraph = context.paragraph = document.createElement('p');
         paragraph.classList.add('text');
         paragraph.dataset.start = pos;
-        if (content[pos - 1] !== '\n') {
+        if (pos === 0 || content[pos - 1] !== '\n') {
           paragraph.classList.add('text-truncated-start');
         }
         if (context.nextSection) {

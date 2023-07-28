@@ -731,7 +731,7 @@ export default class ScrollTextPage extends TextPage {
   }
   getTrunkStartPosition(end) {
     const content = this.readPage.getContent();
-    let start = content.lastIndexOf('\n', end - this.step()) + 1;
+    let start = content.lastIndexOf('\n', Math.max(end - this.step(), 0)) + 1;
     while (true) {
       const ref = this.getTrunkEndPosition(start);
       if (ref < end) start = ref;
