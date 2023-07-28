@@ -66,7 +66,7 @@ export default class ReadPage extends Page {
     }
     this.downloadFile = this.downloadFile.bind(this);
     const maybeNeedDownload = !mayShare ||
-      navigator.userAgentData?.mobile === true ? false : !['iPhone', 'iPad'].includes(navigator.platform);
+      (navigator.userAgentData?.mobile !== true && !['iPhone', 'iPad'].includes(navigator.platform));
     if (maybeNeedDownload) {
       this.controlPage.registerMoreMenu(i18n.getMessage('readMenuDownload'), this.downloadFile);
     }
@@ -291,10 +291,14 @@ export default class ReadPage extends Page {
   getBookmarks() { return this.index.bookmarks; }
   getContents() { return this.index.content; }
   canShareFile() {
-    if (!navigator.share) return false;
-    if (!navigator.canShare) return false;
-    const testFile = new File([''], 'file.txt', { type: 'text/plain' });
-    return navigator.canShare({ files: [testFile] });
+    try {
+      if (!navigator.share) return false;
+      if (!navigator.canShare) return false;
+      const testFile = new File([''], 'file.txt', { type: 'text/plain' });
+      return navigator.canShare({ files: [testFile] });
+    } catch (_ignore) {
+      return false;
+    }
   }
   downloadContent() {
     const text = '\ufeff' + this.content.replace(/\r\n|\r|\n/g, '\r\n');

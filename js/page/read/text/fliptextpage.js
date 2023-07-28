@@ -339,7 +339,9 @@ export default class FlipTextPage extends TextPage {
       container.setAttribute('aria-hidden', name === 'current' ? 'false' : 'true');
       this.addRenderedPage(page);
     });
-    this.readPage.setCursor(this.pages.current.cursor, config);
+    window.requestAnimationFrame(() => {
+      this.readPage.setCursor(this.pages.current.cursor, config);
+    });
     this.updatePageBusy = false;
   }
   /** @param {PageRender} page */
