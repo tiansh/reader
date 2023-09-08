@@ -51,6 +51,11 @@ export default class ScrollTextPage extends TextPage {
   async onActivate({ id }) {
     await super.onActivate({ id });
 
+    // EXPERT_CONFIG Action for touch different area when read using scroll page mode
+    this.scrollTouchAction = await config.expert('reader.scroll_touch_action', 'string', 'prev,menu,next', {
+      validator: value => /^\s*(?:(?:prev|next|menu|noop)\s*(?=,(?!$)|$),?){3}$/.test(value),
+    });
+
     // EXPERT_CONFIG How many pages of text rendered off-screen
     this.textBufferSize = await config.expert('appearance.scroll_buffer_factor', 'number', 3) || 3;
     // EXPERT_CONFIG Width for text
@@ -176,14 +181,14 @@ export default class ScrollTextPage extends TextPage {
       stopSlideX();
       this.readPage.slideIndexPage('cancel');
     });
-    listener.onTouch(({ touch, grid }) => {
+    listener.onTouch(({ grid }) => {
       if (this.autoScrollBusy()) return;
-      this.touchCount = (this.touchCount ?? 0) + 1;
-      if (grid.y === 0) {
+      const action = this.scrollTouchAction.split(',').map(a => a.trim())[grid.y];
+      if (action === 'prev') {
         this.pageUp({ resetSpeech: true, resetRender: false });
-      } else if (grid.y === 2) {
+      } else if (action === 'next') {
         this.pageDown({ resetSpeech: true, resetRender: false });
-      } else if (grid.y === 1) {
+      } else if (action === 'menu') {
         this.readPage.showControlPage();
         const token = this.justShowControlPage = {};
         setTimeout(() => {

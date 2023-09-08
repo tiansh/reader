@@ -35,6 +35,14 @@ mouse_paging=false
 ; 添加自定义 CSS
 custom_css=
 
+[reader]
+; 翻页模式时点击左中右侧的操作
+; 半角逗号分隔，可选值 `prev`, `next`, `menu`, `noop`
+flip_touch_action=prev,menu,next
+; 滚动模式时点击上中下侧的操作
+; 半角逗号分隔，可选值 `prev`, `next`, `menu`, `noop`
+scroll_touch_action=prev,menu,next
+
 [text]
 ; 逐个尝试以下字符编码读取 txt 文件
 ; 如果遇到解析错误会自动尝试下一种字符编码
