@@ -133,6 +133,9 @@ export default class IndexSubPage extends ReadSubPage {
   updateCurrentHighlight(position) {
     const [index, highlight] = this.getCurrentIndex();
     const current = index === -1 ? null : index;
+    const selected = this.itemList.listAllSelected(current);
+    if (current == null && !selected.length) return;
+    if (current != null && selected.length === 1 && selected[0] === current) return;
     this.itemList.clearSelectItem();
     if (current != null) {
       if (highlight) {
@@ -149,7 +152,7 @@ export default class IndexSubPage extends ReadSubPage {
   }
   cursorChange(cursor, config) {
     if (!this.itemList) return;
-    this.updateCurrentHighlight(false);
+    this.updateCurrentHighlight('nearest');
   }
   emptyListRender(container) { }
   listItemRender(container, item) { }

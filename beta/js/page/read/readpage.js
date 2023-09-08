@@ -146,6 +146,10 @@ export default class ReadPage extends Page {
     this.indexPage.initUpdatePage();
     onResize.addListener(this.onResize);
   }
+  hide() {
+    super.hide();
+    onResize.removeListener(this.onResize);
+  }
   onResize() {
     this.updateSideIndex();
     this.subPages.forEach(page => { page.onResize(); });
