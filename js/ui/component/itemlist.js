@@ -41,6 +41,7 @@ export default class ItemList {
     this.onRemove = config.onRemove;
     this.mayRemove = config.mayRemove ?? (() => true);
     this.selectable = config.selectable;
+    /** @type {Set<number>} */
     this.selected = new Set();
     this.emptyListRender = config.emptyListRender;
 
@@ -248,6 +249,9 @@ export default class ItemList {
   }
   getItemElement(index) {
     return this.elements.get(index);
+  }
+  listAllSelected(index) {
+    return Array.from(this.selected);
   }
   setSelectItem(index, selected) {
     if (!this.selectable) return;

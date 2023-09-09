@@ -42,7 +42,12 @@ export default class FlipTextPage extends TextPage {
     this.screenWidthTwoColumn = await config.expert('appearance.screen_width_two_column', 'number', 960);
     // EXPERT_CONFIG When to use two column page when side index active
     this.screenWidthTwoColumnIndex = await config.expert('appearance.screen_width_two_column_index', 'number', 1260);
+    // EXPERT_CONFIG Max length of content
     this.maxContentLength = await config.expert('text.content_max_length', 'number', 100);
+    // EXPERT_CONFIG Action for touch different area when read using flip page mode
+    this.flipTouchAction = await config.expert('reader.flip_touch_action', 'string', 'prev,menu,next', {
+      validator: value => /^\s*(?:(?:prev|next|menu|noop)\s*(?=,(?!$)|$),?){3}$/.test(value),
+    });
 
     /** @type {PageRenderCollection} */
     this.pages = {};
@@ -127,12 +132,12 @@ export default class FlipTextPage extends TextPage {
     listener.onCancelY(cancelY);
 
     listener.onTouch(wos(({ grid }) => {
-      const x = grid.x;
-      if (x === 0) {
+      const action = this.flipTouchAction.split(',').map(a => a.trim())[grid.x];
+      if (action === 'prev') {
         this.prevPage({ resetSpeech: true, resetRender: false });
-      } else if (x === 2) {
+      } else if (action === 'next') {
         this.nextPage({ resetSpeech: true, resetRender: false });
-      } else if (x === 1) {
+      } else if (action === 'menu') {
         this.readPage.showControlPage();
       }
     }));
@@ -390,7 +395,7 @@ export default class FlipTextPage extends TextPage {
     const step = this.step();
     if (context.cursor == null) context.cursor = context.start;
     if (context.previous == null) {
-      const text = content.slice(context.cursor - this.maxContentLength, context.cursor);
+      const text = content.slice(Math.max(0, context.cursor - this.maxContentLength), context.cursor);
       context.previous = text.slice(text.lastIndexOf('\n') + 1);
     }
     let pos = context.cursor;
@@ -416,7 +421,7 @@ export default class FlipTextPage extends TextPage {
         const paragraph = context.paragraph = document.createElement('p');
         paragraph.classList.add('text');
         paragraph.dataset.start = pos;
-        if (content[pos - 1] !== '\n') {
+        if (pos === 0 || content[pos - 1] !== '\n') {
           paragraph.classList.add('text-truncated-start');
         }
         if (context.nextSection) {
