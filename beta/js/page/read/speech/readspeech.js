@@ -69,6 +69,8 @@ export default class ReadSpeech {
     this.enableLoop = await config.expert('speech.loop_enable', 'boolean', false);
     // EXPERT_CONFIG Pause reading when webpage is been hidden (user switched to other tabs)
     this.pauseOnHidden = await config.expert('speech.pause_on_hidden', 'boolean', false);
+    // EXPERT_CONFIG Append some text for each line
+    this.extraSuffix = await config.expert('speech.extra_suffix', 'string', '');
 
     this.speaking = false;
     this.spoken = null;
@@ -193,7 +195,7 @@ export default class ReadSpeech {
       this.next = end;
       text = content.slice(current, end).trimRight();
     } while (!text || this.speechTextSkipRegex.test(text));
-    const ssu = speech.prepare(text);
+    const ssu = speech.prepare(text + this.extraSuffix);
     this.ssuInfo.set(ssu, { start: current, end });
     ssu.addEventListener('start', this.onStart);
     ssu.addEventListener('boundary', this.onBoundary);
