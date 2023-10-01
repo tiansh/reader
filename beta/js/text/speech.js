@@ -35,10 +35,15 @@ const langIndex = lang => {
   if (prefixIndex !== -1) return len + prefixIndex;
   return len * 2;
 };
+/**
+ * @param {SpeechSynthesisVoice} a
+ * @param {SpeechSynthesisVoice} b
+ */
 const voiceCmp = (a, b) => {
   return langIndex(a.lang) - langIndex(b.lang) ||
     a.lang.localeCompare(b.lang) ||
-    a.name.localeCompare(b.name);
+    a.name.localeCompare(b.name) ||
+    a.voiceURI.localeCompare(b.voiceURI);
 };
 
 const updateVoiceList = function () {
