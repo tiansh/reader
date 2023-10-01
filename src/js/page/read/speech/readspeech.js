@@ -70,7 +70,15 @@ export default class ReadSpeech {
     // EXPERT_CONFIG Pause reading when webpage is been hidden (user switched to other tabs)
     this.pauseOnHidden = await config.expert('speech.pause_on_hidden', 'boolean', false);
     // EXPERT_CONFIG Append some text for each line
-    this.extraSuffix = await config.expert('speech.extra_suffix', 'string', '');
+    // zh-CN and zh-HK voices on iOS 17 failed to speak anything wraped in a pair of quotes (“”).
+    // Append some extra text as a workaround.
+    const isBuggyVoice = [
+      'com.apple.voice.compact.zh-CN.Tingting',
+      'com.apple.voice.super-compact.zh-CN.Tingting',
+      'com.apple.voice.compact.zh-HK.Sinji',
+      'com.apple.voice.super-compact.zh-HK.Sinji',
+    ].includes(speech.getPreferVoice().voiceURI) && / OS 17_/.test(navigator.userAgent);
+    this.extraSuffix = await config.expert('speech.extra_suffix', 'string', isBuggyVoice ? '“”。' : '');
 
     this.speaking = false;
     this.spoken = null;

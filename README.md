@@ -72,6 +72,8 @@ skip_text_regex=/^\s*$/u
 loop_enable=false
 ; 页面切换到后台时暂停朗读
 pause_on_hidden=false
+; 在每段末尾追加朗读的文本
+extra_suffix=
 ```
 
 请谨慎配置高级设置功能，错误配置可能造成显示错误甚至完全无法使用。
