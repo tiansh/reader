@@ -165,7 +165,7 @@ export default class ListPage extends Page {
     if (!this.active) return;
     const scrollable = this.fileListSensor.clientHeight;
     if (scrollable) {
-      this.fileListContainer.scrollTop = this.fileListTop.clientHeight;
+      this.fileListContainer.scrollTop = this.fileListTop.clientHeight + 1;
     } else requestAnimationFrame(() => {
       this.scrollToList();
     });
