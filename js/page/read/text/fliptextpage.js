@@ -246,10 +246,15 @@ export default class FlipTextPage extends TextPage {
       this.pagesContainer.style.setProperty('--slide-x', '0px');
       this.pagesContainer.classList.remove('read-text-pages-slide');
     }
-    window.requestAnimationFrame(() => {
-      if (action === 'left') this.nextPage({ resetSpeech: true, resetRender: false });
-      if (action === 'right') this.prevPage({ resetSpeech: true, resetRender: false });
-    });
+    if (action === 'left' || action === 'right') {
+      // We are about to flip pages
+      // set updatePageBusy to prevent speech synthesis mass up pages
+      this.updatePageBusy = true;
+      window.requestAnimationFrame(() => {
+        if (action === 'left') this.nextPage({ resetSpeech: true, resetRender: false });
+        if (action === 'right') this.prevPage({ resetSpeech: true, resetRender: false });
+      });
+    }
   }
   slideCancel() {
     this.slidePage('cancel');
