@@ -49,11 +49,15 @@ export default class ControlPage extends ReadSubPage {
     };
     this.contentsButton = genButton('contents', i18n.getMessage('buttonContents'));
     this.bookmarkButton = genButton('bookmark', i18n.getMessage('buttonBookmark'));
+    // this.noSleepButton = genButton('refresh', i18n.getMessage('buttonNoSleep'));
+
     this.searchButton = genButton('search', i18n.getMessage('buttonSearch'));
     this.jumpButton = genButton('jump', i18n.getMessage('buttonJump'));
     this.speechButton = genButton('speech', i18n.getMessage('buttonSpeech'));
     const stopIcon = template.icon('speech-stop', i18n.getMessage('buttonSpeechStop'));
     this.speechButton.querySelector('.icon').after(stopIcon);
+
+    // this.noSleepButton.querySelector('.icon').after(stopIcon);
 
     this.moreButtons = [];
     this.moreMenuHandler = new Map();
@@ -80,10 +84,15 @@ export default class ControlPage extends ReadSubPage {
     this.speechButton.addEventListener('click', event => {
       this.hide();
       this.readPage.toggleSpeech();
+      this.readPage.noSleepWhenSpeech();
     });
     this.backButton.addEventListener('click', event => {
       this.readPage.gotoList();
     });
+    // this.noSleepButton.addEventListener('click', event => {
+    //   this.hide();
+    //   this.readPage.toggleNoSleep();
+    // });
     this.moreMenu.bind(this.moreButton, action => {
       if (!action) return;
       this.moreMenuHandler.get(action)();

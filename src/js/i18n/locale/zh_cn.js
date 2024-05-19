@@ -137,6 +137,7 @@ export default {
   buttonSearchSubmit: '搜索',
   buttonSearchClear: '清除搜索结果',
   buttonBookmarkAdd: '添加书签',
+  buttonNoSleep: '保持唤醒',
 
   colorHueRange: '色相',
   colorSaturationRange: '饱和度',

@@ -138,6 +138,7 @@ export default {
   buttonSearchSubmit: '搜尋',
   buttonSearchClear: '清除搜尋結果',
   buttonBookmarkAdd: '新增書籤',
+  buttonNoSleep: '保持螢幕開啟',
 
   colorHueRange: '色調',
   colorSaturationRange: '飽和',

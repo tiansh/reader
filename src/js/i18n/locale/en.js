@@ -137,6 +137,7 @@ export default {
   buttonSearchSubmit: 'Search',
   buttonSearchClear: 'Clear Search Result',
   buttonBookmarkAdd: 'Add Bookmark',
+  buttonNoSleep: 'Prevent Sleep',
 
   colorHueRange: 'Hue',
   colorSaturationRange: 'Saturation',

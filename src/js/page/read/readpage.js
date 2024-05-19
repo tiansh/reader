@@ -70,6 +70,8 @@ export default class ReadPage extends Page {
     if (maybeNeedDownload) {
       this.controlPage.registerMoreMenu(i18n.getMessage('readMenuDownload'), this.downloadFile);
     }
+    this.NoSleep = new NoSleep();
+    this.toggleNoSleep = this.noSleepWhenSpeech.bind(this);
   }
   /**
    * @param {{ id: number }} config
@@ -258,6 +260,13 @@ export default class ReadPage extends Page {
   }
   toggleSpeech() {
     return this.speech.toggle();
+  }
+  noSleepWhenSpeech() {
+    if (this.isSpeaking()) {
+      this.NoSleep.enable();
+    } else {
+      this.NoSleep.disable();
+    }
   }
   /**
    * @returns The text position where user had read
