@@ -98,9 +98,7 @@ extra_suffix=
 
 * 旋转锁定<sup>[\[MDN\]](https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation)</sup>
 * 背光亮度调整
-* 保持屏幕唤醒<sup>[\[Chrome\]](https://chromestatus.com/feature/4636879949398016)</sup>
 * 隐藏手机顶部的信号与电量信息
-* 后台播放语音朗读
 * 切换应用时隐藏屏幕快照
 
 所以如上相关的各种问题就不用再问我了。
