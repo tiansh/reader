@@ -48,6 +48,7 @@ const resourceList = [
   './js/ui/util/onresize.js',
   './js/ui/util/template.js',
   './js/ui/util/touch.js',
+  './js/ui/util/wakelock.js',
   './js/text/speech.js',
   './js/text/text.js',
   './js/theme/theme.js',
