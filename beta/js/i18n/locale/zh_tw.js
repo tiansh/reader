@@ -111,6 +111,11 @@ export default {
     if (rate === 1) return '1× (預設)';
     return rate + '×';
   },
+  configScreenGroupTitle: '螢幕',
+  configAutoLock: '自動鎖定',
+  configAutoLockNormal: '裝置預設',
+  configAutoLockSpeech: '朗讀時停用',
+  configAutoLockDisable: '永遠停用',
   configHelpGroupTitle: '說明',
   configHelpTopic: '說明',
   configHelpFilename: 'en.html',

@@ -110,6 +110,11 @@ export default {
     if (rate === 1) return '1× (normal)';
     return rate + '×';
   },
+  configScreenGroupTitle: 'Screen',
+  configAutoLock: 'Auto-Lock',
+  configAutoLockNormal: 'Device Default',
+  configAutoLockSpeech: 'Disable During Speech',
+  configAutoLockDisable: 'Disable Always',
   configHelpGroupTitle: 'Help',
   configHelpTopic: 'Help',
   configHelpFilename: 'en.html',

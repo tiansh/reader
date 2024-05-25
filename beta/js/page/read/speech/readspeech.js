@@ -301,9 +301,14 @@ export default class ReadSpeech {
     await this.start();
   }
   async toggle() {
-    if (this.lastReset || this.stopping) return;
-    if (this.speaking) await this.stop();
-    else await this.start();
+    if (this.lastReset || this.stopping) return null;
+    if (this.speaking) {
+      await this.stop();
+      return false;
+    } else {
+      await this.start();
+      return true;
+    }
   }
   cursorChange(cursor, config) {
     if (this.speaking || this.lastReset) {

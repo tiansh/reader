@@ -19,6 +19,7 @@ import file from '../../data/file.js';
 import config from '../../data/config.js';
 import onResize from '../../ui/util/onresize.js';
 import i18n from '../../i18n/i18n.js';
+import wakelock from '../../ui/util/wakelock.js';
 
 export default class ReadPage extends Page {
   constructor() {
@@ -75,8 +76,12 @@ export default class ReadPage extends Page {
    * @param {{ id: number }} config
    */
   async onActivate({ id }) {
+    /** @type {string} */
     this.langTag = await config.get('cjk_lang_tag', 'und');
+    /** @type {'flip' | 'scroll'} */
     this.renderStyle = await config.get('view_mode', 'flip');
+    /** @type {'normal' | 'speech' | 'disable'} */
+    this.autoLockConfig = await config.get('auto_lock', 'speech')
 
     // EXPERT_CONFIG when index page show as side bar
     this.screenWidthSideIndex = await config.expert('appearance.screen_width_side_index', 'number', 960);
@@ -87,6 +92,11 @@ export default class ReadPage extends Page {
       file.getIndex(id),
       file.content(id),
     ]);
+
+    if (this.autoLockConfig === 'disable') {
+      wakelock.request();
+    }
+
     this.meta = meta;
     this.content = content;
     this.index = index;
@@ -120,6 +130,9 @@ export default class ReadPage extends Page {
     this.onActivate({ id });
   }
   async onInactivate() {
+    if (this.autoLockConfig === 'disable') {
+      wakelock.release();
+    }
     this.meta = null;
     this.index = null;
     this.content = null;
@@ -257,7 +270,11 @@ export default class ReadPage extends Page {
     return true;
   }
   toggleSpeech() {
-    return this.speech.toggle();
+    const speaking = this.speech.toggle();
+    if (this.autoLockConfig === 'speech') {
+      if (speaking === true) wakelock.request();
+      else if (speaking === false) wakelock.release();
+    }
   }
   /**
    * @returns The text position where user had read
