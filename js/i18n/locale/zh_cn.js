@@ -110,6 +110,11 @@ export default {
     if (rate === 1) return '1× (默认)';
     return rate + '×';
   },
+  configScreenGroupTitle: '屏幕',
+  configAutoLock: '自动锁屏',
+  configAutoLockNormal: '设备默认',
+  configAutoLockSpeech: '朗读时禁用',
+  configAutoLockDisable: '始终禁用',
   configHelpGroupTitle: '帮助',
   configHelpTopic: '帮助',
   configHelpFilename: 'zh_cn.html',

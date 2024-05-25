@@ -11,6 +11,7 @@ import config from './config.js';
 import i18n from '../i18n/i18n.js';
 import template from '../ui/util/template.js';
 import app from './app.js';
+import wakelock from '../ui/util/wakelock.js';
 
 class ConfigOption {
   /** @param {{ name: string, description: string?, title: string }} config */
@@ -456,7 +457,19 @@ const options = (factory => {
     })),
     default: '1',
   })],
-}, {
+}, ...wakelock.isSupport() ? [{
+  title: i18n.getMessage('configScreenGroupTitle'),
+  items: [new SelectConfigOption({
+    name: 'auto_lock',
+    title: i18n.getMessage('configAutoLock'),
+    select: [
+      { value: 'normal', text: i18n.getMessage('configAutoLockNormal') },
+      { value: 'speech', text: i18n.getMessage('configAutoLockSpeech') },
+      { value: 'disable', text: i18n.getMessage('configAutoLockDisable') },
+    ],
+    default: 'speech',
+  })],
+}] : [], {
   title: i18n.getMessage('configHelpGroupTitle'),
   items: [new WebpageConfigOption({
     title: i18n.getMessage('configHelpTopic'),
