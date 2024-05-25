@@ -269,8 +269,8 @@ export default class ReadPage extends Page {
     if (this.isIndexActive()) return this.isSideIndexActive();
     return true;
   }
-  toggleSpeech() {
-    const speaking = this.speech.toggle();
+  async toggleSpeech() {
+    const speaking = await this.speech.toggle();
     if (this.autoLockConfig === 'speech') {
       if (speaking === true) wakelock.request();
       else if (speaking === false) wakelock.release();
