@@ -320,7 +320,6 @@ export default class ReadSpeech {
       this.spoken = null;
     }
   }
-  /* global MediaMetadata: false */
   metaLoad(meta) {
     this.stop();
     this.metadata = meta;

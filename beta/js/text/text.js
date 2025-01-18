@@ -8,6 +8,7 @@
  */
 
 import config from '../data/config.js';
+import file from '../data/file.js';
 
 const text = {};
 
@@ -185,3 +186,21 @@ text.preprocess = async function (text) {
   return processors.reduce(async (text, f) => f(await text), text);
 };
 
+text.guessContent = async function (content, { id, title }) {
+  if (!Worker) return;
+  const enabledAutoToc = await config.expert('text.auto_toc', 'string', 'disabled');
+  if (enabledAutoToc !== 'enabled') return;
+  return new Promise(resolve => {
+    const worker = new Worker('./worker/toc.js');
+    worker.addEventListener('message', event => {
+      const content = event.data;
+      if (content) {
+        content.items.unshift({ title, cursor: 0 });
+        file.setIndex({ id, content });
+      }
+      resolve();
+      worker.terminate();
+    });
+    worker.postMessage(content);
+  });
+};
