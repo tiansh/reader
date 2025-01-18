@@ -152,13 +152,15 @@ export default class ListPage extends Page {
       const raw_title = text.parseFilename(item.name);
       const title = await text.preprocess(raw_title);
       result = await file.add({ title, content });
+      await text.guessContent(content, result);
     } catch (e) {
       alert(i18n.getMessage('listImportFail'));
+    } finally {
+      this.importTip.style.display = 'none';
+      this.clearSearch();
+      this.updateList();
+      this.scrollToList();
     }
-    this.importTip.style.display = 'none';
-    this.clearSearch();
-    this.updateList();
-    this.scrollToList();
     return result;
   }
   scrollToList() {

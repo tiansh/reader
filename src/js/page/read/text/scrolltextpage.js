@@ -796,6 +796,7 @@ export default class ScrollTextPage extends TextPage {
       const length = node.nodeValue.length;
       if (length > index) return true;
       index -= length;
+      return false;
     });
     if (!textNode) return element.getBoundingClientRect().bottom;
     const range = document.createRange();

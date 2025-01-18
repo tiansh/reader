@@ -58,6 +58,8 @@ contents_size_limit=5000
 search_mode=text
 ; 搜索时正则的标志，i 为忽略大小写
 search_flags=iu
+; 自动识别目录（试验性功能）
+auto_toc=enabled
 
 [speech]
 ; 语音朗读时，单条语音最多的字数
