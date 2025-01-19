@@ -432,6 +432,14 @@ const options = (factory => {
       { value: 't2s', text: i18n.getMessage('configPreprocessChineseConvertT2S') },
     ],
     default: 'disable',
+  }), new SelectConfigOption({
+    name: 'auto_toc',
+    title: i18n.getMessage('configAutoTocDetect'),
+    select: [
+      { value: 'disable', text: i18n.getMessage('configAutoTocDetectDisable') },
+      { value: 'enable', text: i18n.getMessage('configAutoTocDetectEnable') },
+    ],
+    default: 'enable',
   })],
 }, {
   title: i18n.getMessage('configSpeechGroupTitle'),

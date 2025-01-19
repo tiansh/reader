@@ -58,8 +58,6 @@ contents_size_limit=5000
 search_mode=text
 ; 搜索时正则的标志，i 为忽略大小写
 search_flags=iu
-; 自动识别目录（试验性功能）
-auto_toc=enabled
 
 [speech]
 ; 语音朗读时，单条语音最多的字数
@@ -132,7 +130,7 @@ extra_suffix=
 
 ## About
 
-Copyright (C) 2020-2024 田生
+Copyright (C) 2020-2025 田生
 
 This project is released under the Mozilla Public License 2.0 with no copyleft exception. You may checkout LICENSE file for more detail.
 

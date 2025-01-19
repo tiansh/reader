@@ -188,8 +188,8 @@ text.preprocess = async function (text) {
 
 text.guessContent = async function (content, { id, title }) {
   if (!Worker) return;
-  const enabledAutoToc = await config.expert('text.auto_toc', 'string', 'disabled');
-  if (enabledAutoToc !== 'enabled') return;
+  const enabledAutoToc = await config.get('auto_toc', 'enable');
+  if (enabledAutoToc !== 'enable') return;
   return new Promise(resolve => {
     const worker = new Worker('./worker/toc.js');
     worker.addEventListener('message', event => {
