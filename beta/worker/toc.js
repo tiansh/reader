@@ -37,6 +37,8 @@ const FACTOR_NUMBER_HOLES = 5;
 const FACTOR_NUMBER_INVALID = 5;
 // sensitive to uniqueness of prefix pattern
 const KEYWORD_UNIQUE_FACTOR = 4;
+// sensitive to skipped items of prefix pattern
+const KEYWORD_PREFIX_FACTOR = 4;
 // minimal beauty to pass stage 1
 const BEAUTY_MIN_1 = 0.1;
 // minimal ratio to detect prefix
@@ -242,11 +244,8 @@ const numberParserList = [
   parseNumeric2,
 ].map((p, index) => Object.assign({ index }, p));
 
-const SYMBOL_REGEX = /\P{L}/u;
+const SYMBOL_REGEX = /[^\p{L}\p{N}]/ug;
 const TOKEN_REGEX = /(?:\p{Script=Latn}+|\p{Script=Cyrl}+|\p{Script=Grek}+|\p{Script=Geor}+|\p{Script=Armn}+|\p{Script=Arab}+|\p{Script=Tibetan}+|\p{Number}+|.)/usg;
-
-/** @type {({ pattern: string; key: string; priority: number; beauty: number } & ({ type: 'number'; parser: typeof numberParserList[number] } | { type: 'prefix', prefixBeauty: number }))[]} */
-const patterns = [];
 
 /**
  *
@@ -254,6 +253,15 @@ const patterns = [];
  * @param {{ chars: number; tokenCounts: Map<string, number>; lines: { line: string; tokens: string[]; numbers: number[] }[] }} articleContext
  */
 const recognizeContents = function (article, articleContext = {}) {
+  /** @type {({ pattern: string; key: string; priority: number; beauty: number } & ({ type: 'number'; parser: typeof numberParserList[number] } | { type: 'prefix', prefixBeauty: number }))[]} */
+  const patterns = [], seenPattern = new Set();
+  const commitPattern = (/** @type {typeof patterns[number]} */config) => {
+    if (seenPattern.has(config.pattern)) return;
+    if (config.beauty < BEAUTY_MIN_1) return;
+    seenPattern.add(config.pattern);
+    patterns.push(config);
+  };
+
   Object.assign(articleContext, {
     chars: 0,
     tokenCounts: new Map(),
@@ -331,13 +339,13 @@ const recognizeContents = function (article, articleContext = {}) {
         const charset = parser.charset.key + parser.charset.optional.replace(/./g, ch => infixSet.has(ch) ? ch : '');
         const pattern = !['/', '*'].some(ch => (prefix + suffix).includes(ch)) ?
           `${prefix}*${suffix}`.replace(/\s+/g, ' ') : `/${exactRegex(prefix)}.*${exactRegex(suffix)}/u`;
-        patterns.push({ pattern, key, priority: parser.priority * 10, type: 'number', parser, beauty });
+        commitPattern({ pattern, key, priority: parser.priority * 10, type: 'number', parser, beauty });
         const charsetPattern = ([...new Set(charset)].sort()
           .map(ch => ch.charCodeAt())
           .map((ch, i, chs) => ch - 1 === chs[i - 1] && ch + 1 === chs[i + 1] ? null : ch)
           .reduce((p, ch, i, chs) => p + (ch == null ? chs[i - 1] != null ? '-' : '' : exactRegex(String.fromCharCode(ch))), ''));
         const regexPattern = `/^\\s*${exactRegex(prefix)}[${charsetPattern}]+${exactRegex(suffix)}/`;
-        patterns.push({ pattern: regexPattern, key, priority: parser.priority * 10 + 1, type: 'number', parser, beauty });
+        commitPattern({ pattern: regexPattern, key, priority: parser.priority * 10 + 1, type: 'number', parser, beauty });
       });
     });
   });
@@ -354,16 +362,29 @@ const recognizeContents = function (article, articleContext = {}) {
         if (line.tokens.length >= n) {
           const next = line.tokens[n];
           if (!countNext.has(next)) countNext.set(next, []);
-          else countNext.get(next).push(line);
+          countNext.get(next).push(line);
         }
       });
       let extendPrefix = false;
       [...countNext.entries()].forEach(([next, newMatches]) => {
         if (newMatches.length < minTarget) return;
-        extendPrefix = newMatches === lines;
+        extendPrefix = newMatches.length === lines.length;
         findPrefix([...prefixTokens, next], newMatches);
       });
       if (extendPrefix) return;
+      ; (function () {
+        const prefix = prefixTokens.join('');
+        const pattern = !['/', '*'].some(ch => (prefix).includes(ch)) ? `${prefix}` : `/^\\s*${exactRegex(prefix)}/u`;
+        const key = JSON.stringify([null, prefix, '']);
+        const beauty1 = (
+          (lines.length / totalLines) ** (KEYWORD_UNIQUE_FACTOR / 10) *
+          (lines.length / matchLines) ** (KEYWORD_PREFIX_FACTOR / 10) *
+        1);
+        const beauty2 = contentsBeautyByTitle(lines) * contentsBeautyBySize(lines, articleContext);
+        const beauty = beauty1 * beauty2;
+        if (beauty < BEAUTY_MIN_1) return;
+        commitPattern({ pattern, key, priority: 11, type: 'prefix', beauty, prefixBeauty: beauty1 });
+      }());
       const suffixList = lines.map(line => line.tokens.slice(prefixTokens.length + 1));
       /** @type {Map<string, string[]>} */
       const tokenCount = new Map();
@@ -382,7 +403,10 @@ const recognizeContents = function (article, articleContext = {}) {
         while (sublines.every(tokens => tokens[lcps] && tokens[lcps] === sublines[0][lcps])) lcp += sublines[0][lcps++];
         const prefix = prefixTokens.join(''), suffix = token + lcp;
         const selected = matches.filter(match => match.title.includes(suffix));
-        const beauty1 = (sublines.length / totalLines) ** (KEYWORD_UNIQUE_FACTOR / 10);
+        const beauty1 = (
+          (sublines.length / totalLines) ** (KEYWORD_UNIQUE_FACTOR / 10) *
+          (sublines.length / matchLines) ** (KEYWORD_PREFIX_FACTOR / 10) *
+        1);
         if (beauty1 < BEAUTY_MIN_1) return;
         const beauty2 = contentsBeautyByTitle(selected) * contentsBeautyBySize(selected, articleContext);
         const beauty = beauty1 * beauty2;
@@ -390,7 +414,7 @@ const recognizeContents = function (article, articleContext = {}) {
         const pattern = !['/', '*'].some(ch => (prefix + suffix).includes(ch)) ?
           `${prefix}*${suffix}` : `/^\\s*${exactRegex(prefix)}.*${exactRegex(suffix)}/u`;
         const key = JSON.stringify([null, prefix, suffix]);
-        patterns.push({ pattern, key, priority: 10, type: 'prefix', beauty, prefixBeauty: beauty1 });
+        commitPattern({ pattern, key, priority: 10, type: 'prefix', beauty, prefixBeauty: beauty1 });
       });
     }([prefix], matches.map(match => Object.assign({ tokens: match.context.tokens.slice(0, MAX_KEYWORD_SECTION) }, match))));
   });
@@ -420,7 +444,7 @@ const recognizeContents = function (article, articleContext = {}) {
     const beauty2 = pattern.type === 'number' ? contentsBeautyByNumber(content.map(line => ({ number: pattern.parser.extract(line.title)?.number }))) : pattern.prefixBeauty;
     return { content, beauty: beauty1 * beauty2, priority: pattern.priority, pattern };
   });
-  contentsWithBeauty.sort((a, b) => b.beauty - a.beauty || a.priority - b.priority);
+  contentsWithBeauty.sort((a, b) => b.beauty - a.beauty || a.priority - b.priority || a.pattern.pattern.length - b.pattern.pattern.length);
   const best = contentsWithBeauty[0];
   if (!best || best.beauty < BEAUTY_MIN_2) return null;
   return { items: best.content, template: best.pattern.pattern };
@@ -466,6 +490,7 @@ self.addEventListener('message', event => {
     const result = recognizeContents(fileContent);
     postMessage(result);
   } catch (e) {
+    console.error(e);
     postMessage(null);
   }
 });
