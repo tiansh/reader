@@ -1,4 +1,6 @@
 # tReader
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftiansh%2Freader.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftiansh%2Freader?ref=badge_shield)
+
 
 https://tiansh.github.io/reader
 
@@ -128,9 +130,11 @@ extra_suffix=
     * Apache License 2.0; https://github.com/BYVoid/OpenCC
     * For more details about the modification, see https://github.com/tiansh/opencc-fsm
 
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftiansh%2Freader.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftiansh%2Freader?ref=badge_large)
+
 ## About
 
 Copyright (C) 2020-2024 田生
 
 This project is released under the Mozilla Public License 2.0 with no copyleft exception. You may checkout LICENSE file for more detail.
-
