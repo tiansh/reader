@@ -7,46 +7,55 @@
  * defined by the Mozilla Public License, v. 2.0.
  */
 
-// never try to detect a contents with more items
+// Maximum number of content items to process. Beyond this, content is ignored.
 const MAX_CONTENTS_LENGTH = 2000;
-// never try to generate a content with less items
+// Minimum number of content items required for valid analysis.
 const MIN_CONTENTS = 3;
-// only consider first a few tokens when recognize numbers
-const MAX_NUMBER_SECTION = 20;
-// only consider first a few tokens when recognize keywords
-const MAX_KEYWORD_SECTION = 20;
-// title with characters exceed following number considered invalid
-const MAX_TITLE_LENGTH = 200;
-// sensitivity to small TOC
+// Maximum tokens analyzed per section or line to limit complexity.
+const MAX_SECTION = 15;
+// Maximum length for a valid title. Longer titles are considered invalid.
+const MAX_TITLE_LENGTH = 100;
+// Maximum average length for valid titles.
+const MAX_MEAN_TITLE_LENGTH = 80;
+// Sensitivity to content size variations. Smaller values increase strictness.
 const FACTOR_CONTENTS_SIZE = 4;
-// sensitivity to outliner chapter size
-const FACTOR_OUTLINER = 8;
-// sensitivity to contents mixed with small and large ones
+// Sensitivity to outlier sizes in sections. Higher values allow larger variations.
+const FACTOR_OUTLIER = 10;
+// Sensitivity to inconsistent content sizes. Lower values make checks stricter.
 const FACTOR_VARIANCE_SIZE = 5;
-// smaller value mark outliner more strict
-const OUTLINER_DISTANCE = 3;
-// setsitive to invalid TOC items
+// Defines how much larger an outlier can be before being flagged as invalid.
+const OUTLIER_DISTANCE = 3;
+// Sensitivity to invalid titles (e.g., overly long or duplicate titles). Lower values increase strictness.
 const FACTOR_TITLE_INVALID = 8;
-// number of allowed duplicate TOC; =0 for disallow duplicate
+// Maximum number of duplicate TOC titles allowed. Set to 0 to disallow duplicates.
 const TOC_DUPLICATE_TOLERATE = 1;
-// sensitive to max number in contents
-const FACTOR_NUMBER_MAX = 5;
-// sensitive to discontinue number in contents
+// Maximum numeric patterns recognized on a single line to prevent over-complexity.
+const MAX_NUMERIC_LINE = 2;
+// Sensitivity to large numbers in content. Higher values allow larger numbers to pass.
+const FACTOR_NUMBER_MAX = 4;
+// Sensitivity to skipped or missing numbers in sequences. Smaller values increase strictness.
 const FACTOR_NUMBER_HOLES = 5;
-// sensitive to decreasing number in contents
-const FACTOR_NUMBER_INVALID = 5;
-// sensitive to uniqueness of prefix pattern
-const KEYWORD_UNIQUE_FACTOR = 4;
-// sensitive to skipped items of prefix pattern
-const KEYWORD_PREFIX_FACTOR = 4;
-// minimal beauty to pass stage 1
+// Sensitivity to invalid number sequences (e.g., unordered numbers). Lower values increase strictness.
+const FACTOR_NUMBER_INVALID = 7;
+// Sensitivity to the uniqueness of prefix patterns. Higher values emphasize unique prefixes.
+const KEYWORD_UNIQUE_FACTOR = 5;
+// Sensitivity to skipped prefix items. Lower values enforce stricter prefix patterns.
+const KEYWORD_PREFIX_FACTOR = 3;
+// Minimum beauty score required to pass the first stage of content analysis.
 const BEAUTY_MIN_1 = 0.1;
-// minimal ratio to detect prefix
+// Minimum ratio of lines that must share a prefix pattern for it to be considered valid.
 const PREFIX_MIN_RATIO = 0.45;
-// number of contents from stage 1 per type
-const TEMPLATE_COUNT_1 = 10;
-// minimal beauty to generate suggestion template
-const BEAUTY_MIN_2 = 0.1;
+// Maximum number of number-based templates selected during the first stage of analysis.
+const TEMPLATE_NUMBER_COUNT_1 = 30;
+// Maximum number of prefix-based templates selected during the first stage of analysis.
+const TEMPLATE_PREFIX_COUNT_1 = 10;
+// Sensitivity to mismatches between patterns and content. Smaller values increase strictness.
+const FACTOR_MISMATCH = 8;
+// Minimum beauty score required for a content template to be suggested or selected.
+const BEAUTY_MIN_2 = 0.16;
+
+const SYMBOL_REGEX = /[^\p{L}\p{N}]/ug;
+const TOKEN_REGEX = /(?:\p{Script=Latn}+|\p{Script=Cyrl}+|\p{Script=Grek}+|\p{Script=Geor}+|\p{Script=Armn}+|\p{Script=Arab}+|\p{Script=Tibetan}+|\p{Number}+|.)/gsu;
 
 
 /**
@@ -58,10 +67,11 @@ const BEAUTY_MIN_2 = 0.1;
 const contentsBeautyBySize = function (contents, { chars: totalChars }) {
   if (contents.length > MAX_CONTENTS_LENGTH) return 0;
 
+  const titleChars = contents.reduce((s, c) => s + c.title.length, 0);
   const starts = [0, ...contents.map(content => content.cursor + content.title.length)];
   const ends = [...contents.map(content => content.cursor), totalChars];
   const chapters = ends.map((end, i) => Math.max(end - starts[i], 0));
-  if (OUTLINER_DISTANCE * Math.max(...chapters.slice(0, -1)) < chapters[chapters.length - 1]) chapters.pop();
+  if (OUTLIER_DISTANCE * Math.max(...chapters.slice(0, -1)) < chapters[chapters.length - 1]) chapters.pop();
   const length = chapters.length - 1;
   if (length < 3) return 0;
 
@@ -73,9 +83,10 @@ const contentsBeautyBySize = function (contents, { chars: totalChars }) {
   const bound = (v, l = 0, h = length, m = Math.floor((l + h) / 2)) => l < h ? values[m] < v ? bound(v, m + 1, h) : bound(v, l, m) : l;
 
   const vLeft = at((length - 1) * 0.25), vRight = at((length - 1) * 0.75);
-  let low = Math.max(Math.floor(vLeft / 2 ** OUTLINER_DISTANCE) - 1, 1), leftIndex = bound(low), left = at(leftIndex);
-  let high = Math.ceil(vRight * 2 ** OUTLINER_DISTANCE) + 1, rightIndex = bound(high), right = at(rightIndex);
+  let low = Math.max(Math.floor(vLeft / 2 ** OUTLIER_DISTANCE) - 1, titleChars / length, 1), leftIndex = bound(low), left = at(leftIndex);
+  let high = Math.ceil(vRight * 2 ** OUTLIER_DISTANCE) + 1, rightIndex = bound(high), right = at(rightIndex);
   let mid = Math.ceil((left + right) / 2), centerIndex = bound(mid), center = at(centerIndex);
+  if (low > high) return 0;
 
   for (let iterate = 0; iterate < 10; iterate++) {
     if (center === left || center === right) break;
@@ -93,9 +104,8 @@ const contentsBeautyBySize = function (contents, { chars: totalChars }) {
     return t ** 2;
   };
   const factors = [
-    (1 / FACTOR_CONTENTS_SIZE) ** (1 / length),
-    (1 / FACTOR_OUTLINER) ** (length / (rightIndex - leftIndex) - 1),
-    (1 / FACTOR_OUTLINER) ** (totalChars / sum(leftIndex, rightIndex) - 1),
+    (1 / FACTOR_OUTLIER) ** (length / (rightIndex - leftIndex) - 1),
+    (1 / FACTOR_OUTLIER) ** (totalChars / (titleChars + sum(leftIndex, rightIndex)) - 1),
     (1 / FACTOR_VARIANCE_SIZE) ** rate(leftIndex, centerIndex),
     (1 / FACTOR_VARIANCE_SIZE) ** rate(centerIndex, rightIndex),
   ];
@@ -112,15 +122,22 @@ const contentsBeautyByTitle = function (contents) {
   if (length < MIN_CONTENTS) return 0;
   if (length > MAX_CONTENTS_LENGTH) return 0;
   const nameSet = new Map();
+  let totalSize = 0, totalCount = 0;
   const validSize = contents.filter(({ title }) => {
     if (title.length > MAX_TITLE_LENGTH) return false;
     const count = nameSet.has(title) ? nameSet.get(title) : 0;
     nameSet.set(title, count + 1);
     if (count > TOC_DUPLICATE_TOLERATE) return false;
+    totalSize += title.length; totalCount++;
     return true;
   }).length;
-  const beauty = (1 / FACTOR_TITLE_INVALID) ** (length / validSize - 1) ** 0.5;
-  return beauty;
+  const meanSize = totalSize / totalCount;
+  const factors = [
+    (1 / FACTOR_CONTENTS_SIZE) ** (1 / totalCount),
+    (1 / FACTOR_TITLE_INVALID) ** (length / validSize - 1) ** 0.5,
+    2 * (MAX_MEAN_TITLE_LENGTH - meanSize) / MAX_MEAN_TITLE_LENGTH - (Math.exp(-meanSize / MAX_MEAN_TITLE_LENGTH) - 1 / Math.E) / (1 - 1 / Math.E),
+  ];
+  return factors.reduce((x, y) => x * y);
 };
 
 /**
@@ -128,7 +145,7 @@ const contentsBeautyByTitle = function (contents) {
  * @returns {number}
  */
 const contentsBeautyByNumber = function (contents) {
-  const numbers = contents.map(x => x.number);
+  const numbers = contents.map(x => x && x.number);
   const length = numbers.length;
   if (length < MIN_CONTENTS) return 0;
   const best = [];
@@ -155,15 +172,33 @@ const contentsBeautyByNumber = function (contents) {
   let holes = max - min + 1, seen = new Set();
   seq.forEach(n => !seen.has(n) && (seen.add(n), holes--));
   const factors = [
-    (1 / FACTOR_NUMBER_MAX) ** (1 / max),
+    (1 / FACTOR_NUMBER_MAX) ** (1 / max ** 2),
     (1 / FACTOR_NUMBER_INVALID) ** (length / size - 1),
     (1 / FACTOR_NUMBER_HOLES) ** (max / (max - holes) - 1),
   ];
   return factors.reduce((x, y) => x * y);
 };
 
+/**
+ *
+ * @param {{ context: { tokens: string[] } }[]} contents
+ * @param {{ prefixCounts: Map<string, number>; symbolCounts: Map<string, number> }} articleContext
+ */
+const contentsBeautyByPrefix = function (contents, articleContext) {
+  if (!contents.length) return 0;
+  const token = contents[0].context.tokens[0];
+  const totalLines = articleContext.symbolCounts.get(token);
+  const prefixLines = articleContext.prefixCounts.get(token);
+  const size = contents.length;
+  const factors = [
+    (size / totalLines) ** (KEYWORD_UNIQUE_FACTOR / 10),
+    (size / prefixLines) ** (KEYWORD_PREFIX_FACTOR / 10),
+  ];
+  return factors.reduce((x, y) => x * y);
+};
 
-const exactRegex = (/** @type {string} */str) => str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+const exactRegex = (/** @type {string} */str) => str.replace(/[\\^$.*+?()[\]{}|\s]/g, c => /\s/.test(c) ? c === ' ' ? c : '\\s' : '\\' + c);
+
 
 /**
  * @param {object} config
@@ -174,17 +209,20 @@ const exactRegex = (/** @type {string} */str) => str.replace(/[-/\\^$*+?.()|[\]{
  * @param {number} config.priority
  */
 const extractNumber = function ({ charset, regex, parser, group, priority }) {
-  const matcher = new RegExp(regex(charset.key, charset.optional));
+  const matcher = new RegExp(regex(charset.key, charset.optional), 'g');
   return {
     extract: function (/** @type {string} */str) {
-      const match = str.match(matcher);
-      if (!match) return null;
-      const prefix = str.slice(0, match.index);
-      const infix = match[0];
-      const number = parser(infix);
-      const suffix = str.slice(match.index + infix.length);
-      if (!Number.isFinite(number)) return null;
-      return { prefix, infix, suffix, number };
+      const matches = [];
+      for (let index = 0, match; index < MAX_NUMERIC_LINE && (match = matcher.exec(str)); index++) {
+        const prefix = str.slice(0, match.index);
+        const infix = match[0];
+        const number = parser(infix);
+        const suffix = str.slice(match.index + infix.length);
+        if (!Number.isFinite(number)) return null;
+        matches.push({ prefix, infix, suffix, number });
+      }
+      matcher.lastIndex = 0;
+      return matches;
     },
     charset,
     regex,
@@ -244,67 +282,73 @@ const numberParserList = [
   parseNumeric2,
 ].map((p, index) => Object.assign({ index }, p));
 
-const SYMBOL_REGEX = /[^\p{L}\p{N}]/ug;
-const TOKEN_REGEX = /(?:\p{Script=Latn}+|\p{Script=Cyrl}+|\p{Script=Grek}+|\p{Script=Geor}+|\p{Script=Armn}+|\p{Script=Arab}+|\p{Script=Tibetan}+|\p{Number}+|.)/usg;
-
 /**
  *
  * @param {string} article
- * @param {{ chars: number; tokenCounts: Map<string, number>; lines: { line: string; tokens: string[]; numbers: number[] }[] }} articleContext
+ * @param {{ chars: number; prefixCounts: Map<string, number>; symbolCounts: Map<string, number>; lines: { line: string; tokens: string[]; numbers: number[] }[] }} articleContext
  */
 const recognizeContents = function (article, articleContext = {}) {
-  /** @type {({ pattern: string; key: string; priority: number; beauty: number } & ({ type: 'number'; parser: typeof numberParserList[number] } | { type: 'prefix', prefixBeauty: number }))[]} */
+  /** @type {({ mismatch: RegExp; pattern: string; key: string; priority: number; beauty: number } & ({ type: 'number'; parser: typeof numberParserList[number]; prefix: string } | { type: 'prefix', prefixBeauty: number }))[]} */
   const patterns = [], seenPattern = new Set();
   const commitPattern = (/** @type {typeof patterns[number]} */config) => {
-    if (seenPattern.has(config.pattern)) return;
+    if (seenPattern.has(config.key)) return;
     if (config.beauty < BEAUTY_MIN_1) return;
-    seenPattern.add(config.pattern);
+    seenPattern.add(config.key);
     patterns.push(config);
   };
 
   Object.assign(articleContext, {
     chars: 0,
-    tokenCounts: new Map(),
+    symbolCounts: new Map(),
+    prefixCounts: new Map(),
     lines: [],
   });
-  /** @typedef {ReturnType<typeof numberParserList[number]['extract']> & { cursor: number; title: string }} NumberMatchItem */
+  /** @typedef {(ReturnType<typeof numberParserList[number]['extract']>)[number] & { cursor: number; title: string }} NumberMatchItem */
   /** @type {Map<string, NumberMatchItem[]>[]} */
   const numberMatching = numberParserList.map(_ => new Map());
-  /** @type {Map<string, { cursor: number; title: string; context: { line: string; tokens: RegExpMatchArray | null; numbers: number[]; } }[]>} */
+  /** @type {Map<string, { cursor: number; title: string; context: { line: string; tokens: RegExpMatchArray | null; } }[]>} */
   const prefixMatching = new Map();
 
   let cursor = 0;
   const lines = article.split('\n');
   lines.forEach(line => {
-    const tokens = line.trim().match(TOKEN_REGEX);
-    const lineContext = { line, tokens, numbers: [] };
+    const stripedLine = line.trim();
+    const tokens = [];
+    for (let tokenMatch; (tokenMatch = TOKEN_REGEX.exec(stripedLine));) {
+      if (tokens.push(tokenMatch[0]) === MAX_SECTION) {
+        TOKEN_REGEX.lastIndex = 0;
+        break;
+      }
+    }
+    const symbols = stripedLine.match(SYMBOL_REGEX);
+    const lineContext = { line, tokens };
     articleContext.lines.push(lineContext);
-    if (tokens?.length) {
-      [...new Set(tokens)].forEach(token => {
-        articleContext.tokenCounts.set(token, (articleContext.tokenCounts.get(token) ?? 0) + 1);
+    if (symbols?.length) {
+      [...new Set(symbols)].forEach(token => {
+        articleContext.symbolCounts.set(token, (articleContext.symbolCounts.get(token) ?? 0) + 1);
       });
+    }
+    if (tokens.length) {
       const firstToken = tokens[0];
       if (firstToken && SYMBOL_REGEX.test(firstToken)) {
         if (!prefixMatching.has(firstToken)) prefixMatching.set(firstToken, []);
         prefixMatching.get(firstToken).push({ title: line, cursor, context: lineContext });
+        articleContext.prefixCounts.set(firstToken, (articleContext.prefixCounts.get(firstToken) ?? 0) + 1);
       }
     }
-    if (tokens?.length && line.length < MAX_TITLE_LENGTH) {
-      const numericLine = tokens.slice(0, MAX_NUMBER_SECTION).join('');
+    if (tokens.length && line.length < MAX_TITLE_LENGTH) {
+      const numericLine = tokens.join('');
       numberParserList.forEach((parser, index) => {
-        const matched = parser.extract(numericLine);
-        if (matched) {
-          lineContext.numbers.push(matched.number);
+        const matchedList = parser.extract(numericLine);
+        matchedList.forEach(matched => {
           const context = numberMatching[index];
           const prefix = matched.prefix.trimStart();
           if (!context.has(prefix)) context.set(prefix, []);
           context.get(prefix).push({ ...matched, cursor, title: line });
-        } else {
-          lineContext.numbers.push(null);
-        }
+        });
       });
     }
-    cursor += line.length + 1;
+    cursor += stripedLine.length + 1;
   });
   articleContext.chars = cursor;
 
@@ -334,26 +378,36 @@ const recognizeContents = function (article, articleContext = {}) {
         const beauty2 = contentsBeautyBySize(matches, articleContext) * contentsBeautyByTitle(matches);
         const beauty = beauty1 * beauty2;
         if (beauty < BEAUTY_MIN_1) return;
-        const key = JSON.stringify([parser.index, prefix, suffix]);
+        const key = JSON.stringify([parser.index, 1, prefix, suffix]);
         const infixCollection = matches.map(m => m.infix), infixSet = new Set(infixCollection.join(''));
-        const charset = parser.charset.key + parser.charset.optional.replace(/./g, ch => infixSet.has(ch) ? ch : '');
         const pattern = !['/', '*'].some(ch => (prefix + suffix).includes(ch)) ?
-          `${prefix}*${suffix}`.replace(/\s+/g, ' ') : `/${exactRegex(prefix)}.*${exactRegex(suffix)}/u`;
-        commitPattern({ pattern, key, priority: parser.priority * 10, type: 'number', parser, beauty });
-        const charsetPattern = ([...new Set(charset)].sort()
+          (suffix ? `${prefix}*${suffix}` : prefix).replace(/\s+/g, ' ') :
+          (suffix ? `/${exactRegex(prefix)}.*${exactRegex(suffix)}/u` : `/${exactRegex(prefix)}/u`);
+        const charset = parser.charset.key + parser.charset.optional.replace(/./g, ch => infixSet.has(ch) ? ch : '');
+        const charsetPattern = ([...new Set(charset)]
           .map(ch => ch.charCodeAt())
           .map((ch, i, chs) => ch - 1 === chs[i - 1] && ch + 1 === chs[i + 1] ? null : ch)
           .reduce((p, ch, i, chs) => p + (ch == null ? chs[i - 1] != null ? '-' : '' : exactRegex(String.fromCharCode(ch))), ''));
+        const regexKey = JSON.stringify([parser.index, 2, prefix, suffix]);
         const regexPattern = `/^\\s*${exactRegex(prefix)}[${charsetPattern}]+${exactRegex(suffix)}/`;
-        commitPattern({ pattern: regexPattern, key, priority: parser.priority * 10 + 1, type: 'number', parser, beauty });
+        const prefixTokens = prefix.match(TOKEN_REGEX) || [], shortPrefix = prefixTokens.slice(-1).join(''), prefixSpace = /\s/.test(prefixTokens[prefixTokens.length - 2]);
+        const suffixTokens = suffix.match(TOKEN_REGEX) || [], shortSuffix = suffixTokens.slice(0, 1).join(''), suffixSpace = /\s/.test(suffixTokens[1]);
+        const prefixReg = (prefixSpace ? '\\s' : '') + exactRegex(shortPrefix), suffixReg = exactRegex(shortSuffix) + (suffixSpace ? '\\s' : '');
+        const mismatch = new RegExp(`${prefixReg}[${charsetPattern}]+${suffixReg}`, 'u');
+        if (prefix) commitPattern({ mismatch, pattern, key, priority: parser.priority * 10, type: 'number', parser, beauty, prefix });
+        if (prefix || suffix) commitPattern({ mismatch, pattern: regexPattern, key: regexKey, priority: parser.priority * 10 + 1, type: 'number', parser, beauty, prefix });
+        if (!prefix && !suffix) {
+          const emptyPattern = `/^\\s*${exactRegex(prefix)}[${charsetPattern}]+${exactRegex(suffix)}\\s*$/`;
+          commitPattern({ mismatch, pattern: emptyPattern, key: regexKey, priority: parser.priority * 10, type: 'number', parser, beauty, prefix });
+        }
       });
     });
   });
 
   [...prefixMatching.entries()].forEach(([prefix, matches]) => {
     if (matches.length > MAX_CONTENTS_LENGTH / PREFIX_MIN_RATIO) return;
-    const totalLines = articleContext.tokenCounts.get(prefix);
-    const minTarget = Math.min(MIN_CONTENTS, totalLines * PREFIX_MIN_RATIO);
+    const totalLines = articleContext.symbolCounts.get(prefix);
+    const minTarget = Math.max(MIN_CONTENTS, totalLines * PREFIX_MIN_RATIO);
     const matchLines = matches.length;
     if (matchLines < minTarget) return;
     ; (function findPrefix(prefixTokens, lines) {
@@ -375,15 +429,13 @@ const recognizeContents = function (article, articleContext = {}) {
       ; (function () {
         const prefix = prefixTokens.join('');
         const pattern = !['/', '*'].some(ch => (prefix).includes(ch)) ? `${prefix}` : `/^\\s*${exactRegex(prefix)}/u`;
+        const mismatch = new RegExp(exactRegex(prefix));
         const key = JSON.stringify([null, prefix, '']);
-        const beauty1 = (
-          (lines.length / totalLines) ** (KEYWORD_UNIQUE_FACTOR / 10) *
-          (lines.length / matchLines) ** (KEYWORD_PREFIX_FACTOR / 10) *
-        1);
+        const beauty1 = contentsBeautyByPrefix(lines, articleContext);
         const beauty2 = contentsBeautyByTitle(lines) * contentsBeautyBySize(lines, articleContext);
         const beauty = beauty1 * beauty2;
         if (beauty < BEAUTY_MIN_1) return;
-        commitPattern({ pattern, key, priority: 11, type: 'prefix', beauty, prefixBeauty: beauty1 });
+        commitPattern({ mismatch, pattern, key, priority: 11, type: 'prefix', beauty, prefixBeauty: beauty1 });
       }());
       const suffixList = lines.map(line => line.tokens.slice(prefixTokens.length + 1));
       /** @type {Map<string, string[]>} */
@@ -403,51 +455,63 @@ const recognizeContents = function (article, articleContext = {}) {
         while (sublines.every(tokens => tokens[lcps] && tokens[lcps] === sublines[0][lcps])) lcp += sublines[0][lcps++];
         const prefix = prefixTokens.join(''), suffix = token + lcp;
         const selected = matches.filter(match => match.title.includes(suffix));
-        const beauty1 = (
-          (sublines.length / totalLines) ** (KEYWORD_UNIQUE_FACTOR / 10) *
-          (sublines.length / matchLines) ** (KEYWORD_PREFIX_FACTOR / 10) *
-        1);
+        const beauty1 = contentsBeautyByPrefix(selected, articleContext);
         if (beauty1 < BEAUTY_MIN_1) return;
         const beauty2 = contentsBeautyByTitle(selected) * contentsBeautyBySize(selected, articleContext);
         const beauty = beauty1 * beauty2;
         if (beauty < BEAUTY_MIN_1) return;
         const pattern = !['/', '*'].some(ch => (prefix + suffix).includes(ch)) ?
           `${prefix}*${suffix}` : `/^\\s*${exactRegex(prefix)}.*${exactRegex(suffix)}/u`;
+        const mismatch = new RegExp(exactRegex(prefix) + '.*' + exactRegex(suffix));
         const key = JSON.stringify([null, prefix, suffix]);
-        commitPattern({ pattern, key, priority: 10, type: 'prefix', beauty, prefixBeauty: beauty1 });
+        commitPattern({ mismatch, pattern, key, priority: 10, type: 'prefix', beauty, prefixBeauty: beauty1 });
       });
-    }([prefix], matches.map(match => Object.assign({ tokens: match.context.tokens.slice(0, MAX_KEYWORD_SECTION) }, match))));
+    }([prefix], matches.map(match => Object.assign({ tokens: match.context.tokens.slice(0, MAX_SECTION) }, match))));
   });
-  const seen = new Set(), dedupe = patterns.filter(pattern => seen.has(pattern.pattern) ? false : seen.add(pattern.pattern));
-  const numberPatterns = dedupe.filter(p => p.type === 'number').sort((x, y) => y.beauty - x.beauty).slice(0, TEMPLATE_COUNT_1);
-  const prefixPatterns = dedupe.filter(p => p.type === 'prefix').sort((x, y) => y.beauty - x.beauty).slice(0, TEMPLATE_COUNT_1);
+  const seen = new Set(), dedupe = patterns.filter(pattern => seen.has(pattern.key) ? false : seen.add(pattern.key));
+  const numberPatterns = dedupe.filter(p => p.type === 'number').sort((x, y) => y.beauty - x.beauty).slice(0, TEMPLATE_NUMBER_COUNT_1);
+  const prefixPatterns = dedupe.filter(p => p.type === 'prefix').sort((x, y) => y.beauty - x.beauty).slice(0, TEMPLATE_PREFIX_COUNT_1);
   const chosenPatterns = [...numberPatterns, ...prefixPatterns];
-  const regexen = chosenPatterns.map(x => parseContentTemplate(x.pattern));
-  const contents = regexen.map(x => []);
+  const regexList = chosenPatterns.map(x => parseContentTemplate(x.pattern));
+  const mismatchSet = new Map();
+  chosenPatterns.map(x => !mismatchSet.has('' + x.mismatch) && mismatchSet.set('' + x.mismatch, x.mismatch));
+  const mismatchList = [...mismatchSet.values()];
+  const mismatchIndex = chosenPatterns.map(x => mismatchList.findIndex(r => x.mismatch + '' === r + ''));
+  const contents = regexList.map(x => []), mismatch = regexList.map(x => 0);
   cursor = 0;
   article.split('\n').forEach(line => {
+    const mismatchResult = mismatchList.map(r => r.test(line));
     if (line.length <= MAX_TITLE_LENGTH) {
-      regexen.forEach((matchReg, index) => {
+      regexList.forEach((matchReg, index) => {
         if (matchReg.test(line)) {
           contents[index].push({
             title: line.trim(),
             cursor,
           });
+        } else {
+          const m = mismatchResult[mismatchIndex[index]];
+          if (m) mismatch[index]++;
         }
+      });
+    } else {
+      mismatchIndex.forEach((m, index) => {
+        if (mismatchResult[m]) mismatch[index]++;
       });
     }
     cursor += line.length + 1;
   });
   const contentsWithBeauty = contents.map((content, index) => {
     const pattern = chosenPatterns[index];
-    const beauty1 = contentsBeautyBySize(content, articleContext) * contentsBeautyByTitle(content);
-    const beauty2 = pattern.type === 'number' ? contentsBeautyByNumber(content.map(line => ({ number: pattern.parser.extract(line.title)?.number }))) : pattern.prefixBeauty;
-    return { content, beauty: beauty1 * beauty2, priority: pattern.priority, pattern };
+    const beauty1 = contentsBeautyBySize(content, { chars: cursor }) * contentsBeautyByTitle(content);
+    const numbers = pattern.type === 'number' ? content.map(line => pattern.parser.extract(line.title.split(pattern.prefix)[1])[0]) : [];
+    const beauty2 = pattern.type === 'number' ? contentsBeautyByNumber(numbers) : pattern.prefixBeauty;
+    const beauty3 = (1 / FACTOR_MISMATCH) ** (mismatch[index] / content.length);
+    return { content, beauty: beauty1 * beauty2 * beauty3, priority: pattern.priority, pattern };
   });
   contentsWithBeauty.sort((a, b) => b.beauty - a.beauty || a.priority - b.priority || a.pattern.pattern.length - b.pattern.pattern.length);
   const best = contentsWithBeauty[0];
   if (!best || best.beauty < BEAUTY_MIN_2) return null;
-  return { items: best.content, template: best.pattern.pattern };
+  return { items: best.content, template: best.pattern.pattern, beauty: best.beauty };
 };
 
 
@@ -461,6 +525,7 @@ const useRegExpForContent = function (template) {
     try {
       return new RegExp(reg, flags);
     } catch (e) {
+      console.error(e);
       return null;
     }
   }
