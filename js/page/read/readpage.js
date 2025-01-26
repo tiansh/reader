@@ -81,7 +81,7 @@ export default class ReadPage extends Page {
     /** @type {'flip' | 'scroll'} */
     this.renderStyle = await config.get('view_mode', 'flip');
     /** @type {'normal' | 'speech' | 'disable'} */
-    this.autoLockConfig = await config.get('auto_lock', 'speech')
+    this.autoLockConfig = await config.get('auto_lock', 'speech');
 
     // EXPERT_CONFIG when index page show as side bar
     this.screenWidthSideIndex = await config.expert('appearance.screen_width_side_index', 'number', 960);
