@@ -53,8 +53,9 @@ const TEMPLATE_PREFIX_COUNT_1 = 10;
 const FACTOR_MISMATCH = 8;
 // Minimum beauty score required for a content template to be suggested or selected.
 const BEAUTY_MIN_2 = 0.16;
-
+// Regex to recognize symbol
 const SYMBOL_REGEX = /[^\p{L}\p{N}]/ug;
+// Regex to recognize tokens
 const TOKEN_REGEX = /(?:\p{Script=Latn}+|\p{Script=Cyrl}+|\p{Script=Grek}+|\p{Script=Geor}+|\p{Script=Armn}+|\p{Script=Arab}+|\p{Script=Tibetan}+|\p{Number}+|.)/gsu;
 
 
