@@ -2,15 +2,16 @@
 
 https://tiansh.github.io/reader
 
-又一个 TXT 文本阅读器。
-
-自用为主。
+又一个 TXT 文本阅读器：支持按词语的繁简转换，及利用浏览器内置语音朗读，阅读功能全面；配色字体到其他排版布局高度可定制化；同时界面简洁帮助阅读免于打扰。
 
 ## 使用
 
-Safari 打开 https://tiansh.github.io/reader ，选择“添加到主屏幕”，从主屏幕上找到并打开，就可以开始用了。
-
-具体的使用帮助请参考 https://tiansh.github.io/reader/help/zh\_cn.html 。
+* 访问 https://tiansh.github.io/reader ，点击左上角加号添加文件即可使用。
+* 支持纯文本文件（.txt）和经过 gzip 压缩的纯文本文件（.txt.gz）。建议使用 UTF-8 编码以避免乱码。
+* 一些浏览器支持将应用“安装”或“添加到主屏幕”，选择对应选项后可以安装应用。应用无需安装即可使用，但安装后可以支持在不连接到互联网时继续使用。
+* 具体的使用帮助请参考 https://tiansh.github.io/reader/help/zh_cn.html 。
+* 除了下载和检查更新外，应用不包括联网功能。您的设置、小说等内容都存储在您的设备上，不会发送给任何人。具体的隐私协议请参考 https://tiansh.github.io/reader/help/privacy.html 。
+（另请注意，使用在线的语音朗读时，浏览器或操作系统提供的语音合成工具可能连接互联网。这些语音合成工具并非由阅读器本身提供，使用时请参考对应的隐私协议。）
 
 ### 高级设置
 
