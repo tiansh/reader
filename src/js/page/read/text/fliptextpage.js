@@ -38,6 +38,8 @@ export default class FlipTextPage extends TextPage {
   async onActivate({ id }) {
     await super.onActivate({ id });
 
+    /** @type {'disable' | 'enable'} */
+    this.tapToPageWhenSpeech = await config.get('speech_tap_page', 'enable') !== 'disable';
     // EXPERT_CONFIG When to use two column page
     this.screenWidthTwoColumn = await config.expert('appearance.screen_width_two_column', 'number', 960);
     // EXPERT_CONFIG When to use two column page when side index active
@@ -133,11 +135,14 @@ export default class FlipTextPage extends TextPage {
 
     listener.onTouch(wos(({ grid }) => {
       const action = this.flipTouchAction.split(',').map(a => a.trim())[grid.x];
-      if (action === 'prev') {
+      const isSpeech = this.readPage.speech.isWorking();
+      const mayFlip = this.tapToPageWhenSpeech || !isSpeech;
+      const apply = !mayFlip && (action === 'prev' || action === 'next') ? 'menu' : action;
+      if (apply === 'prev') {
         this.prevPage({ resetSpeech: true, resetRender: false });
-      } else if (action === 'next') {
+      } else if (apply === 'next') {
         this.nextPage({ resetSpeech: true, resetRender: false });
-      } else if (action === 'menu') {
+      } else if (apply === 'menu') {
         this.readPage.showControlPage();
       }
     }));
