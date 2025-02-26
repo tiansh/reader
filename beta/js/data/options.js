@@ -464,6 +464,15 @@ const options = (factory => {
       text: i18n.getMessage('configSpeechRateNum', rate),
     })),
     default: '1',
+  }), new SelectConfigOption({
+    name: 'speech_tap_page',
+    title: i18n.getMessage('configSpeechTapPage'),
+    select: [
+      { value: 'disable', text: i18n.getMessage('configSpeechTapPageDisable') },
+      { value: 'enable', text: i18n.getMessage('configSpeechTapPageEnable') },
+    ],
+    description: i18n.getMessage('configSpeechTapPageDescription'),
+    default: 'enable',
   })],
 }, ...wakelock.isSupport() ? [{
   title: i18n.getMessage('configScreenGroupTitle'),

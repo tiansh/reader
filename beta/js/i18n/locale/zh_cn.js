@@ -113,6 +113,10 @@ export default {
     if (rate === 1) return '1× (默认)';
     return rate + '×';
   },
+  configSpeechTapPage: '朗读时点按翻页',
+  configSpeechTapPageEnable: '允许',
+  configSpeechTapPageDisable: '禁用',
+  configSpeechTapPageDescription: '禁用点按翻页后您仍然可以滑动屏幕翻页。',
   configScreenGroupTitle: '屏幕',
   configAutoLock: '自动锁屏',
   configAutoLockNormal: '设备默认',

@@ -113,6 +113,10 @@ export default {
     if (rate === 1) return '1× (normal)';
     return rate + '×';
   },
+  configSpeechTapPage: 'Tap Page When Speech',
+  configSpeechTapPageEnable: 'Enable',
+  configSpeechTapPageDisable: 'Disable',
+  configSpeechTapPageDescription: 'You can still flip pages by sliding when tap-to-flip is disabled.',
   configScreenGroupTitle: 'Screen',
   configAutoLock: 'Auto-Lock',
   configAutoLockNormal: 'Device Default',

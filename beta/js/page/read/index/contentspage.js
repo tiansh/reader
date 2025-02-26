@@ -267,9 +267,11 @@ export default class IndexContentsPage extends IndexSubPage {
   }
   updateCurrentHighlight(position) {
     if (!this.renderReal) {
-      this.recoverRealList();
-      super.updateCurrentHighlight(position);
-      this.hideRealList();
+      if (this.needUpdateCurrentHighlight()) {
+        this.recoverRealList();
+        super.updateCurrentHighlight(position);
+        this.hideRealList();
+      }
     } else {
       super.updateCurrentHighlight(position);
     }
