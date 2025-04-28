@@ -132,7 +132,7 @@ const contentsBeautyByTitle = function (contents) {
     totalSize += title.length; totalCount++;
     return true;
   }).length;
-  const meanSize = totalSize / totalCount;
+  const meanSize = (totalSize + 1) / totalCount;
   const factors = [
     (1 / FACTOR_CONTENTS_SIZE) ** (1 / totalCount),
     (1 / FACTOR_TITLE_INVALID) ** (length / validSize - 1) ** 0.5,

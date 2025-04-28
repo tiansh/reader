@@ -114,6 +114,10 @@ export default {
     if (rate === 1) return '1× (預設)';
     return rate + '×';
   },
+  configSpeechTapPage: '朗讀時點按翻頁',
+  configSpeechTapPageEnable: '允許',
+  configSpeechTapPageDisable: '停用',
+  configSpeechTapPageDescription: '停用點按翻頁後您仍然可以滑動熒幕以翻頁。',
   configScreenGroupTitle: '螢幕',
   configAutoLock: '自動鎖定',
   configAutoLockNormal: '裝置預設',
