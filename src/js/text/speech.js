@@ -146,6 +146,7 @@ speech.setPreferVoice = function (voiceURI) {
 };
 
 setTimeout(() => {
+  if (typeof window.speechSynthesis === 'undefined') return;
   updateVoiceList();
   try {
     speechSynthesis.addEventListener('voiceschanged', updateVoiceList);
