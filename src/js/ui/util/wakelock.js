@@ -17,7 +17,7 @@ wakelock.isSupport = function () {
   const isIos = ['iPhone', 'iPad'].includes(navigator.platform);
   const isStandalone = window.navigator.standalone;
   const version = navigator.appVersion.split('OS')[1]?.match(/\d+/g)?.map(x => +x);
-  const isOldVersion = version[0] < 18 || version[0] === 18 && version[1] < 4;
+  const isOldVersion = version && (version[0] < 18 || version[0] === 18 && version[1] < 4);
   if (isIos && isStandalone && isOldVersion) return false;
   return true;
 };

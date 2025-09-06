@@ -87,3 +87,15 @@ updateTheme();
   document.getElementById('custom_css').textContent = userCustomCss;
 }());
 
+; (async function () {
+  const rootStyle = async (key, defaultValue, variable) => {
+    const writeStyle = (value) => {
+      document.documentElement.style.setProperty(variable, value);
+    };
+    writeStyle(await config.get(key, defaultValue));
+    config.addListener(key, writeStyle);
+  };
+  rootStyle('light_background', '#ffffff', '--light-background');
+  rootStyle('dark_background', '#000000', '--dark-background');
+}());
+
