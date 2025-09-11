@@ -9,15 +9,6 @@
 :root {
   --content-padding-x: 20px;
   --content-padding-y: 20px;
-
-  --extra-top: env(safe-area-inset-top, 0px);
-  --extra-right: env(safe-area-inset-right, 0px);
-  --extra-bottom: env(safe-area-inset-bottom, 0px);
-  --extra-left: env(safe-area-inset-left, 0px);
-  --extra-top: 40px;
-  --extra-right: 50px;
-  --extra-bottom: 60px;
-  --extra-left: 70px;
 }
 
 html, body {
