@@ -16,13 +16,16 @@ export default config;
 const EXPERT_CONFIG_NAME = 'expert';
 config.EXPERT_CONFIG_NAME = EXPERT_CONFIG_NAME;
 
+/** @type {{ name: string; listener: (newValue: any) => void }[]} */
 const listenerList = [];
 
+/** @template {ConfigType} @type {(name: string, defaultValue: ConfigType) => Promise<ConfigType>} */
 config.get = async (name, defaultValue) => {
   let value = await storage.config.getItem(name);
   return value ?? defaultValue;
 };
 
+/** @template {ConfigType} @type {(name: string, value: ConfigType) => Promise<ConfigType>} */
 config.set = async (name, value) => {
   await storage.config.setItem(value, name);
   Promise.resolve().then(() => {
@@ -84,14 +87,14 @@ const findListener = (name, listener) => {
   return listenerList.findIndex(i => i.name === name && i.listener === listener);
 };
 
+/** @type {(name: string, listener: (newValue: any) => void) => void} */
 config.addListener = (name, listener) => {
   const pos = findListener(name, listener);
   if (pos === -1) listenerList.push({ name, listener });
 };
 
+/** @type {(name: string, listener: (newValue: any) => void) => void} */
 config.removeListener = (name, listener) => {
   const pos = findListener(name, listener);
   if (pos !== -1) listenerList.splice(pos, 1);
 };
-
-

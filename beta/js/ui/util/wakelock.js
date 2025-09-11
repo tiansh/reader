@@ -12,13 +12,13 @@ export default wakelock;
 
 wakelock.isSupport = function () {
   if (!('wakeLock' in navigator)) return false;
-  // WakeLock support on iOS standalone mode is buggy
-  // We disable the support by checking iOS
-  // https://webkit.org/b/254545#c32
+  // WakeLock support on iOS standalone mode is buggy before iOS 18.4
+  // https://webkit.org/b/254545#c65
   const isIos = ['iPhone', 'iPad'].includes(navigator.platform);
   const isStandalone = window.navigator.standalone;
-  const version = navigator.appVersion.split('OS')[1]?.match(/\d+/g);
-  if (isIos && isStandalone) return false;
+  const version = navigator.appVersion.split('OS')[1]?.match(/\d+/g)?.map(x => +x);
+  const isOldVersion = version && (version[0] < 18 || version[0] === 18 && version[1] < 4);
+  if (isIos && isStandalone && isOldVersion) return false;
   return true;
 };
 

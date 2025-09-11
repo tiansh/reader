@@ -10,6 +10,7 @@
 
 import config from '../../../data/config.js';
 import speech from '../../../text/speech.js';
+import wakelock from '../../../ui/util/wakelock.js';
 import ReadPage from '../readpage.js';
 
 export default class ReadSpeech {
@@ -33,10 +34,10 @@ export default class ReadSpeech {
 
     /** @type {WeakMap<SpeechSynthesisUtterance, { start: number, end: number }>} */
     this.ssuInfo = new WeakMap();
-
-    this.listenEvents();
   }
   async init() {
+    /** @type {'normal' | 'speech' | 'disable'} */
+    this.autoLockConfig = await config.get('auto_lock', 'speech');
     const normalize = (n, defaultValue) => n < 0 ? defaultValue : Math.round(n);
     // EXPERT_CONFIG Maximum character allowed in a single speech instance
     this.speechTextMaxLength = await config.expert('speech.max_char_length', 'number', 1000, { normalize });
@@ -83,6 +84,8 @@ export default class ReadSpeech {
     this.speaking = false;
     this.spoken = null;
     this.speakingSsu = null;
+
+    this.listenEvents();
   }
   listenEvents() {
     this.listenMediaDeviceChange();
@@ -255,6 +258,9 @@ export default class ReadSpeech {
       await this.fakeAudio.play();
       this.updateMediaSession();
     }
+    if (this.autoLockConfig === 'speech') {
+      wakelock.request();
+    }
     this.readMore();
   }
   async stop() {
@@ -282,6 +288,9 @@ export default class ReadSpeech {
     if (this.mediaSessionEnable) {
       if (this.fakeAudio) this.fakeAudio.pause();
       this.updateMediaSession();
+    }
+    if (this.autoLockConfig === 'speech') {
+      wakelock.release();
     }
   }
   async reset() {

@@ -20,7 +20,7 @@ html, body {
 }
 
 body {
-  background: var(--default-background);
+  background-color: inherit;
   color: var(--default-color);
   font-size: 20px;
   display: block;
@@ -38,6 +38,7 @@ a {
 }
 
 .page {
+  background: var(--default-background);
   display: none;
   overflow: hidden;
   position: absolute;
