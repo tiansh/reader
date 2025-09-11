@@ -28,6 +28,7 @@ body:target kbd { border-color: #666;}
   <h3>List of files</h3>
   <p>If you need to add a file, click the "Add" button in the upper left corner, and select the text file you want to add.</p>
   <p>If your file is rendered as mojibake, you may need to save the text file with UTF-8 encoding.</p>
+  <p>The reader support plain text file with extension <code>.txt</code>. And it also support gzip compressed text file (with extension <code>.txt.gz</code>, but not support other archive formats).</p>
   <p>When you need to delete a file, you can swipe left, right-click or press keyboard Delete on the corresponding item in the list to get the delete button.</p>
   <p>Click the "Settings" button in the upper right corner of the file list to open the settings. Clicking on the items in the list to start reading.</p>
   <h3>Settings</h3>
@@ -56,9 +57,9 @@ body:target kbd { border-color: #666;}
   <h3>Table of contents, bookmarks and searches</h3>
   <p>You may switch between the three tabs using the three buttons at the bottom of the catalog, bookmarks, and search interface.</p>
   <p>The reader will try to automatically extract table of contents. And you may still want to manually adjust the template for the table of contents to extract it more precisely. Click the "Refresh" button in the upper right corner, enter the template and confirm. The reader will extract the table of contents based on the template.</p>
-  <p>If your article uses "CHAPTER I. Some Title" as the title of each chapter, you can enter "CHAPTER *. " as the template of table of contents. The template uses a asterisk (<code>*</code>) as a wildcard to match any text, and a space (<code>&#32;</code>) to match any whitespace characters. You may also use regular expressions by adding slashs (/) to the beginning and end of template.</p>
+  <p>If your article uses "CHAPTER I. Some Title" as the title of each chapter, you can enter "CHAPTER *. " as the template of table of contents. The template uses a asterisk (<code>*</code>) as a wildcard to match any text, and a space (<code>&#32;</code>) to match any whitespace characters. You may also use regular expressions by adding slashes (/) to the beginning and ending of template.</p>
   <p>Clicking the button in the upper right corner of bookmarks page to add bookmarks. You may delete bookmarks in a similar way just like the list of file page does.</p>
-  <p>Searching shows only the first result of each paragraph no matter the how many repeated searced text appears in a single paragraph.</p>
+  <p>Searching shows only the first result of each paragraph no matter the how many repeated searched text appears in a single paragraph.</p>
   <h2>Frequently asked questions</h2>
   <h3>Failed to render CJK characters; Incorrect line breakings</h3>
   <p>The reader may not guess the language of its content. This may cause the browser to render CJK texts with wrong fonts. And may also lead to different line breaking behaviors than you expected.</p>

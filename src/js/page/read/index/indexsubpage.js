@@ -129,6 +129,14 @@ export default class IndexSubPage extends ReadSubPage {
     if (!list[r]) return [null, null];
     return [r, list[r].cursor === cursor];
   }
+  needUpdateCurrentHighlight() {
+    const [index] = this.getCurrentIndex();
+    const current = index === -1 ? null : index;
+    const selected = this.itemList.listAllSelected(current);
+    if (current == null && !selected.length) return false;
+    if (current != null && selected.length === 1 && selected[0] === current) return false;
+    return true;
+  }
   /** @param {'start' | 'nearest'} position */
   updateCurrentHighlight(position) {
     const [index, highlight] = this.getCurrentIndex();

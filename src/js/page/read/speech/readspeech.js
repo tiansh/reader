@@ -78,7 +78,7 @@ export default class ReadSpeech {
       'com.apple.voice.super-compact.zh-CN.Tingting',
       'com.apple.voice.compact.zh-HK.Sinji',
       'com.apple.voice.super-compact.zh-HK.Sinji',
-    ].includes(speech.getPreferVoice().voiceURI) && / OS 17_/.test(navigator.userAgent);
+    ].includes(speech.getPreferVoice()?.voiceURI) && / OS 17_/.test(navigator.userAgent);
     this.extraSuffix = await config.expert('speech.extra_suffix', 'string', isBuggyVoice ? '“”。' : '');
 
     this.speaking = false;
