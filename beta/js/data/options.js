@@ -12,6 +12,7 @@ import i18n from '../i18n/i18n.js';
 import template from '../ui/util/template.js';
 import app from './app.js';
 import wakelock from '../ui/util/wakelock.js';
+import speech from '../text/speech.js';
 
 class ConfigOption {
   /** @param {{ name: string, description: string?, title: string }} config */
@@ -443,7 +444,7 @@ const options = (factory => {
   })],
 }, {
   title: i18n.getMessage('configSpeechGroupTitle'),
-  items: [new VoiceConfigOption({
+  items: [...[new VoiceConfigOption({
     name: 'speech_voice',
     title: i18n.getMessage('configSpeechVoice'),
     default: null,
@@ -464,7 +465,15 @@ const options = (factory => {
       text: i18n.getMessage('configSpeechRateNum', rate),
     })),
     default: '1',
-  }), new SelectConfigOption({
+  })], ...speech.supportBackground() ? [new SelectConfigOption({
+    name: 'speech_pause_in_background',
+    title: i18n.getMessage('configSpeechPauseInBackground'),
+    select: [
+      { value: 'pause', text: i18n.getMessage('configSpeechPauseInBackgroundPause') },
+      { value: 'continue', text: i18n.getMessage('configSpeechPauseInBackgroundContinue') },
+    ],
+    default: 'continue',
+  })] : [], ...[new SelectConfigOption({
     name: 'speech_tap_page',
     title: i18n.getMessage('configSpeechTapPage'),
     select: [
@@ -473,7 +482,7 @@ const options = (factory => {
     ],
     description: i18n.getMessage('configSpeechTapPageDescription'),
     default: 'enable',
-  })],
+  })]],
 }, ...wakelock.isSupport() ? [{
   title: i18n.getMessage('configScreenGroupTitle'),
   items: [new SelectConfigOption({

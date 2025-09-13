@@ -145,6 +145,11 @@ speech.setPreferVoice = function (voiceURI) {
   config.set('speech_voice', voiceURI);
 };
 
+speech.supportBackground = function () {
+  const isIos = ['iPhone', 'iPad'].includes(navigator.platform);
+  return !isIos;
+};
+
 setTimeout(() => {
   if (typeof window.speechSynthesis === 'undefined') return;
   updateVoiceList();
