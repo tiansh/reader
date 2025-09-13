@@ -7,7 +7,7 @@
  */
 
 .file-list-container {
-  height: calc(var(--window-height) - 50px);
+  height: calc(var(--page-height) - 50px);
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-user-select: none;

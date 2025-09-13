@@ -215,10 +215,10 @@ button.submit-button .icon-go {
 
 .screen-option {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: var(--window-width);
-  height: var(--window-height);
+  top: var(--extra-top);
+  left: var(--extra-left);
+  width: var(--page-width);
+  height: var(--page-height);
   z-index: 9;
   display: flex;
   flex-direction: column;

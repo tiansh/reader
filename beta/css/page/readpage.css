@@ -110,7 +110,7 @@
 }
 
 .read-index {
-  height: var(--window-height);
+  height: var(--page-height);
   background: var(--default-background);
   overflow: hidden;
   --tab-index-current: 0;
