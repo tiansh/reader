@@ -7,12 +7,13 @@
  */
 
 .config-page {
-  position: fixed;
+  position: absolute;
   top: 0;
   bottom: 0;
   left: 0;
-  width: var(--window-width);
+  width: var(--page-width);
   background: var(--config-background);
+  z-index: 1;
 }
 
 .config-page-content {

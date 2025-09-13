@@ -20,7 +20,7 @@
   box-sizing: border-box;
   position: absolute;
   width: 100%;
-  height: var(--window-height);
+  height: var(--page-height);
   top: 0;
   left: var(--slide-x);
   -webkit-user-select: text;
@@ -45,11 +45,11 @@
 }
 
 .read-page-flip .read-text-page-prev {
-  left: calc(calc(-1 * var(--window-width)) + var(--slide-x));
+  left: calc(calc(-1 * var(--page-width)) + var(--slide-x));
 }
 
 .read-page-flip .read-text-page-next {
-  left: calc(var(--window-width) + var(--slide-x));
+  left: calc(var(--page-width) + var(--slide-x));
 }
 
 .read-page-flip .read-text-pages-slide .read-text-page {
@@ -162,7 +162,7 @@
 }
 
 .read-page-flip .read-index {
-  top: calc(calc(var(--window-height) * -1) + var(--slide-offset));
+  top: calc(calc(var(--page-height) * -1) + var(--slide-offset));
   bottom: calc(100vh - var(--slide-offset));
 }
 

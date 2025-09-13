@@ -14,8 +14,8 @@ import config from '../data/config.js';
 
 const updateWindowSize = function ([width, height]) {
   const html = document.documentElement;
-  html.style.setProperty('--window-width', width + 'px');
-  html.style.setProperty('--window-height', height + 'px');
+  html.style.setProperty('--viewport-width', width + 'px');
+  html.style.setProperty('--viewport-height', height + 'px');
 };
 onResize.addListener(updateWindowSize);
 
