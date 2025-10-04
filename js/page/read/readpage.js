@@ -270,11 +270,7 @@ export default class ReadPage extends Page {
     return true;
   }
   async toggleSpeech() {
-    const speaking = await this.speech.toggle();
-    if (this.autoLockConfig === 'speech') {
-      if (speaking === true) wakelock.request();
-      else if (speaking === false) wakelock.release();
-    }
+    this.speech.toggle();
   }
   /**
    * @returns The text position where user had read

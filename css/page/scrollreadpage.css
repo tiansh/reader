@@ -16,7 +16,7 @@
   box-sizing: border-box;
   position: absolute;
   width: 100%;
-  height: var(--window-height);
+  height: var(--page-height);
   overflow: hidden;
   overflow-wrap: break-word;
   contain: layout;

@@ -10,6 +10,7 @@
 
 import config from '../../../data/config.js';
 import speech from '../../../text/speech.js';
+import wakelock from '../../../ui/util/wakelock.js';
 import ReadPage from '../readpage.js';
 
 export default class ReadSpeech {
@@ -37,6 +38,10 @@ export default class ReadSpeech {
     this.listenEvents();
   }
   async init() {
+    /** @type {'normal' | 'speech' | 'disable'} */
+    this.autoLockConfig = await config.get('auto_lock', 'speech');
+    /** @type {'continue' | 'pause'} */
+    this.pauseInBackground = speech.supportBackground() ? await config.get('speech_pause_in_background', 'continue') : 'pause';
     const normalize = (n, defaultValue) => n < 0 ? defaultValue : Math.round(n);
     // EXPERT_CONFIG Maximum character allowed in a single speech instance
     this.speechTextMaxLength = await config.expert('speech.max_char_length', 'number', 1000, { normalize });
@@ -67,8 +72,6 @@ export default class ReadSpeech {
     });
     // EXPERT_CONFIG Loop when speech reach end of text
     this.enableLoop = await config.expert('speech.loop_enable', 'boolean', false);
-    // EXPERT_CONFIG Pause reading when webpage is been hidden (user switched to other tabs)
-    this.pauseOnHidden = await config.expert('speech.pause_on_hidden', 'boolean', false);
     // EXPERT_CONFIG Append some text for each line
     // zh-CN and zh-HK voices on iOS 17 failed to speak anything wraped in a pair of quotes (“”).
     // Append some extra text as a workaround.
@@ -89,19 +92,18 @@ export default class ReadSpeech {
     window.addEventListener('beforeunload', event => {
       this.stop();
     });
-    if (this.pauseOnHidden) {
-      this.hiddenPause = false;
-      document.addEventListener('visibilitychange', event => {
-        if (this.speaking && document.hidden) {
-          this.hiddenPause = true;
-          this.stop();
-        }
-        if (this.hiddenPause && !document.hidden) {
-          this.hiddenPause = false;
-          this.reset();
-        }
-      });
-    }
+    this.hiddenPause = false;
+    document.addEventListener('visibilitychange', event => {
+      if (this.pauseInBackground === 'continue') return;
+      if (this.speaking && document.hidden) {
+        this.hiddenPause = true;
+        this.stop();
+      }
+      if (this.hiddenPause && !document.hidden) {
+        this.hiddenPause = false;
+        this.reset();
+      }
+    });
   }
   async listenMediaDeviceChange() {
     if (!navigator.mediaDevices) return false;
@@ -255,6 +257,9 @@ export default class ReadSpeech {
       await this.fakeAudio.play();
       this.updateMediaSession();
     }
+    if (this.autoLockConfig === 'speech') {
+      wakelock.request();
+    }
     this.readMore();
   }
   async stop() {
@@ -282,6 +287,9 @@ export default class ReadSpeech {
     if (this.mediaSessionEnable) {
       if (this.fakeAudio) this.fakeAudio.pause();
       this.updateMediaSession();
+    }
+    if (this.autoLockConfig === 'speech') {
+      wakelock.release();
     }
   }
   async reset() {

@@ -94,6 +94,7 @@ export default class RangeInput {
     this.input.max = this.config.max;
     this.input.step = this.config.step;
     this.input.value = this.textValue();
+    this.renderValue();
   }
   getConfig() {
     return this.config;
@@ -136,6 +137,7 @@ export default class RangeInput {
       this.input.value = this.textValue();
     }
   }
+  /** @param {RangeConfig} config */
   normalizeConfig(config) {
     let min = Number.isFinite(config.min) ? config.min : 0;
     let max = Number.isFinite(config.max) ? config.max : 1;

@@ -14,8 +14,8 @@ import config from '../data/config.js';
 
 const updateWindowSize = function ([width, height]) {
   const html = document.documentElement;
-  html.style.setProperty('--window-width', width + 'px');
-  html.style.setProperty('--window-height', height + 'px');
+  html.style.setProperty('--viewport-width', width + 'px');
+  html.style.setProperty('--viewport-height', height + 'px');
 };
 onResize.addListener(updateWindowSize);
 
@@ -85,5 +85,17 @@ updateTheme();
   // EXPERT_CONFIG Add some custom CSS (danger)
   const userCustomCss = await config.expert('appearance.custom_css', 'string', '');
   document.getElementById('custom_css').textContent = userCustomCss;
+}());
+
+; (async function () {
+  const rootStyle = async (key, defaultValue, variable) => {
+    const writeStyle = (value) => {
+      document.documentElement.style.setProperty(variable, value);
+    };
+    writeStyle(await config.get(key, defaultValue));
+    config.addListener(key, writeStyle);
+  };
+  rootStyle('light_background', '#ffffff', '--light-background');
+  rootStyle('dark_background', '#000000', '--dark-background');
 }());
 
