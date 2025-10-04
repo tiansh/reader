@@ -71,8 +71,6 @@ media_session_enable=false
 skip_text_regex=/^\s*$/u
 ; 语音朗读遇到文章结尾时自动从开头重读
 loop_enable=false
-; 页面切换到后台时暂停朗读
-pause_on_hidden=false
 ; 在每段末尾追加朗读的文本
 extra_suffix=
 ```
