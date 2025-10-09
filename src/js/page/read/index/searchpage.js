@@ -116,11 +116,11 @@ export default class IndexSearchPage extends IndexSubPage {
     const lines = this.readPage.content.split('\n'), linum = lines.length;
 
     const searchResult = this.searchResultList;
-    const lastSearchResultSize = searchResult.length;
-    if (lastSearchResultSize && searchResult[lastSearchResultSize - 1] == null) {
-      this.itemList.removeItem(lastSearchResultSize - 1);
+    if (searchResult.length && searchResult[searchResult.length - 1] == null) {
+      this.itemList.removeItem(searchResult.length - 1);
       searchResult.pop();
     }
+    const lastSearchResultSize = searchResult.length;
     const searchLimit = 1000;
     let searchHit = 0;
     let cursor = this.lastSearchCursor, i = this.lastSearchLine;
