@@ -13,6 +13,16 @@ import speech from '../../../text/speech.js';
 import wakelock from '../../../ui/util/wakelock.js';
 import ReadPage from '../readpage.js';
 
+/**
+ * @typedef {'ready' | 'speaking' | 'more' | 'stopping' | 'stopped'} SpeechState
+ * Ready: Ready to start speaking; (stable)
+ * Speaking: Speaking; (stable)
+ * More: Prepare following ssu for speaking; transfer to Speaking when done
+ * Stopping: Stopping the speech; transfer to Stopped when done
+ * Stopped: Speaking stopped, 1s interval is required before transfer to Ready due to iOS bug(?)
+ */
+/** @typedef {'stop' | 'paused' | 'play' | 'reset'} UserState */
+
 export default class ReadSpeech {
   /**
    * @param {ReadPage} page
@@ -26,16 +36,30 @@ export default class ReadSpeech {
 
     this.page = page;
 
-    this.onStart = this.onStart.bind(this);
-    this.onBoundary = this.onBoundary.bind(this);
-    this.onEnd = this.onEnd.bind(this);
-    this.onError = this.onError.bind(this);
+    this.onSsuStart = this.onSsuStart.bind(this);
+    this.onSsuBoundary = this.onSsuBoundary.bind(this);
+    this.onSsuEnd = this.onSsuEnd.bind(this);
+    this.onSsuError = this.onSsuError.bind(this);
     this.onMediaKey = this.onMediaKey.bind(this);
+    this.handleMediaSessionWhenStateChange = this.handleMediaSessionWhenStateChange.bind(this);
+    this.handleAutoLockWhenStateChange = this.handleAutoLockWhenStateChange.bind(this);
 
     /** @type {WeakMap<SpeechSynthesisUtterance, { start: number, end: number }>} */
     this.ssuInfo = new WeakMap();
+    /** @type {Set<SpeechSynthesisUtterance> | null} */
+    this.pendingSsu = null;
+    /** @type {SpeechSynthesisUtterance | null} */
+    this.speakingSsu = null;
 
     this.listenEvents();
+
+    this.reportSpeechState('ready');
+    /** @type {UserState} */
+    this.userState = 'stop';
+    /** @type {UserState} */
+    this.targetUserState = 'stop';
+    /** @type {((state: UserState) => void)[]} */
+    this.stateChangeListeners = [];
   }
   async init() {
     /** @type {'normal' | 'speech' | 'disable'} */
@@ -83,25 +107,86 @@ export default class ReadSpeech {
     ].includes(speech.getPreferVoice()?.voiceURI) && / OS 17_/.test(navigator.userAgent);
     this.extraSuffix = await config.expert('speech.extra_suffix', 'string', isBuggyVoice ? '“”。' : '');
 
-    this.speaking = false;
-    this.spoken = null;
-    this.speakingSsu = null;
+    this.initMediaSession();
+    this.initWakeLock();
   }
+  /** @param {SpeechState} state */
+  reportSpeechState(state) {
+    /** @type {SpeechState} */
+    this.speechState = state;
+    const changed = this.speechStateChanged;
+    /** @type {Promise<SpeechState>} */
+    this.speechStateChangePromise = new Promise(resolve => {
+      this.speechStateChanged = resolve;
+    });
+    if (changed) changed(state);
+  }
+  untilSpeechStateChange() {
+    return this.speechStateChangePromise;
+  }
+  async untilSpeechStateStable() {
+    while (!['ready', 'speaking'].includes(this.speechState)) {
+      await this.untilSpeechStateChange();
+    }
+  }
+  reportUserState(state) {
+    const stateBefore = this.userState;
+    this.userState = state;
+    this.stateChangeListeners.forEach(f => {
+      try { f(state, stateBefore); } catch (e) { console.error(e); }
+    });
+  }
+  /** @param {(state: UserState, stateBefore: UserState) => void} listener */
+  addStateChangeListener(listener) {
+    const list = this.stateChangeListeners;
+    if (list.indexOf(listener) === -1) list.push(listener);
+  }
+  /** @param {(state: UserState, stateBefore: UserState) => void} listener */
+  removeStateChangeListener(listener) {
+    const list = this.stateChangeListeners;
+    const pos = list.indexOf(listener);
+    if (pos !== -1) list.splice(pos, 1);
+    return pos !== -1;
+  }
+
+  isSpeaking() {
+    return this.speechState === 'speaking' || this.speechState === 'more';
+  }
+
+  isWorking() {
+    return this.userState !== 'stop';
+  }
+  isPaused() {
+    return this.userState === 'paused';
+  }
+  isPlaying() {
+    return this.userState === 'play';
+  }
+  isReseting() {
+    return this.targetUserState === 'reset';
+  }
+
   listenEvents() {
     this.listenMediaDeviceChange();
+    this.listenBeforeUnload();
+    this.listenVisibilityChange();
+  }
+  listenBeforeUnload() {
     window.addEventListener('beforeunload', event => {
       this.stop();
     });
+  }
+  listenVisibilityChange() {
     this.hiddenPause = false;
     document.addEventListener('visibilitychange', event => {
       if (this.pauseInBackground === 'continue') return;
-      if (this.speaking && document.hidden) {
+      if (this.isSpeaking() && document.hidden) {
         this.hiddenPause = true;
-        this.stop();
+        this.pause();
       }
-      if (this.hiddenPause && !document.hidden) {
+      if (this.hiddenPause && this.isPaused() && !document.hidden) {
         this.hiddenPause = false;
-        this.reset();
+        this.start();
       }
     });
   }
@@ -123,9 +208,10 @@ export default class ReadSpeech {
       });
     });
   }
+
   /** @param {SpeechSynthesisEvent} event */
-  onStart(event) {
-    if (!this.speaking) return;
+  onSsuStart(event) {
+    if (!this.isSpeaking()) return;
     /** @type {SpeechSynthesisUtterance} */
     const ssu = event.target;
     const ssuInfo = this.getSsuInfo(ssu);
@@ -137,8 +223,8 @@ export default class ReadSpeech {
     this.readMore();
   }
   /** @param {SpeechSynthesisEvent} event */
-  onBoundary(event) {
-    if (!this.speaking) return;
+  onSsuBoundary(event) {
+    if (!this.isSpeaking()) return;
     const boundaryCursor = this.boundaryCursor = {};
     const ssu = event.target;
     const ssuInfo = this.getSsuInfo(ssu);
@@ -159,14 +245,14 @@ export default class ReadSpeech {
     this.readMore();
   }
   /** @param {SpeechSynthesisEvent} event */
-  onEnd(event) {
-    if (!this.speaking) return;
+  onSsuEnd(event) {
+    if (!this.isSpeaking()) return;
     this.speakingSsu = null;
     const ssu = event.target;
-    ssu.removeEventListener('start', this.onStart);
-    ssu.removeEventListener('boundary', this.onBoundary);
-    ssu.removeEventListener('end', this.onEnd);
-    ssu.removeEventListener('error', this.onError);
+    ssu.removeEventListener('start', this.onSsuStart);
+    ssu.removeEventListener('boundary', this.onSsuBoundary);
+    ssu.removeEventListener('end', this.onSsuEnd);
+    ssu.removeEventListener('error', this.onSsuError);
     const ssuInfo = this.getSsuInfo(ssu);
     if (!ssuInfo) return;
     if (!this.page.textPage) {
@@ -174,11 +260,11 @@ export default class ReadSpeech {
       return;
     }
     this.page.textPage.clearHighlight();
-    this.sopken = ssuInfo.end;
+    this.spoken = ssuInfo.end;
     this.readMore();
   }
-  onError(event) {
-    if (!this.speaking) return;
+  onSsuError(event) {
+    if (!this.isSpeaking()) return;
     this.stop();
   }
   getSsuInfo(ssu) {
@@ -188,8 +274,9 @@ export default class ReadSpeech {
   }
   readEnd() {
     if (this.enableLoop) {
-      this.reset();
+      this.pause();
       this.page.setCursor(0, { resetSpeech: true, resetRender: false });
+      this.start();
     } else {
       this.stop();
     }
@@ -198,7 +285,7 @@ export default class ReadSpeech {
     const content = this.page.content;
     let current = null, text = null, end = null;
     do {
-      if (this.next === content.length) return;
+      if (this.next === content.length) return null;
       current = this.next;
       const line = content.indexOf('\n', current) + 1;
       end = Math.min(line || content.length, current + this.speechTextMaxLength);
@@ -207,29 +294,28 @@ export default class ReadSpeech {
     } while (!text || this.speechTextSkipRegex.test(text));
     const ssu = speech.prepare(text + this.extraSuffix);
     this.ssuInfo.set(ssu, { start: current, end });
-    ssu.addEventListener('start', this.onStart);
-    ssu.addEventListener('boundary', this.onBoundary);
-    ssu.addEventListener('end', this.onEnd);
-    ssu.addEventListener('error', this.onError);
+    ssu.addEventListener('start', this.onSsuStart);
+    ssu.addEventListener('boundary', this.onSsuBoundary);
+    ssu.addEventListener('end', this.onSsuEnd);
+    ssu.addEventListener('error', this.onSsuError);
     this.pendingSsu.add(ssu);
     speechSynthesis.speak(ssu);
+    return ssu;
   }
   async readMore() {
-    if (this.lastReset) return;
-    if (!this.speaking) return;
-    if (this.readMoreBusy) return;
-    this.readMoreBusy = true;
+    if (!this.isSpeaking()) return;
+    if (this.speechState === 'more') return;
+    this.reportSpeechState('more');
     const length = this.page.content.length;
     while (
-      this.speaking &&
-      this.pendingSsu.size < this.maxPendingSsuSize &&
-      this.next < length
+      this.isSpeaking() && this.targetUserState === 'play' &&
+      this.pendingSsu && this.pendingSsu.size < this.maxPendingSsuSize &&
+      this.readNext()
     ) {
-      this.readNext();
       await new Promise(resolve => { setTimeout(resolve, 0); });
     }
-    this.readMoreBusy = false;
-    if (!this.speaking) return;
+    if (!(this.isSpeaking() && this.targetUserState === 'play')) return;
+    this.reportSpeechState('speaking');
     if (!this.pendingSsu.size && !this.speakingSsu) {
       this.readEnd();
     }
@@ -238,88 +324,75 @@ export default class ReadSpeech {
     if (this.spoken == null) return false;
     return this.page.textPage.isInPage(this.spoken);
   }
-  async start() {
-    if (this.lastReset) return;
-    if (this.speaking || this.stopping) return;
-    if (speechSynthesis.speaking || speechSynthesis.pending) return;
-    this.readMoreBusy = false;
-    const page = this.page;
-    page.element.classList.add('read-speech');
-    this.next = page.getRenderCursor();
+  async startSpeech() {
+    if (this.targetUserState !== 'play') return;
+    await this.untilSpeechStateStable();
+    if (this.isSpeaking()) return;
+    this.next = this.page.getRenderCursor();
     if (this.spoken != null && this.spokenInPage()) {
       this.next = this.spoken;
     }
     this.spoken = this.next;
     this.pendingSsu = new Set();
-    this.speaking = true;
-    if (this.mediaSessionEnable) {
-      this.fakeAudio.currentTime = 0;
-      await this.fakeAudio.play();
-      this.updateMediaSession();
-    }
-    if (this.autoLockConfig === 'speech') {
-      wakelock.request();
-    }
+    this.speakingSsu = null;
+    this.reportSpeechState('speaking');
+
     this.readMore();
   }
-  async stop() {
-    if (!this.speaking) return;
-    if (this.stopping) {
-      await this.stopping;
-      return;
-    }
-    this.page.element.classList.remove('read-speech');
-    this.page.textPage.clearHighlight();
-    this.speaking = false;
-    let stopped = null;
-    this.stopping = new Promise(resolve => { stopped = resolve; });
+  async stopSpeech() {
+    if (this.targetUserState === 'play') return;
+    await this.untilSpeechStateStable();
+    if (!this.isSpeaking()) return;
+    this.reportSpeechState('stopping');
+    this.page.textPage?.clearHighlight();
     while (speechSynthesis.speaking || speechSynthesis.pending) {
       speechSynthesis.cancel();
       await new Promise(resolve => setTimeout(resolve, 0));
     }
     this.pendingSsu = null;
     this.speakingSsu = null;
-    while (this.readMoreBusy) {
-      await new Promise(resolve => setTimeout(resolve, 0));
-    }
-    this.stopping = false;
-    stopped();
-    if (this.mediaSessionEnable) {
-      if (this.fakeAudio) this.fakeAudio.pause();
-      this.updateMediaSession();
-    }
-    if (this.autoLockConfig === 'speech') {
-      wakelock.release();
-    }
+    this.reportSpeechState('stopped');
+    setTimeout(() => {
+      this.reportSpeechState('ready');
+    }, 1e3);
+  }
+  async pause() {
+    await this.adjustUserState('paused');
+  }
+  async start() {
+    await this.adjustUserState('play');
+  }
+  async stop() {
+    await this.adjustUserState('stop');
   }
   async reset() {
-    const token = this.lastReset = {};
-    await this.stop();
-    /*
-     * FIXME
-     * I don't know why!
-     * But safari doesn't work if we don't give a pause.
-     * I'm not sure how long would be suitable.
-     * I just make it work on my iPhone with 1s delay.
-     * This should be changed to something more meaningful.
-     */
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    if (token !== this.lastReset) return;
-    this.lastReset = null;
-    await this.start();
+    await this.adjustUserState('reset');
   }
-  async toggle() {
-    if (this.lastReset || this.stopping) return null;
-    if (this.speaking) {
-      await this.stop();
-      return false;
-    } else {
-      await this.start();
-      return true;
+  /** @param {UserState} targetUserState */
+  async adjustUserState(targetUserState) {
+    this.targetUserState = targetUserState;
+    const token = this.adjustUserStateToken = Symbol();
+    while (true) {
+      await this.untilSpeechStateStable();
+      if (this.adjustUserStateToken !== token) return;
+      if (this.targetUserState === 'play' && !this.isSpeaking()) {
+        await this.startSpeech();
+      } else if (this.targetUserState !== 'play' && this.isSpeaking()) {
+        await this.stopSpeech();
+      }
+      if (this.targetUserState === 'play' && this.isSpeaking()) {
+        this.reportUserState(this.targetUserState);
+      } else if (this.targetUserState === 'reset') {
+        if (!this.isSpeaking()) this.targetUserState = 'play';
+        continue;
+      } else if (this.targetUserState !== 'play' && !this.isSpeaking()) {
+        this.reportUserState(this.targetUserState);
+      } else continue;
+      break;
     }
   }
   cursorChange(cursor, config) {
-    if (this.speaking || this.lastReset) {
+    if (this.isPlaying() || this.isReseting()) {
       if (this.boundaryCursor) return;
       if (config.resetSpeech) {
         this.reset();
@@ -327,6 +400,20 @@ export default class ReadSpeech {
     } else {
       this.spoken = null;
     }
+  }
+
+  initMediaSession() {
+    if (!this.mediaSessionEnable) return;
+    this.addStateChangeListener(this.handleMediaSessionWhenStateChange);
+  }
+  async handleMediaSessionWhenStateChange(state, stateBefore) {
+    if (state === 'play' && stateBefore !== 'play') {
+      this.fakeAudio.currentTime = 0;
+      await this.fakeAudio.play();
+    } else if (state !== 'play' && stateBefore === 'play') {
+      if (this.fakeAudio) this.fakeAudio.pause();
+    } else return;
+    this.updateMediaSession();
   }
   metaLoad(meta) {
     this.stop();
@@ -382,7 +469,7 @@ export default class ReadSpeech {
     const key = event.key;
     let action = null;
     if (key === 'MediaPlayPause') {
-      action = !this.speaking && !this.stopping;
+      action = this.userState !== 'play';
     } else if (key === 'MediaStop') {
       action = false;
     }
@@ -397,7 +484,7 @@ export default class ReadSpeech {
     const meta = this.metadata;
     if (meta) {
       navigator.mediaSession.metadata = new MediaMetadata({ title: meta.title });
-      navigator.mediaSession.playbackState = this.speaking ? 'playing' : 'paused';
+      navigator.mediaSession.playbackState = this.isSpeaking() ? 'playing' : 'paused';
       navigator.mediaSession.setPositionState({ duration: 0, playbackRate: 1, position: 0 });
     } else {
       navigator.mediaSession.metadata = null;
@@ -405,8 +492,17 @@ export default class ReadSpeech {
       navigator.mediaSession.setPositionState();
     }
   }
-  isWorking() {
-    return Boolean(this.speaking || this.stopping || this.lastReset);
+
+  initWakeLock() {
+    this.addStateChangeListener(this.handleAutoLockWhenStateChange);
+  }
+  async handleAutoLockWhenStateChange(state, stateBefore) {
+    if (this.autoLockConfig !== 'speech') return;
+    if (state === 'play' && stateBefore !== 'play') {
+      wakelock.request();
+    } else if (state !== 'play' && stateBefore === 'play') {
+      wakelock.release();
+    }
   }
 }
 

@@ -29,6 +29,7 @@ export default class ReadPage extends Page {
     this.useSideIndex = null;
     this.onResize = this.onResize.bind(this);
     this.keyboardEvents = this.keyboardEvents.bind(this);
+    this.handleSpeechStateChange = this.handleSpeechStateChange.bind(this);
   }
   matchUrl(url) {
     if (!/\/read\/\d+/.test(url)) return null;
@@ -108,6 +109,7 @@ export default class ReadPage extends Page {
 
     await this.speech.init();
     this.speech.metaLoad(this.meta);
+    this.speech.addStateChangeListener(this.handleSpeechStateChange);
 
     this.readIndex = new ReadIndex(this);
     if (this.renderStyle === 'flip') {
@@ -143,6 +145,7 @@ export default class ReadPage extends Page {
     this.subPages.forEach(page => { page.onInactivate(); });
     this.speech.stop();
     this.speech.metaUnload();
+    this.speech.removeStateChangeListener(this.handleSpeechStateChange);
     this.textPage.onInactivate();
     this.textPage = null;
     this.container.classList.remove('read-page-scroll', 'read-page-flip');
@@ -270,7 +273,18 @@ export default class ReadPage extends Page {
     return true;
   }
   async toggleSpeech() {
-    this.speech.toggle();
+    if (this.speech.isWorking()) {
+      this.speech.stop();
+    } else {
+      this.speech.start();
+    }
+  }
+  handleSpeechStateChange(state) {
+    if (state === 'play' || state === 'paused') {
+      this.element.classList.add('read-speech');
+    } else {
+      this.element.classList.remove('read-speech');
+    }
   }
   /**
    * @returns The text position where user had read
