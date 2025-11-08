@@ -148,22 +148,12 @@ export default class ReadSpeech {
     if (pos !== -1) list.splice(pos, 1);
     return pos !== -1;
   }
+  getState() {
+    return this.userState;
+  }
 
   isSpeaking() {
     return this.speechState === 'speaking' || this.speechState === 'more';
-  }
-
-  isWorking() {
-    return this.userState !== 'stop';
-  }
-  isPaused() {
-    return this.userState === 'paused';
-  }
-  isPlaying() {
-    return this.userState === 'play';
-  }
-  isReseting() {
-    return this.targetUserState === 'reset';
   }
 
   listenEvents() {
@@ -184,7 +174,7 @@ export default class ReadSpeech {
         this.hiddenPause = true;
         this.pause();
       }
-      if (this.hiddenPause && this.isPaused() && !document.hidden) {
+      if (this.hiddenPause && this.targetUserState === 'paused' && !document.hidden) {
         this.hiddenPause = false;
         this.start();
       }
@@ -265,7 +255,7 @@ export default class ReadSpeech {
   }
   onSsuError(event) {
     if (!this.isSpeaking()) return;
-    this.stop();
+    this.reset();
   }
   getSsuInfo(ssu) {
     const info = this.ssuInfo.get(ssu);
@@ -392,7 +382,7 @@ export default class ReadSpeech {
     }
   }
   cursorChange(cursor, config) {
-    if (this.isPlaying() || this.isReseting()) {
+    if (this.targetUserState === 'play' || this.targetUserState === 'reset') {
       if (this.boundaryCursor) return;
       if (config.resetSpeech) {
         this.reset();

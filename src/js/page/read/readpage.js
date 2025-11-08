@@ -273,7 +273,8 @@ export default class ReadPage extends Page {
     return true;
   }
   async toggleSpeech() {
-    if (this.speech.isWorking()) {
+    const state = this.speech.getState();
+    if (state === 'play' || state === 'paused') {
       this.speech.stop();
     } else {
       this.speech.start();
@@ -318,7 +319,7 @@ export default class ReadPage extends Page {
   getContent() { return this.content; }
   getMeta() { return this.meta; }
   getLang() { return this.langTag; }
-  isSpeaking() { return this.speech.isWorking(); }
+  isSpeaking() { return this.speech.getState() === 'play'; }
   getBookmarks() { return this.index.bookmarks; }
   getContents() { return this.index.content; }
   canShareFile() {

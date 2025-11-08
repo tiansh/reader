@@ -316,7 +316,7 @@ export default class ScrollTextPage extends TextPage {
         if (thisScrollEvent !== this.lastScrollEvent) return;
         const speech = this.readPage.speech;
         this.onScrollDone({
-          resetSpeech: speech.isWorking() && !speech.spokenInPage(),
+          resetSpeech: speech.getState() === 'play' && !speech.spokenInPage(),
           resetRender: false,
         });
       }, this.scrollDoneTimeout);
@@ -478,7 +478,8 @@ export default class ScrollTextPage extends TextPage {
       this.pagePending = { direction: 'up', config };
       return;
     }
-    const autoRunning = this.scrollToBusy || this.readPage.speech.isWorking() || this.autoScrollBusy();
+    const speechState = this.readPage.speech.getState();
+    const autoRunning = this.scrollToBusy || speechState === 'play' || this.autoScrollBusy();
     if (this.isScrollReachTop() && !autoRunning) {
       this.readPage.showControlPage();
       return;
@@ -498,7 +499,8 @@ export default class ScrollTextPage extends TextPage {
       this.pagePending = { direction: 'down', config };
       return;
     }
-    const autoRunning = this.scrollToBusy || this.readPage.speech.isWorking() || this.autoScrollBusy();
+    const speechState = this.readPage.speech.getState();
+    const autoRunning = this.scrollToBusy || speechState === 'play' || this.autoScrollBusy();
     if (this.isScrollReachBottom() && !autoRunning) {
       this.readPage.showControlPage();
       return;
