@@ -97,18 +97,34 @@ export default class ReadSpeech {
     // EXPERT_CONFIG Loop when speech reach end of text
     this.enableLoop = await config.expert('speech.loop_enable', 'boolean', false);
     // EXPERT_CONFIG Append some text for each line
+    const extraSuffix = await config.expert('speech.extra_suffix', 'string', '');
+    this.preprocessText = extraSuffix ? (text => text + extraSuffix) : (text => text);
+
+    this.applyBugTrick();
+    this.initMediaSession();
+    this.initWakeLock();
+  }
+  applyBugTrick() {
     // zh-CN and zh-HK voices on iOS 17 failed to speak anything wraped in a pair of quotes (“”).
     // Append some extra text as a workaround.
-    const isBuggyVoice = [
+    const iOS17QuotedTextBug = [
       'com.apple.voice.compact.zh-CN.Tingting',
       'com.apple.voice.super-compact.zh-CN.Tingting',
       'com.apple.voice.compact.zh-HK.Sinji',
       'com.apple.voice.super-compact.zh-HK.Sinji',
     ].includes(speech.getPreferVoice()?.voiceURI) && / OS 17_/.test(navigator.userAgent);
-    this.extraSuffix = await config.expert('speech.extra_suffix', 'string', isBuggyVoice ? '“”。' : '');
-
-    this.initMediaSession();
-    this.initWakeLock();
+    if (iOS17QuotedTextBug) this.preprocessText = (p => text => p(text) + '“”。')(this.preprocessText);
+    // all voice on iOS 26 / Mac 26 faild to speak text with chinese wrapped in less than, greater than signs
+    ((async () => {
+      if (!['MacIntel', 'iPad', 'iPhone'].includes(navigator.platform)) return false;
+      if (/Version\/26/.test(navigator.userAgent)) return true;
+      if (!navigator.userAgentData || !navigator.userAgentData.getHighEntropyValues) return false;
+      if ((await navigator.userAgentData.getHighEntropyValues(['platformVersion'])).platformVersion.startsWith(26)) return true;
+      return false;
+    })()).then(iOS26Mac26TaggedTextBug => {
+      const fix = text => text.replace(/</g, '＜').replace(/>/g, '＞');
+      if (iOS26Mac26TaggedTextBug) this.preprocessText = (p => text => fix(p(text)))(this.preprocessText);
+    });
   }
   /** @param {SpeechState} state */
   reportSpeechState(state) {
@@ -282,7 +298,7 @@ export default class ReadSpeech {
       this.next = end;
       text = content.slice(current, end).trimRight();
     } while (!text || this.speechTextSkipRegex.test(text));
-    const ssu = speech.prepare(text + this.extraSuffix);
+    const ssu = speech.prepare(this.preprocessText(text));
     this.ssuInfo.set(ssu, { start: current, end });
     ssu.addEventListener('start', this.onSsuStart);
     ssu.addEventListener('boundary', this.onSsuBoundary);
