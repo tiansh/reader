@@ -278,11 +278,11 @@ export default class ReadSpeech {
     if (!info) this.reset();
     return info;
   }
-  readEnd() {
+  async readEnd() {
     if (this.enableLoop) {
-      this.pause();
+      await this.pause();
       this.page.setCursor(0, { resetSpeech: true, resetRender: false });
-      this.start();
+      await this.start();
     } else {
       this.stop();
     }
