@@ -135,7 +135,7 @@ export default class FlipTextPage extends TextPage {
 
     listener.onTouch(wos(({ grid }) => {
       const action = this.flipTouchAction.split(',').map(a => a.trim())[grid.x];
-      const isSpeech = this.readPage.speech.isWorking();
+      const isSpeech = this.readPage.speech.getState() === 'play';
       const mayFlip = this.tapToPageWhenSpeech || !isSpeech;
       const apply = !mayFlip && (action === 'prev' || action === 'next') ? 'menu' : action;
       if (apply === 'prev') {
